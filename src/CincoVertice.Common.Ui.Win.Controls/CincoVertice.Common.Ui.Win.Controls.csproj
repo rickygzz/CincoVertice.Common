@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CincoVertice.Common.Ui\CincoVertice.Common.Ui.csproj" />
+    <ProjectReference Include="..\CincoVertice.Common.Utils\CincoVertice.Common.Utils.csproj" />
+  </ItemGroup>
+
+</Project>
