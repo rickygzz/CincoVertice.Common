@@ -1,9 +1,11 @@
 ﻿using CincoVertice.Common.Ui.Rtf.Models;
 using CincoVertice.Common.Ui.Win.Controls.Rtf.Core;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace CincoVertice.Common.Ui.Win.Controls.Rtf;
 
+[SupportedOSPlatform("windows10.0")]
 public class ConsoleOutputControl : RichTextBox
 {
     private readonly RtfText _rtf;
