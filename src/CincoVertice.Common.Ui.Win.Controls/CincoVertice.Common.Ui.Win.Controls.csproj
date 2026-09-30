@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CincoVertice.Common.Ui\CincoVertice.Common.Ui.csproj" />
+    <ProjectReference Include="..\CincoVertice.Common.Utils.Tests\CincoVertice.Common.Utils.Tests.csproj" />
     <ProjectReference Include="..\CincoVertice.Common.Utils\CincoVertice.Common.Utils.csproj" />
   </ItemGroup>
 
