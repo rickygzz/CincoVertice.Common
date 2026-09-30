@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CincoVertice.Common.Utils.Tests\CincoVertice.Common.Utils.Tests.csproj" />
-  </ItemGroup>
-
 </Project>

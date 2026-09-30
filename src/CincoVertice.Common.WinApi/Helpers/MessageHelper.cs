@@ -1,8 +1,5 @@
-﻿using System.Runtime.Versioning;
+﻿namespace CincoVertice.Common.WinApi.Helpers;
 
-namespace CincoVertice.Common.WinApi.Helpers;
-
-[SupportedOSPlatform("windows10.0")]
 public class MessageHelper
 {
     private static readonly string _errorTitle = "Error";

@@ -1,4 +1,6 @@
-﻿namespace CincoVertice.Common.WinApi.Helpers;
+﻿using System.Diagnostics;
+
+namespace CincoVertice.Common.WinApi.Helpers;
 
 public static class ProcessHelper
 {
@@ -6,11 +8,11 @@ public static class ProcessHelper
     {
         string assemblyLocation = System.Reflection.Assembly.GetEntryAssembly()?.Location ?? string.Empty;
         string file = Path.GetFileNameWithoutExtension(assemblyLocation);
-        
-        System.Diagnostics.Process[] processes = System.Diagnostics.Process.GetProcessesByName(file);
-        System.Diagnostics.Process thisProcess = System.Diagnostics.Process.GetCurrentProcess();
 
-        foreach (System.Diagnostics.Process process in processes)
+        Process[] processes = Process.GetProcessesByName(file);
+        Process thisProcess = Process.GetCurrentProcess();
+
+        foreach (Process process in processes)
         {
             if (process.Id != thisProcess.Id)
             {

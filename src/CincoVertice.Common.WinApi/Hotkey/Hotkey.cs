@@ -1,10 +1,8 @@
 ﻿using CincoVertice.Common.WinApi.Helpers;
 using CincoVertice.Common.WinApi.Hotkey.Window;
-using System.Runtime.Versioning;
 
 namespace CincoVertice.Common.WinApi.Hotkey;
 
-[SupportedOSPlatform("windows10.0")]
 public class Hotkey : IDisposable
 {
     private readonly HotkeyWindow _hotkeyWindow;
