@@ -3,11 +3,11 @@
 namespace CincoVertice.Common.Utils.Config;
 
 /// <summary>
-/// Key, value types and errors.
+///     Key, value types and errors.
 /// </summary>
 public class ConfigTokenType : GenericTokenType
 {
-    private static int count = End + 1;
+    // private static int count = End + 1;
 
     /// <summary>Null.</summary>
     public static readonly int Key = count++;

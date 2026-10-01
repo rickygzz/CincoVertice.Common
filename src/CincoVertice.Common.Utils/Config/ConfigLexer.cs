@@ -8,7 +8,7 @@ namespace CincoVertice.Common.Utils.Config;
 public class ConfigLexer : GenericLexer
 {
     /// <summary>
-    /// List with indexes of all keys processed in Process().
+    ///     List with indexes of all keys processed in Process().
     /// </summary>
     public ConfigItems Items;
 
@@ -32,7 +32,7 @@ public class ConfigLexer : GenericLexer
     }
 
     /// <summary>
-    /// Process this.text.
+    ///     Processes the input text and generates tokens.
     /// </summary>
     private new void Process()
     {
@@ -48,7 +48,7 @@ public class ConfigLexer : GenericLexer
     }
 
     /// <summary>
-    /// NextToken().
+    ///     Retrieves the next token from the input text.
     /// </summary>
     /// <returns>true if a valid token was found, otherwise false.</returns>
     private bool NextToken()

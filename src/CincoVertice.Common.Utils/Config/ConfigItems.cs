@@ -1,15 +1,13 @@
 ﻿using System.Reflection;
-using System.Text;
 using CincoVertice.Common.Utils.Config.Tokens;
 using CincoVertice.Common.Utils.Lexer;
-using CincoVertice.Common.Utils.Lexer.Tokens;
 
 namespace CincoVertice.Common.Utils.Config;
 
 public class ConfigItems
 {
     /// <summary>
-    /// List with indexes of all keys processed in Process().
+    ///     List with indexes of all keys processed in Process().
     /// </summary>
     private readonly List<ConfigItemModel> _keyValueList = [];
 
@@ -21,7 +19,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Gets keys count.
+    ///     Gets keys count.
     /// </summary>
     /// <returns>The number of keys on config file.</returns>
     public int KeysCount
@@ -32,6 +30,9 @@ public class ConfigItems
         }
     }
 
+    /// <summary>
+    ///     Removes all configuration key-value items.
+    /// </summary>
     public void Clear()
     {
         _keyValueList.Clear();
@@ -54,7 +55,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Gets the index of the first key found matching provided key name.
+    ///     Gets the index of the first key found matching provided key name.
     /// </summary>
     /// <param name="key">The key name to look for.</param>
     /// <returns>Returns index if key is found, otherwise -1.</returns>
@@ -74,7 +75,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Gets the key name for the provided key index.
+    ///     Gets the key name for the provided key index.
     /// </summary>
     /// <param name="keyIndex">The key index to look for.</param>
     /// <returns>Returns key name if found, otherwise returns string.Empty.</returns>
@@ -89,7 +90,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Gets the value of the first key found matching provided key name.
+    ///     Gets the value of the first key found matching provided key name.
     /// </summary>
     /// <param name="key">The key name to look for.</param>
     /// <returns>Returns value if valid key-value pair token is found, otherwise returns string.Empty.</returns>
@@ -110,7 +111,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Get value from key index.
+    ///     Gets the value from the key index.
     /// </summary>
     /// <param name="keyIndex">Index of key.</param>
     /// <returns>Return key value if it exists, otherwise returns string.Empty.</returns>
@@ -131,7 +132,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Get value type from index.
+    ///     Get value type from index.
     /// </summary>
     /// <param name="keyIndex">Index of key.</param>
     /// <returns>Returns key value if it exists, otherwise returns ConfigTokenType.Null.</returns>
@@ -187,7 +188,7 @@ public class ConfigItems
     }
 
     /// <summary>
-    /// Set. If key exists, it modifies its value. Otherwise, appends as new key.
+    ///     Set. If key exists, it modifies its value. Otherwise, appends as new key.
     /// </summary>
     /// <param name="key">key.</param>
     /// <param name="value">value.</param>
@@ -195,24 +196,44 @@ public class ConfigItems
     {
         ConfigLexer keyLexer = new(key);
 
+        // Setting the text already ran Process(), which leaves the lexer at the end of the text.
+        keyLexer.Char(0);
+
         GenericToken keyToken = keyLexer.GetKey();
 
-        if (keyToken.Type == GenericTokenType.Null)
+        if (keyToken.Type == GenericTokenType.Null || keyToken.Length != key.Length)
         {
             // Not a valid key name given
             return;
         }
 
-        ConfigLexer valueLexer = new(value);
+        if (value.Contains('\r') || value.Contains('\n'))
+        {
+            // A value ends at the end of its line
+            return;
+        }
 
-        GenericToken valueToken = valueLexer.GetNumericValue();
+        string text = _lexer.Text;
+        string newText;
 
-        StringBuilder sb = new(this._lexer.TextLength + (value.Length * 2));
+        int keyIndex = GetKeyIndex(key);
 
-        //for (int i = 0; i < _lexer.Tokens.Count; i++)
-        //{
-        //    if (_lexer.Tokens[i].Type)
-        //}
+        if (keyIndex != -1)
+        {
+            // Replace the value in place. A missing value is a zero-length token right after the =.
+            GenericToken valueToken = _keyValueList[keyIndex].Value;
+
+            newText = text[..valueToken.StartPos] + value + text[(valueToken.StartPos + valueToken.Length)..];
+        }
+        else
+        {
+            string newLine = text.Length == 0 || text.EndsWith('\n') ? string.Empty : Environment.NewLine;
+
+            newText = text + newLine + key + " = " + value;
+        }
+
+        // Tokens are positions into the text, so re-tokenize. This rebuilds the lexer tokens and this list.
+        _lexer.Text = newText;
     }
 
     public void Set<T>(T instance)
