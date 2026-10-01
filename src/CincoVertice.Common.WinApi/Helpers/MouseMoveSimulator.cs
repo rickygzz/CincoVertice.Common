@@ -11,7 +11,7 @@ public class MouseMoveSimulator
 
     public int Interval { get; set; } = 70000;
 
-    private System.Threading.Timer _timer;
+    private readonly System.Threading.Timer _timer;
     private POINT _prevPosition;
 
     public MouseMoveSimulator()

@@ -4,9 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace CincoVertice.Common.WinApi.Libs;
 
-/// <summary>
-/// Dwmapi
-/// </summary>
 public static class Dwmapi
 {
     /// <summary>
@@ -44,10 +41,8 @@ public static class Dwmapi
     /// <returns>RECT.</returns>
     public static RECT GetWindowRectangle(nint hWnd)
     {
-        RECT rect = default;
-
-        int size = Marshal.SizeOf(typeof(RECT));
-        DwmGetWindowAttribute(hWnd, (int)DwmWindowAttribute.DWMWA_EXTENDED_FRAME_BOUNDS, out rect, size);
+        int size = Marshal.SizeOf<RECT>();
+        DwmGetWindowAttribute(hWnd, (int)DwmWindowAttribute.DWMWA_EXTENDED_FRAME_BOUNDS, out RECT rect, size);
 
         return rect;
     }

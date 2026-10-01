@@ -12,7 +12,7 @@ public class GenericLexer : IGenericLexer
 
     private string text = string.Empty;
 
-    private List<Line> lines = new();
+    private readonly List<Line> lines = [];
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="GenericLexer"/> class.
@@ -52,7 +52,7 @@ public class GenericLexer : IGenericLexer
     /// <summary>
     /// List with indexes of all keys processed in Process().
     /// </summary>
-    public GenericTokens Tokens = new GenericTokens();
+    public GenericTokens Tokens = new();
 
     /// <summary>Gets character index for text[charIndex].</summary>
     public int CharIndex { get; private set; }

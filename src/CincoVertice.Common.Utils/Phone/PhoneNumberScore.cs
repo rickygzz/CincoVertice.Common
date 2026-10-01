@@ -38,7 +38,7 @@ public class PhoneNumberScore
         {
             var rx = Regex.Matches(model.Phone, rule.Rule);
 
-            if (rx.Any())
+            if (rx.Count != 0)
             {
                 model.Score += rx.Count * rule.Points;
                 model.Rules.Add(rule);

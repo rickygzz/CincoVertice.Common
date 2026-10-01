@@ -4,12 +4,10 @@ public class ConfigFile
 {
     private string _filename = string.Empty;
 
-    private ConfigLexer _lexer;
+    private readonly ConfigLexer _lexer = new();
 
     public ConfigFile(string filename)
     {
-        _lexer = new ConfigLexer();
-
         Filename = filename;
     }
 
@@ -69,7 +67,7 @@ public class ConfigFile
     }
 
     /// <summary>
-    /// Save to Filename.
+    ///     Save to Filename.
     /// </summary>
     /// <returns>True if successful, otherwise, false.</returns>
     public bool SaveAs(string newFilename)

@@ -7,7 +7,7 @@ namespace CincoVertice.Common.WinApi.Helpers;
 
 public class InputSimulator
 {
-    private List<INPUT> toSend = new List<INPUT>();
+    private readonly List<INPUT> toSend = [];
 
     /// <summary>
     ///     SendInputs added with AddKey().
@@ -16,7 +16,7 @@ public class InputSimulator
     {
         if (this.toSend.Count > 0)
         {
-            INPUT[] inputs = this.toSend.ToArray();
+            INPUT[] inputs = [.. this.toSend];
             User32.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
 
             this.toSend.Clear();
@@ -138,14 +138,14 @@ public class InputSimulator
         //    //MC.Message.Error("SendText()", ex.Message);
         //}
 
-        List<INPUT> textToSend = new List<INPUT>();
+        List<INPUT> textToSend = [];
 
         foreach (char key in text)
         {
             textToSend.Add(KeyboardInput((KeyCode)key, KeyboardInputDwFlags.KEYEVENTF_KEYDOWN));
             textToSend.Add(KeyboardInput((KeyCode)key, KeyboardInputDwFlags.KEYEVENTF_KEYUP));
 
-            INPUT[] inputs = textToSend.ToArray();
+            INPUT[] inputs = [.. textToSend];
 
             User32.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
 
@@ -195,7 +195,7 @@ public class InputSimulator
     /// <param name="altPressed">Is alt key pressed?.</param>
     public static void SendKey(KeyCode key, bool ctlPressed = false, bool altPressed = false)
     {
-        List<INPUT> list = new List<INPUT>();
+        List<INPUT> list = [];
 
         if (ctlPressed)
         {
@@ -220,7 +220,7 @@ public class InputSimulator
             list.Add(KeyboardInput(KeyCode.VK_MENU, KeyboardInputDwFlags.KEYEVENTF_KEYUP));
         }
 
-        INPUT[] kbinputs = list.ToArray();
+        INPUT[] kbinputs = [.. list];
         User32.SendInput((uint)kbinputs.Length, kbinputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
@@ -233,7 +233,7 @@ public class InputSimulator
     /// </param>
     public static void Wheel(int times)
     {
-        INPUT[] mouseInputs = new INPUT[] { MouseInputWheel(times) };
+        INPUT[] mouseInputs = [MouseInputWheel(times)];
         User32.SendInput((uint)mouseInputs.Length, mouseInputs, Marshal.SizeOf(typeof(INPUT)));
     }
 
@@ -244,7 +244,7 @@ public class InputSimulator
     /// <returns>Returns INPUT information for SendInput() events</returns>
     public static INPUT MouseInputClick(MouseInputDwFlags mouseFlags)
     {
-        INPUT minput = new INPUT()
+        INPUT minput = new()
         {
             Type = InputType.INPUT_MOUSE,
             MKHInput = new MOUSEKEYBDHARDWAREINPUT()
@@ -276,7 +276,7 @@ public class InputSimulator
     /// </returns>
     public static INPUT MouseInputWheel(int movementAmount)
     {
-        INPUT minput = new INPUT()
+        INPUT minput = new()
         {
             Type = InputType.INPUT_MOUSE,
             MKHInput = new MOUSEKEYBDHARDWAREINPUT()
@@ -304,7 +304,7 @@ public class InputSimulator
     /// <returns>Returns INPUT information for SendInput() events</returns>
     public static INPUT MouseInputMoveDelta(int deltaX, int deltaY)
     {
-        INPUT minput = new INPUT()
+        INPUT minput = new()
         {
             Type = InputType.INPUT_MOUSE,
             MKHInput = new MOUSEKEYBDHARDWAREINPUT()
@@ -332,7 +332,7 @@ public class InputSimulator
     /// <returns>Returns INPUT information for SendInput() events</returns>
     public static INPUT KeyboardInput(KeyCode key, KeyboardInputDwFlags kbFlags)
     {
-        INPUT kbinput = new INPUT()
+        INPUT kbinput = new()
         {
             Type = InputType.INPUT_KEYBOARD,
             MKHInput = new MOUSEKEYBDHARDWAREINPUT()
