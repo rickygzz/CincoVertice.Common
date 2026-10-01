@@ -3,7 +3,7 @@
 public class GenericTokens
 {
     /// <summary>Tokens processed.</summary>
-    protected List<GenericToken> _tokens = new List<GenericToken>();
+    protected List<GenericToken> _tokens = [];
 
     /// <summary>
     ///     Get Token by index.

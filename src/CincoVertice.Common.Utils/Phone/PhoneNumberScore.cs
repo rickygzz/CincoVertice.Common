@@ -17,7 +17,7 @@ public class PhoneNumberScore
 
     public void LoadRules(string file)
     {
-        phoneScoreRuleModels = new ExcelMapper(file).Fetch<PhoneScoreRuleModel>().ToList();
+        phoneScoreRuleModels = [.. new ExcelMapper(file).Fetch<PhoneScoreRuleModel>()];
     }
 
     public void LoadPhones(string file)

@@ -149,7 +149,7 @@ public class ConfigItems
     public T GetValues<T>()
         where T : class, new()
     {
-        T result = new T();
+        T result = new();
         var fields = typeof(T).GetFields();
 
         foreach (FieldInfo field in fields)

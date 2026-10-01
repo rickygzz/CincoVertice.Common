@@ -39,7 +39,7 @@ public class RtfText
             UpdateContent();
         }
 
-        StringBuilder sb = new StringBuilder(_header.Length + _content.Length + _footer.Length);
+        StringBuilder sb = new(_header.Length + _content.Length + _footer.Length);
 
         sb.Append(_header);
         sb.Append(_content);
@@ -50,7 +50,7 @@ public class RtfText
 
     private void UpdateHeader()
     {
-        StringBuilder sb = new StringBuilder(256 + _fonts.Count * 160 + _colors.Count * 25);
+        StringBuilder sb = new(256 + _fonts.Count * 160 + _colors.Count * 25);
 
         sb.Append(@"{\rtf1\ansi\ansicpg1252\deff0");
         sb.Append(@"{\fonttbl{");

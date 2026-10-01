@@ -106,7 +106,7 @@ public class MdiTab : TabControl
             if (SelectedIndex != 0)
             {
                 // Check if close icon was pressed
-                Rectangle rectClose = new Rectangle(
+                Rectangle rectClose = new(
                     rectTab.X + rectTab.Width - Padding.X - 5,
                     rectTab.Y,
                     Padding.X + 5,
@@ -142,7 +142,7 @@ public class MdiTab : TabControl
         {
             Rectangle rectTab = GetTabRect(TabPages.IndexOf(tp));
 
-            Rectangle rectClose = new Rectangle(
+            Rectangle rectClose = new(
                 rectTab.X + rectTab.Width - Padding.X,
                 rectTab.Y,
                 Padding.X,
@@ -278,10 +278,11 @@ public class MdiTab : TabControl
             {
                 Form tabForm = parent.ActiveMdiChild;
 
-                TabPage tp = new TabPage(tabForm.Text);
-
-                // Tab page points to the MDI Child
-                tp.Tag = new TabPageTag() { OwnerForm = tabForm, Menu = tabForm.ContextMenuStrip! };
+                TabPage tp = new(tabForm.Text)
+                {
+                    // Tab page points to the MDI Child
+                    Tag = new TabPageTag() { OwnerForm = tabForm, Menu = tabForm.ContextMenuStrip! }
+                };
                 tabForm.ContextMenuStrip = null;
 
                 tp.Parent = this;
