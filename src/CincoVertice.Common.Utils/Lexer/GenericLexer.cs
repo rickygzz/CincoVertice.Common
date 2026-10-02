@@ -196,6 +196,6 @@ public class GenericLexer : IGenericLexer
             }
         }
 
-        return new Position { Line = lines.Count, Column = lines[lines.Count - 1].CharEnd };
+        return new Position { Line = lines.Count, Column = lines[^1].CharEnd };
     }
 }
