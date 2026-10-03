@@ -18,6 +18,7 @@ public class ConsoleOutputControl : RichTextBox
     {
         Multiline = true;
         DetectUrls = false;
+        HideSelection = false;
 
         _rtf = new RtfText(Font.Name, Font.Size);
 
@@ -31,7 +32,10 @@ public class ConsoleOutputControl : RichTextBox
         _rtf.UpdateDefaultFont(Font.Name, Font.Size);
     }
 
-    public void AddText(string text, RtfFormat? formatModel = null, bool updateContent = false)
+    public void AddText(
+        string text,
+        RtfFormat? formatModel = null,
+        bool updateContent = false)
     {
         _rtf.AddText(text, formatModel);
 
@@ -71,11 +75,11 @@ public class ConsoleOutputControl : RichTextBox
         _rtf.AddFont(fonts);
     }
 
-    public void UpdateText(bool scrolltoBottom = false)
+    public void UpdateText(bool scrollToBottom = false)
     {
         Rtf = _rtf.Rtf(updateContent: true);
 
-        if (scrolltoBottom)
+        if (scrollToBottom)
         {
             ScrollToBottom();
         }

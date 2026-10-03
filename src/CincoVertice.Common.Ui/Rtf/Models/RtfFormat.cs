@@ -1,18 +1,22 @@
 ﻿namespace CincoVertice.Common.Ui.Rtf.Models;
 
+/// <summary>
+///     Formatting applied to a piece of RTF text. A null property leaves that formatting unchanged
+///     (keeps whatever the previous text used).
+/// </summary>
 public class RtfFormat
 {
-    public int Bold { get; set; } = -1;
+    public bool? Bold { get; set; }
 
-    public int Italic { get; set; } = -1;
+    public bool? Italic { get; set; }
 
-    public int ForeColorIndex { get; set; } = -1;
+    public int? ForeColorIndex { get; set; }
 
-    public int HighlightColorIndex { get; set; } = -1;
+    public int? HighlightColorIndex { get; set; }
 
-    public float Size { get; set; } = -1;
+    public float? Size { get; set; }
 
-    public int FontIndex { get; set; } = -1;
+    public int? FontIndex { get; set; }
 
-    public double LineHeight { get; set; } = -1;
+    public double? LineHeight { get; set; }
 }

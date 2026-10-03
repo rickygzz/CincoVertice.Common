@@ -4,12 +4,18 @@ namespace CincoVertice.Common.Ui.Rtf.Helpers;
 
 public static class RtfColorHelper
 {
-    public static (RtfColor Darker, RtfColor Dark, RtfColor Base, RtfColor Light, RtfColor Lighter) GenerateShades(
-        this RtfColor baseColor,
-        double darkT = 0.25,
-        double darkerT = 0.5,
-        double lightT = 0.25,
-        double lighterT = 0.5)
+    public static (
+        RtfColor Darker,
+        RtfColor Dark,
+        RtfColor Base,
+        RtfColor Light,
+        RtfColor Lighter)
+        GenerateShades(
+            this RtfColor baseColor,
+            double darkT = 0.25,
+            double darkerT = 0.5,
+            double lightT = 0.25,
+            double lighterT = 0.5)
     {
         return (
             baseColor.Darken(darkerT),
@@ -97,12 +103,12 @@ public static class RtfColorHelper
         {
             return 0;
         }
-        
+
         if (value > 1)
         {
             return 1;
         }
-        
+
         return value;
     }
 }

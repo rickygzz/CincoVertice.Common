@@ -11,18 +11,11 @@ public class RtfContent
 
     public RtfContent(string text, RtfFormat? format = null)
     {
+        Text = text;
+
         if (format == null)
         {
-            Format.Bold = -1;
-            Format.Italic = -1;
-            Format.ForeColorIndex = -1;
-            Format.HighlightColorIndex = -1;
-            Format.Size = -1;
-            Format.FontIndex = -1;
-            Format.LineHeight = -1;
-
-            Text = text;
-
+            // All properties null: keep the previous formatting
             return;
         }
 
@@ -33,47 +26,47 @@ public class RtfContent
         Format.Size = format.Size;
         Format.FontIndex = format.FontIndex;
         Format.LineHeight = format.LineHeight;
-
-        Text = text;
     }
 
     public string Rtf(RtfFormat prevFormat)
     {
         StringBuilder sb = new(Text.Length + 1024);
 
-        if (Format.Bold >= 0 && Format.Bold != prevFormat.Bold)
+        // Write only the formatting that is set (not null) and differs from the previous text
+
+        if (Format.Bold is bool bold && bold != prevFormat.Bold)
         {
-            sb.Append(Format.Bold == 0 ? "\\b0 " : "\\b ");
+            sb.Append(bold ? "\\b " : "\\b0 ");
         }
 
-        if (Format.Italic >= 0 && Format.Italic != prevFormat.Italic)
+        if (Format.Italic is bool italic && italic != prevFormat.Italic)
         {
-            sb.Append(Format.Italic == 0 ? "\\i0 " : "\\i ");
+            sb.Append(italic ? "\\i " : "\\i0 ");
         }
 
-        if (Format.HighlightColorIndex >= 0 && Format.HighlightColorIndex != prevFormat.HighlightColorIndex)
+        if (Format.HighlightColorIndex is int highlightColorIndex && highlightColorIndex != prevFormat.HighlightColorIndex)
         {
-            sb.Append("\\highlight").Append(Format.HighlightColorIndex).Append(' ');
+            sb.Append("\\highlight").Append(highlightColorIndex).Append(' ');
         }
 
-        if (Format.ForeColorIndex >= 0 && Format.ForeColorIndex != prevFormat.ForeColorIndex)
+        if (Format.ForeColorIndex is int foreColorIndex && foreColorIndex != prevFormat.ForeColorIndex)
         {
-            sb.Append("\\cf").Append(Format.ForeColorIndex).Append(' ');
+            sb.Append("\\cf").Append(foreColorIndex).Append(' ');
         }
 
-        if (Format.Size >= 0 && !FloatingPointHelper.AreEqual(Format.Size, prevFormat.Size))
+        if (Format.Size is float size && !FloatingPointHelper.AreEqual(size, prevFormat.Size))
         {
-            sb.Append("\\fs").Append(Format.Size * 2).Append(' ');
+            sb.Append("\\fs").Append(size * 2).Append(' ');
         }
 
-        if (Format.LineHeight >= 0 && !FloatingPointHelper.AreEqual(Format.LineHeight, prevFormat.LineHeight))
+        if (Format.LineHeight is double lineHeight && !FloatingPointHelper.AreEqual(lineHeight, prevFormat.LineHeight))
         {
-            sb.Append(@"\smult1\sl" + 248 * Format.LineHeight);
+            sb.Append(@"\smult1\sl" + 248 * lineHeight);
         }
 
-        if (Format.FontIndex >= 0 && Format.FontIndex != prevFormat.FontIndex)
+        if (Format.FontIndex is int fontIndex && fontIndex != prevFormat.FontIndex)
         {
-            sb.Append("\\f").Append(Format.FontIndex).Append(' ');
+            sb.Append("\\f").Append(fontIndex).Append(' ');
         }
 
         // Escape special chars

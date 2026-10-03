@@ -70,11 +70,11 @@ public class RtfText
         foreach (var color in _colors)
         {
             sb.Append(@"\red");
-            sb.Append(color.R.ToString());
+            sb.Append(color.R);
             sb.Append(@"\green");
-            sb.Append(color.G.ToString());
+            sb.Append(color.G);
             sb.Append(@"\blue");
-            sb.Append(color.B.ToString());
+            sb.Append(color.B);
             sb.Append(';');
         }
         sb.Append('}');
@@ -94,11 +94,11 @@ public class RtfText
         var sb = new StringBuilder(EstimateContentCapacity());
 
         sb.Append(@"\viewkind4\uc1\pard\lang2058");
-        if (_contentList[0].Format.FontIndex == -1)
+        if (_contentList[0].Format.FontIndex is null)
         {
             sb.Append(@"\f0");
         }
-        if (Equals(_contentList[0].Format.Size, -1))
+        if (_contentList[0].Format.Size is null)
         {
             sb.Append(@"\fs22\smult1\sl480");
         }
@@ -138,12 +138,12 @@ public class RtfText
         }
 
         int contentLength = 42;
-        int bold = -1;
-        int italic = -1;
-        int highlightColor = -1;
-        int foreColor = -1;
-        float size = -1;
-        int font = -1;
+        bool? bold = null;
+        bool? italic = null;
+        int? highlightColor = null;
+        int? foreColor = null;
+        float? size = null;
+        int? font = null;
 
         for (int i = 0; i < _contentList.Count; i++)
         {

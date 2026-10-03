@@ -17,8 +17,13 @@ public static class ModernConsole
         { "Accent1Dark", new RtfColor(180, 220, 250).Darken(0.25) }
     };
 
-    public static int ColorIndex(string colorName)
+    /// <returns>
+    ///     The color index, or null if there is no color with that name (leaves the color unchanged).
+    /// </returns>
+    public static int? ColorIndex(string colorName)
     {
-        return Colors.Keys.ToList().IndexOf(colorName);
+        int index = Colors.Keys.ToList().IndexOf(colorName);
+
+        return index >= 0 ? index : null;
     }
 }
