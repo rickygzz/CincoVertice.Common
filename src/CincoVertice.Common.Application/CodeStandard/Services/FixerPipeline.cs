@@ -35,7 +35,7 @@ public sealed class FixerPipeline
         return new FixerPipeline(
         [
             new InvisibleCharacterFixer(),
-            new TypographicCommentFixer(),
+            new TypographicCharacterFixer(),
             new CommentSpaceFixer(),
             new EmptyXmlCommentFixer(),
             new BlankLineFixer(),

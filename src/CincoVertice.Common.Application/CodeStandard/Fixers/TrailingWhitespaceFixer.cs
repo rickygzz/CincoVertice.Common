@@ -3,6 +3,10 @@ using CincoVertice.Common.Application.CodeStandard.Interfaces;
 
 namespace CincoVertice.Common.Application.CodeStandard.Fixers;
 
+/// <summary>
+///     Fixes CH0010 and CH0011 (see TrailingWhitespaceChecker): removes whitespace at the end of every line,
+///     which leaves a whitespace-only line empty.
+/// </summary>
 public sealed class TrailingWhitespaceFixer : IStringFixer
 {
     public string Fix(string content)

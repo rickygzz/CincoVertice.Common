@@ -16,7 +16,6 @@ public class LineCheckerService : ILineCheckerService
         // First, so whitespace-only and comment lines are checked too
         new InvisibleCharacterChecker(),
         new BlankLineChecker(),
-        new WhitespaceOnlyLineChecker(),
         new TrailingWhitespaceChecker(),
         new LineLengthChecker(),
         new IndentationChecker(),
