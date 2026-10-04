@@ -42,6 +42,14 @@ public static class Errors
 
     public const string CH0024 = "Keyword '{keyword}' should have only one space before parenthesis.";
 
+    public const string CH0025 = "Line contains invisible character {character} at column {column}.";
+
+    public const string CH0026 = "Line contains Unicode space {character} at column {column}; use a normal space.";
+
+    public const string CH0027 = "Line is a consecutive blank line.";
+
+    public const string CH0028 = "Blank line before closing brace.";
+
     public const string CH0030 = "Empty XML comments.";
     #endregion
 

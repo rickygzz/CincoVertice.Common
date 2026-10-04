@@ -15,6 +15,7 @@ public class LineCheckerService : ILineCheckerService
     [
         // First, so whitespace-only and comment lines are checked too
         new InvisibleCharacterChecker(),
+        new BlankLineChecker(),
         new WhitespaceOnlyLineChecker(),
         new TrailingWhitespaceChecker(),
         new LineLengthChecker(),
@@ -37,7 +38,7 @@ public class LineCheckerService : ILineCheckerService
     /// <param name="line">The line information.</param>
     public void CheckLine(LineModel line)
     {
-        if (string.IsNullOrEmpty(line.Content))
+        if (line.Content is null)
         {
             return;
         }

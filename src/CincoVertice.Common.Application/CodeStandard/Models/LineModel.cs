@@ -14,6 +14,12 @@ public class LineModel
 
     public int PreviousIndentationLevel { get; set; } = 0;
 
+    /// <summary>
+    ///     True when the previous line is empty or whitespace only. Set by the caller, like
+    ///     <see cref="PreviousIndentationLevel"/>.
+    /// </summary>
+    public bool PreviousLineIsBlank { get; set; } = false;
+
     public int IndentationLevel { get; set; } = 0;
 
     public LineEndingEnum LineEnding = LineEndingEnum.None;

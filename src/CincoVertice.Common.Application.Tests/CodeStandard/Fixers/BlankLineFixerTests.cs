@@ -3,7 +3,7 @@ using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeStandard.Fixers;
 
-public class ConsecutiveBlankLineFixerTests
+public class BlankLineFixerTests
 {
     [Theory]
     [InlineData(null)]
@@ -11,7 +11,7 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_WhenContentIsNullOrEmpty_ReturnsEmpty(string? content)
     {
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content!);
+        var result = new BlankLineFixer().Fix(content!);
 
         // Assert
         Assert.Equal(string.Empty, result);
@@ -26,7 +26,7 @@ public class ConsecutiveBlankLineFixerTests
         string content = "line1\nline2\nline3\n";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(content, result);
@@ -39,7 +39,7 @@ public class ConsecutiveBlankLineFixerTests
         string content = "somecode;\n\nmorecode;";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(content, result);
@@ -52,7 +52,7 @@ public class ConsecutiveBlankLineFixerTests
         string content = "somecode;\r\n\r\nmorecode;";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(content, result);
@@ -64,7 +64,7 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_ReducesTwoBlankLinesToOne()
     {
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix("line1\n\n\nline2");
+        var result = new BlankLineFixer().Fix("line1\n\n\nline2");
 
         // Assert
         Assert.Equal("line1\n\nline2", result);
@@ -74,7 +74,7 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_ReducesThreeBlankLinesToOne()
     {
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix("line1\n\n\n\nline2");
+        var result = new BlankLineFixer().Fix("line1\n\n\n\nline2");
 
         // Assert
         Assert.Equal("line1\n\nline2", result);
@@ -84,7 +84,7 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_ReducesCrlfTwoBlankLinesToOne()
     {
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix("line1\r\n\r\n\r\nline2");
+        var result = new BlankLineFixer().Fix("line1\r\n\r\n\r\nline2");
 
         // Assert
         Assert.Equal("line1\r\n\r\nline2", result);
@@ -94,7 +94,7 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_ReducesMultipleGroupsIndependently()
     {
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix("a\n\nb\n\n\nc\n\n\n\nd");
+        var result = new BlankLineFixer().Fix("a\n\nb\n\n\nc\n\n\n\nd");
 
         // Assert
         Assert.Equal("a\n\nb\n\nc\n\nd", result);
@@ -112,7 +112,7 @@ public class ConsecutiveBlankLineFixerTests
             "}";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal("    }\n}", result);
@@ -129,7 +129,7 @@ public class ConsecutiveBlankLineFixerTests
             "}";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal("    }\n}", result);
@@ -145,7 +145,7 @@ public class ConsecutiveBlankLineFixerTests
             "    }";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal("    code;\n    }", result);
@@ -165,7 +165,7 @@ public class ConsecutiveBlankLineFixerTests
             "}";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(
@@ -187,7 +187,7 @@ public class ConsecutiveBlankLineFixerTests
         string content = "class Foo\n{\n    int x;\n}";
 
         // Act
-        var result = new ConsecutiveBlankLineFixer().Fix(content);
+        var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(content, result);
@@ -203,8 +203,8 @@ public class ConsecutiveBlankLineFixerTests
     public void Fix_IsIdempotent(string content)
     {
         // Act
-        var once = new ConsecutiveBlankLineFixer().Fix(content);
-        var twice = new ConsecutiveBlankLineFixer().Fix(once);
+        var once = new BlankLineFixer().Fix(content);
+        var twice = new BlankLineFixer().Fix(once);
 
         // Assert
         Assert.Equal(once, twice);

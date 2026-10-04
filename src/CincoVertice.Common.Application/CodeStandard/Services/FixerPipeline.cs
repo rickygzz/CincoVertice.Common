@@ -26,13 +26,19 @@ public sealed class FixerPipeline
     }
 
     /// <summary>
-    ///     Builds the default formatting pipeline. Order matters: the structural fixer runs first,
+    ///     Builds the default formatting pipeline. Order matters: character cleanup runs first (so the other
+    ///     fixers see normal spaces, not e.g. no-break spaces in the indentation), then the structural fixer,
     ///     line-splitting fixers next, and trailing-whitespace cleanup last.
     /// </summary>
     public static FixerPipeline CreateFormatting()
     {
         return new FixerPipeline(
         [
+            new InvisibleCharacterFixer(),
+            new TypographicCommentFixer(),
+            new CommentSpaceFixer(),
+            new EmptyXmlCommentFixer(),
+            new BlankLineFixer(),
             new FileScopedNamespaceFixer(),
             new IndentationFixer(),
             new KeywordParenthesisSpaceFixer(),

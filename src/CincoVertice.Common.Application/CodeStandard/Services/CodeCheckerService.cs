@@ -49,10 +49,12 @@ public class CodeCheckerService : ICodeCheckerService
         }
 
         int previousIndentationLevel = 0;
+        bool previousLineIsBlank = false;
 
         foreach (var line in lines)
         {
             line.PreviousIndentationLevel = previousIndentationLevel;
+            line.PreviousLineIsBlank = previousLineIsBlank;
 
             _lineChecker.CheckLine(line);
 
@@ -62,6 +64,8 @@ public class CodeCheckerService : ICodeCheckerService
             {
                 previousIndentationLevel = line.IndentationLevel;
             }
+
+            previousLineIsBlank = string.IsNullOrWhiteSpace(line.Content);
 
             errors.AddRange(line.Errors);
         }

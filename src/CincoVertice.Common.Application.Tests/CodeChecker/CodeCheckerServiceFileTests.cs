@@ -148,6 +148,32 @@ public class CodeCheckerServiceFileTests : IDisposable
         Assert.Equal(0, error.Line);
     }
 
+    [Fact]
+    public void CheckFile_ReportsBlankLinesThatTheFixerRemoves()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "public class Test",
+            "{",
+            "    public int A { get; set; }",
+            "",
+            "",
+            "    public int B { get; set; }",
+            "",
+            "}"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Equal(
+            [(5, nameof(Errors.CH0027)), (8, nameof(Errors.CH0028))],
+            errors.Select(e => (e.Line, e.Code)));
+    }
+
     private string CreateTempFile(string content)
     {
         string filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cs");

@@ -5,7 +5,10 @@ using CincoVertice.Common.Application.CodeStandard.Models;
 
 namespace CincoVertice.Common.Application.CodeStandard.Fixers;
 
-public sealed class ConsecutiveBlankLineFixer : IStringFixer
+/// <summary>
+///     Fixes CH0027 and CH0028 (see BlankLineChecker).
+/// </summary>
+public sealed class BlankLineFixer : IStringFixer
 {
     /// <summary>
     ///     Reduces any run of two or more consecutive blank lines to a single blank line.
