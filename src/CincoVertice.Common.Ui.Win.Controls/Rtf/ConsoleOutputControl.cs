@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using CincoVertice.Common.Ui.Rtf.Models;
+using CincoVertice.Common.Ui.Rtf.Themes;
 using CincoVertice.Common.Ui.Win.Controls.Rtf.Core;
 
 namespace CincoVertice.Common.Ui.Win.Controls.Rtf;
@@ -24,9 +25,12 @@ public class ConsoleOutputControl : RichTextBox
 
         CreateControl();
 
+        SetTheme(new ModernConsole());
+
         _contextMenu = new ContextMenuStrip();
         InitializeContextMenu();
     }
+
     protected override void OnFontChanged(EventArgs e)
     {
         _rtf.UpdateDefaultFont(Font.Name, Font.Size);
@@ -85,6 +89,13 @@ public class ConsoleOutputControl : RichTextBox
         }
     }
 
+    public void SetTheme(IRtfTheme theme)
+    {
+        BackColor = theme.Colors["Background"].ToColor();
+
+        _rtf.UpdateTheme(theme);
+    }
+
     public void ScrollToBottom()
     {
         _ = SendMessage(Handle, WM_VSCROLL, SB_BOTTOM, nint.Zero);
@@ -99,8 +110,14 @@ public class ConsoleOutputControl : RichTextBox
         ContextMenuStrip = _contextMenu;
     }
 
+    public void ClearContent()
+    {
+        _rtf.ClearContent();
+        Rtf = _rtf.Rtf(updateContent: true);
+    }
+
     private void ClearMenuItem_Click(object? sender, EventArgs e)
     {
-        Clear();
+        ClearContent();
     }
 }

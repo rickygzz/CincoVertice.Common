@@ -1,4 +1,5 @@
-﻿using CincoVertice.Common.Ui.Rtf.Helpers;
+﻿using System.Drawing;
+using CincoVertice.Common.Ui.Rtf.Helpers;
 
 namespace CincoVertice.Common.Ui.Rtf.Models;
 
@@ -26,5 +27,10 @@ public class RtfColor(int red, int green, int blue)
     public RtfColor Darken(double t)
     {
         return RtfColorHelper.MixWithBlackLinear(this, t);
+    }
+
+    public Color ToColor()
+    {
+        return Color.FromArgb(Red, Green, Blue);
     }
 }

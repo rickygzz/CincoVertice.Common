@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Ui.Rtf.Models;
+using CincoVertice.Common.Ui.Rtf.Themes;
 using CincoVertice.Common.Utils.Helpers;
 using System.Text;
 
@@ -27,11 +28,14 @@ public class RtfText
         UpdateFooter();
     }
 
-    public void UpdateDefaultFont(string defaultFont, float defaultFontSize)
-    {
-        _fonts[0] = new Font(defaultFont, defaultFontSize);
-    }
-
+    /// <summary>
+    ///     Builds and returns the complete RTF document from its header, content, and footer sections.
+    /// </summary>
+    /// <param name="updateContent">
+    ///     <see langword="true"/> to regenerate the content section before building the document;
+    ///     otherwise, uses the previously generated content.
+    /// </param>
+    /// <returns>The complete RTF document.</returns>
     public string Rtf(bool updateContent = false)
     {
         if (updateContent)
@@ -46,6 +50,24 @@ public class RtfText
         sb.Append(_footer);
 
         return sb.ToString();
+    }
+
+    public void UpdateDefaultFont(string defaultFont, float defaultFontSize)
+    {
+        _fonts[0] = new Font(defaultFont, defaultFontSize);
+    }
+
+    public void UpdateTheme(IRtfTheme theme)
+    {
+        _fonts[0] = new Font(theme.DefaultFont, theme.DefaultFontSize);
+
+        _colors.Clear();
+        foreach (var color in theme.Colors.Values)
+        {
+            _colors.Add(color.ToColor());
+        }
+
+        UpdateHeader();
     }
 
     private void UpdateHeader()
@@ -274,5 +296,10 @@ public class RtfText
     public void AddNewLine()
     {
         AddText("\n");
+    }
+
+    public void ClearContent()
+    {
+        _contentList.Clear();
     }
 }

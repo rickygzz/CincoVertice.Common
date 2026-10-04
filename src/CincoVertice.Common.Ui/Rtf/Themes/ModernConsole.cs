@@ -2,13 +2,15 @@
 
 namespace CincoVertice.Common.Ui.Rtf.Themes;
 
-public static class ModernConsole
+public class ModernConsole : IRtfTheme
 {
-    public static RtfColor Background { get; set; } = new(30, 30, 30);
+    public string DefaultFont { get; set; } = "Consolas";
 
-    public static Dictionary<string, RtfColor> Colors { get; set; } = new()
+    public float DefaultFontSize { get; set; } = 12;
+
+    public Dictionary<string, RtfColor> Colors { get; set; } = new()
     {
-        { "Background", Background },
+        { "Background", new RtfColor(30, 30, 30) },
         { "Foreground", new RtfColor(255, 255, 255) },
         { "Accent1Base", new RtfColor(78, 103, 200) },
         { "Accent1Lightest", new RtfColor(180, 220, 250).Lighten(0.80) },
@@ -20,10 +22,9 @@ public static class ModernConsole
     /// <returns>
     ///     The color index, or null if there is no color with that name (leaves the color unchanged).
     /// </returns>
-    public static int? ColorIndex(string colorName)
+    public int? ColorIndex(string colorName)
     {
         int index = Colors.Keys.ToList().IndexOf(colorName);
-
         return index >= 0 ? index : null;
     }
 }
