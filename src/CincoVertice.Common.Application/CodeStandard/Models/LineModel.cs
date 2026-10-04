@@ -20,6 +20,23 @@ public class LineModel
     /// </summary>
     public bool PreviousLineIsBlank { get; set; } = false;
 
+    /// <summary>
+    ///     The closest previous line with code, skipping blank, comment and preprocessor lines. Set by the caller,
+    ///     so checkers can follow statements that span lines.
+    /// </summary>
+    public LineModel? PreviousCodeLine { get; set; }
+
+    /// <summary>
+    ///     Set by the missing braces checker: parentheses of an if condition still open at the end of this line.
+    /// </summary>
+    public int OpenConditionParens { get; set; } = 0;
+
+    /// <summary>
+    ///     Set by the missing braces checker: this line ends an if or else header with no body, so the next code
+    ///     line must start with {.
+    /// </summary>
+    public bool AwaitsOpeningBrace { get; set; } = false;
+
     public int IndentationLevel { get; set; } = 0;
 
     public LineEndingEnum LineEnding = LineEndingEnum.None;

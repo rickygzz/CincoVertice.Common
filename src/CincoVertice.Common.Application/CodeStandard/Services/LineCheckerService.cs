@@ -26,6 +26,7 @@ public class LineCheckerService : ILineCheckerService
         new CommentSpaceChecker(),
 
         // Code rules
+        new MissingBracesChecker(),
         new FileScopedNamespaceChecker(),
         new ForbiddenStartTokenChecker(),
         new KeywordParenthesisSpaceChecker(),

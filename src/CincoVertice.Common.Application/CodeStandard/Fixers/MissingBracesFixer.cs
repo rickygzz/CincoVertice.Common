@@ -1,17 +1,15 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 using CincoVertice.Common.Application.CodeStandard.Models;
 
 namespace CincoVertice.Common.Application.CodeStandard.Fixers;
 
-public sealed partial class MissingBracesFixer : IStringFixer
+/// <summary>
+///     Fixes CH0031 (see MissingBracesChecker).
+/// </summary>
+public sealed class MissingBracesFixer : IStringFixer
 {
-    private static readonly Regex _ifOrElseIf = IfOrElseIfRegex();
-
-    private static readonly Regex _bareElse = ElseRegex();
-
     /// <summary>
     ///     Adds braces to <c>if</c>, <c>else if</c>, and <c>else</c> blocks that are missing them,
     ///     with each brace on its own line.
@@ -33,11 +31,11 @@ public sealed partial class MissingBracesFixer : IStringFixer
         {
             string trimmed = lines[i].TrimmedContent;
 
-            if (_ifOrElseIf.IsMatch(trimmed))
+            if (IfElseStatement.MatchIf(trimmed).Success)
             {
                 i = ProcessIfOrElseIf(lines, i, sb);
             }
-            else if (_bareElse.IsMatch(trimmed))
+            else if (IfElseStatement.MatchElse(trimmed).Success)
             {
                 i = ProcessBareElse(lines, i, sb);
             }
@@ -232,12 +230,4 @@ public sealed partial class MissingBracesFixer : IStringFixer
         line.LineEnding == LineEndingEnum.None ? "\n" : line.LineEnding.ToText();
 
     private static void AppendLine(StringBuilder sb, LineModel line) =>
-        sb.Append(line.Content).Append(line.LineEnding.ToText());
-
-
-    [GeneratedRegex(@"^(?:}\s*)?(?:else\s+)?if\s*\(", RegexOptions.Compiled)]
-    private static partial Regex IfOrElseIfRegex();
-
-    [GeneratedRegex(@"^(?:}\s*)?else(?:\s|$)", RegexOptions.Compiled)]
-    private static partial Regex ElseRegex();
-}
+        sb.Append(line.Content).Append(line.LineEnding.ToText());}

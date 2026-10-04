@@ -53,6 +53,8 @@ public static class Errors
     public const string CH0029 = "Namespace should be file-scoped: namespace Name;";
 
     public const string CH0030 = "Empty XML comments.";
+
+    public const string CH0031 = "if / else body must be in braces.";
     #endregion
 
     public static ErrorModel New(int line, string code, string message)

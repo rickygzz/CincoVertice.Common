@@ -8,9 +8,10 @@ public interface ILineCheckerService
     ///     Checks a line for code standard compliance. Errors are added to <see cref="LineModel.Errors"/>.
     /// </summary>
     /// <param name="line">
-    ///     The line to check. <see cref="LineModel.PreviousIndentationLevel"/> and
-    ///     <see cref="LineModel.PreviousLineIsBlank"/> must be set by the caller;
-    ///     <see cref="LineModel.TrimmedContent"/> and <see cref="LineModel.IndentationLevel"/> are set by the check.
+    ///     The line to check. Set by the caller: <see cref="LineModel.PreviousIndentationLevel"/>,
+    ///     <see cref="LineModel.PreviousLineIsBlank"/> and <see cref="LineModel.PreviousCodeLine"/>.
+    ///     Set by the check:
+    ///     <see cref="LineModel.TrimmedContent"/>, <see cref="LineModel.IndentationLevel"/> and the checker state.
     /// </param>
     void CheckLine(LineModel line);
 }

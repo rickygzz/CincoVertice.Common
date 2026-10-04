@@ -50,11 +50,13 @@ public class CodeCheckerService : ICodeCheckerService
 
         int previousIndentationLevel = 0;
         bool previousLineIsBlank = false;
+        LineModel? previousCodeLine = null;
 
         foreach (var line in lines)
         {
             line.PreviousIndentationLevel = previousIndentationLevel;
             line.PreviousLineIsBlank = previousLineIsBlank;
+            line.PreviousCodeLine = previousCodeLine;
 
             _lineChecker.CheckLine(line);
 
@@ -66,6 +68,11 @@ public class CodeCheckerService : ICodeCheckerService
             }
 
             previousLineIsBlank = string.IsNullOrWhiteSpace(line.Content);
+
+            if (IsCodeLine(line))
+            {
+                previousCodeLine = line;
+            }
 
             errors.AddRange(line.Errors);
         }
@@ -122,6 +129,17 @@ public class CodeCheckerService : ICodeCheckerService
                 }
             }
         }
+    }
+
+    /// <summary>
+    ///     False for blank, comment and preprocessor lines. Runs after the check, so a trailing comment is already
+    ///     removed from <see cref="LineModel.TrimmedContent"/>.
+    /// </summary>
+    private static bool IsCodeLine(LineModel line)
+    {
+        string code = line.TrimmedContent;
+
+        return code.Length > 0 && code[0] is not ('/' or '*' or '#');
     }
 
     private static bool IsGeneratedFile(string filePath)

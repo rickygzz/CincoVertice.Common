@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Constants;
+using CincoVertice.Common.Application.CodeStandard.Fixers;
 using CincoVertice.Common.Application.CodeStandard.Models;
 using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;
@@ -210,6 +211,53 @@ public class CodeCheckerServiceFileTests : IDisposable
         // Assert
         var error = Assert.Single(errors);
         Assert.Equal((1, nameof(Errors.CH0029)), (error.Line, error.Code));
+    }
+
+    [Fact]
+    public void CheckFile_FollowsIfAcrossBlankAndCommentLines()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "if (x)",
+            "",
+            "    // Explain the return",
+            "    return;"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal((4, nameof(Errors.CH0031)), (error.Line, error.Code));
+    }
+
+    [Fact]
+    public void CheckFile_WhenMissingBracesFixerRan_ReportsNoCh0031()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "if (a &&",
+            "    b)",
+            "    Run();",
+            "else if (c) Stop();",
+            "else",
+            "    Wait();"
+        ];
+        string fixedContent = new MissingBracesFixer().Fix(string.Join('\n', lines));
+        string original = CreateTempFile(string.Join('\n', lines));
+        string fixedFile = CreateTempFile(fixedContent);
+
+        // Act
+        List<ErrorModel> before = _checker.CheckFile(original);
+        List<ErrorModel> after = _checker.CheckFile(fixedFile);
+
+        // Assert
+        Assert.Equal(3, before.Count(e => e.Code == nameof(Errors.CH0031)));
+        Assert.DoesNotContain(after, e => e.Code == nameof(Errors.CH0031));
     }
 
     private string CreateTempFile(string content)
