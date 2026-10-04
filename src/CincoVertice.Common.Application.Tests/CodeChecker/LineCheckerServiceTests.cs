@@ -1,35 +1,13 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.CodeStandard.Models;
-using CincoVerticeCommon.Application.CodeChecker;
+using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeChecker;
 
-public class CodeCheckerTest
-
+public class LineCheckerServiceTests
 {
-    private readonly CodeCheckerService _checker;
-
-    public CodeCheckerTest()
-    {
-        _checker = new CodeCheckerService();
-    }
-
-    [Fact]
-    public void CheckFile_FileNotFound_AddsError()
-    {
-        // Arrange
-        string filePath = "non-existent_file.txt";
-
-        // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
-
-        // Assert
-        Assert.Single(errors);
-        Assert.Equal(nameof(Errors.CH0001), errors[0].Code);
-        Assert.Equal(0, errors[0].Line);
-        Assert.Equal(Errors.CH0001, errors[0].Message);
-    }
+    private readonly LineCheckerService _lineChecker = new();
 
     [Theory]
     [InlineData(null)]
@@ -44,7 +22,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Empty(line.Errors);
@@ -63,7 +41,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -83,7 +61,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -103,7 +81,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Equal(2, line.Errors.Count);
@@ -129,7 +107,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -150,7 +128,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -173,7 +151,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -198,7 +176,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Empty(line.Errors);
@@ -218,7 +196,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -242,7 +220,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Empty(line.Errors);
@@ -260,7 +238,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -282,7 +260,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -305,7 +283,7 @@ public class CodeCheckerTest
 
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -328,7 +306,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -352,7 +330,7 @@ public class CodeCheckerTest
 
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -377,7 +355,7 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
@@ -399,12 +377,91 @@ public class CodeCheckerTest
         };
 
         // Act
-        CodeCheckerService.CheckLine(line);
+        _lineChecker.CheckLine(line);
 
         // Assert
         Assert.Single(line.Errors);
         Assert.Equal(nameof(Errors.CH0030), line.Errors[0].Code);
         Assert.Equal(line.Number, line.Errors[0].Line);
         Assert.Equal(Errors.CH0030, line.Errors[0].Message);
+    }
+
+    [Theory]
+    [InlineData("    ///Uses this.Value -", nameof(Errors.CH0020))]
+    [InlineData("    /// <returns></returns> this.Value -", nameof(Errors.CH0030))]
+    public void CheckLine_DocumentationError_StopsBeforeCodeRules(string lineContent, string expectedCode)
+    {
+        // Arrange
+        LineModel line = new()
+        {
+            Content = lineContent,
+            Number = 1
+        };
+
+        // Act
+        _lineChecker.CheckLine(line);
+
+        // Assert: no CH0018 (ends with "-") or CH0019 ("this.") for a documentation line
+        Assert.Equal(expectedCode, Assert.Single(line.Errors).Code);
+    }
+
+    [Theory]
+    [InlineData("    if (a != b) // some comment")]
+    [InlineData("    if (a != b) // Done?")]
+    [InlineData("    var x = 1; // Same as this.Value")]
+    [InlineData("    var x = y; // a + b -")]
+    public void CheckLine_TrailingComment_IsNotCheckedAsCode(string lineContent)
+    {
+        // Arrange
+        LineModel line = new()
+        {
+            Content = lineContent,
+            Number = 1,
+            PreviousIndentationLevel = 1
+        };
+
+        // Act
+        _lineChecker.CheckLine(line);
+
+        // Assert
+        Assert.Empty(line.Errors);
+    }
+
+    [Fact]
+    public void CheckLine_TrailingComment_DoesNotHideForbiddenEndToken()
+    {
+        // Arrange
+        LineModel line = new()
+        {
+            Content = "    var x = a + // Why",
+            Number = 1,
+            PreviousIndentationLevel = 1
+        };
+
+        // Act
+        _lineChecker.CheckLine(line);
+
+        // Assert
+        var error = Assert.Single(line.Errors);
+        Assert.Equal(nameof(Errors.CH0018), error.Code);
+        Assert.Equal(Errors.CH0018.Replace("{token}", "+"), error.Message);
+    }
+
+    [Fact]
+    public void CheckLine_TrailingCommentWithoutSpace_AddsCh0021()
+    {
+        // Arrange
+        LineModel line = new()
+        {
+            Content = "    if (a != b) //some comment",
+            Number = 1,
+            PreviousIndentationLevel = 1
+        };
+
+        // Act
+        _lineChecker.CheckLine(line);
+
+        // Assert
+        Assert.Equal(nameof(Errors.CH0021), Assert.Single(line.Errors).Code);
     }
 }

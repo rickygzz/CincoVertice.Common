@@ -1,23 +1,36 @@
-﻿using System.Text.RegularExpressions;
-using CincoVertice.Common.Application.CodeStandard.Checkers;
-using CincoVertice.Common.Application.CodeStandard.Constants;
+﻿using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 using CincoVertice.Common.Application.CodeStandard.Models;
 
-namespace CincoVerticeCommon.Application.CodeChecker;
+namespace CincoVertice.Common.Application.CodeStandard.Services;
 
-public partial class CodeCheckerService : ICodeCheckerService
+/// <summary>
+///     Checks files and folders for code standard compliance.
+///     Each line is checked by <see cref="ILineCheckerService"/>.
+/// </summary>
+public class CodeCheckerService : ICodeCheckerService
 {
-    public void CheckFile(string filePath, out List<ErrorModel> errors)
+    private static readonly string[] _skippedFolders = ["bin", "obj", ".git", ".vs"];
+
+    private static readonly string[] _generatedFileSuffixes = [".Designer.cs", ".g.cs", ".g.i.cs"];
+
+    private readonly ILineCheckerService _lineChecker;
+
+    public CodeCheckerService(ILineCheckerService lineChecker)
     {
-        errors = [];
+        _lineChecker = lineChecker;
+    }
+
+    public List<ErrorModel> CheckFile(string filePath)
+    {
+        List<ErrorModel> errors = [];
 
         if (!File.Exists(filePath))
         {
             errors.Add(Errors.New(0, nameof(Errors.CH0001), Errors.CH0001));
 
-            return;
+            return errors;
         }
 
         List<LineModel> lines = [];
@@ -32,7 +45,7 @@ public partial class CodeCheckerService : ICodeCheckerService
         {
             errors.Add(Errors.New(0, nameof(Errors.CH0002), Errors.CH0002.Replace("{message}", ex.Message)));
 
-            return;
+            return errors;
         }
 
         int previousIndentationLevel = 0;
@@ -41,7 +54,7 @@ public partial class CodeCheckerService : ICodeCheckerService
         {
             line.PreviousIndentationLevel = previousIndentationLevel;
 
-            CheckLine(line);
+            _lineChecker.CheckLine(line);
 
             // Blank lines never have their indentation computed, so they must not reset the
             // carried level; otherwise the next code line would falsely trip CH0014.
@@ -52,194 +65,63 @@ public partial class CodeCheckerService : ICodeCheckerService
 
             errors.AddRange(line.Errors);
         }
+
+        return errors;
+    }
+
+    /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>
+    public List<FileCheckResultModel> CheckFolder(string folderPath)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
+        }
+
+        List<FileCheckResultModel> results = [];
+
+        foreach (string filePath in EnumerateSourceFiles(folderPath).Order(StringComparer.OrdinalIgnoreCase))
+        {
+            List<ErrorModel> errors = CheckFile(filePath);
+
+            results.Add(new FileCheckResultModel { FilePath = filePath, Errors = errors });
+        }
+
+        return results;
     }
 
     /// <summary>
-    ///     Checks line for code standard compliance.
+    ///     C# source files in the folder and its subfolders, without walking into skipped folders.
     /// </summary>
-    /// <param name="line">The line information.</param>
-    /// <returns>Returns the indentation level.</returns>
-    public static void CheckLine(LineModel line)
+    private static IEnumerable<string> EnumerateSourceFiles(string folderPath)
     {
-        if (string.IsNullOrEmpty(line.Content))
+        // The EnumerationOptions overload avoids the legacy pattern match where *.cs also matches *.csx
+        EnumerationOptions options = new() { IgnoreInaccessible = true };
+        Stack<string> folders = new([folderPath]);
+
+        while (folders.Count > 0)
         {
-            return;
-        }
+            string folder = folders.Pop();
 
-        line.TrimmedContent = line.Content.Trim();
-
-        if (string.IsNullOrEmpty(line.TrimmedContent))
-        {
-            line.AddError(nameof(Errors.CH0010), Errors.CH0010);
-
-            return;
-        }
-
-        if (char.IsWhiteSpace(line.Content[^1]))
-        {
-            line.AddError(nameof(Errors.CH0011), Errors.CH0011);
-        }
-
-        if (line.Content.Length > 120)
-        {
-            line.AddError(nameof(Errors.CH0016), Errors.CH0016);
-        }
-
-        IndentationChecker indentationChecker = new();
-        if (!indentationChecker.Check(line))
-        {
-            return;
-        }
-
-        if (!CheckDocumentationAndComments(line))
-        {
-            return;
-        }
-
-        CheckForbiddenStartTokens(line);
-
-        CheckKeywordSpaceBeforeParenthesis(line);
-
-        CheckForbiddenEndTokens(line);
-
-        string[] forbiddenTokens = ["this."];
-        foreach (var token in forbiddenTokens)
-        {
-            if (line.TrimmedContent.Contains(token))
+            foreach (string filePath in Directory.EnumerateFiles(folder, "*.cs", options))
             {
-                line.AddError(nameof(Errors.CH0019), Errors.CH0019.Replace("{token}", token));
+                if (!IsGeneratedFile(filePath))
+                {
+                    yield return filePath;
+                }
+            }
+
+            foreach (string subfolder in Directory.EnumerateDirectories(folder, "*", options))
+            {
+                if (!_skippedFolders.Contains(Path.GetFileName(subfolder), StringComparer.OrdinalIgnoreCase))
+                {
+                    folders.Push(subfolder);
+                }
             }
         }
     }
 
-    /// <summary>
-    ///     Check line for documentation and comments.
-    /// </summary>
-    /// <param name="line">Line information.</param>
-    /// <returns>Returns false to indicate it should stop parsing line for errors. Otherwise returns true.</returns>
-    private static bool CheckDocumentationAndComments(LineModel line)
+    private static bool IsGeneratedFile(string filePath)
     {
-        DocumentationChecker checker = new();
-
-        if (checker.Check(line))
-        {
-            CommentChecker commentChecker = new();
-
-            return commentChecker.Check(line);
-        }
-
-        return true;
+        return _generatedFileSuffixes.Any(suffix => filePath.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
     }
-
-    private static void CheckForbiddenStartTokens(LineModel line)
-    {
-        string[] forbiddenStartTokens =
-            [",", ";", ")", "(", "=", "+=", "-=", "*=", "/=", "%=", "==", "!=", ">=", "<=", "=>", "<", ">"];
-        string pattern = @"\(\s*(\w+\s*(,\s*\w+\s*)*)?\)\s*([=>]|=)";
-
-        foreach (var token in forbiddenStartTokens)
-        {
-            if (line.TrimmedContent.StartsWith(token))
-            {
-                if (token.Equals("(") && Regex.IsMatch(line.TrimmedContent, pattern))
-                {
-                    break;
-                }
-
-                line.AddError(nameof(Errors.CH0017), Errors.CH0017.Replace("{token}", token));
-                break;
-            }
-        }
-    }
-
-    private static void CheckForbiddenEndTokens(LineModel line)
-    {
-        string[] forbiddenEndTokens =
-            ["&&", "||", "??=", "??", "!", "?", ":", "+", "-", "/", "*"];
-
-        foreach (var token in forbiddenEndTokens)
-        {
-            if (line.TrimmedContent.EndsWith(token))
-            {
-                if (token.Equals(":")
-                    && (line.TrimmedContent.StartsWith("case")
-                    || line.TrimmedContent.StartsWith("default")))
-                {
-                    break;
-                }
-
-                if (token.Equals("!") && !line.TrimmedContent.EndsWith(" !"))
-                {
-                    break;
-                }
-
-                line.AddError(nameof(Errors.CH0018), Errors.CH0018.Replace("{token}", token));
-
-                break;
-            }
-        }
-    }
-
-    private static void CheckKeywordSpaceBeforeParenthesis(LineModel line)
-    {
-        if (line.TrimmedContent.Contains("new") && KeywordHasSpacesBeforeParenthesisRegex().IsMatch(line.TrimmedContent))
-        {
-            line.AddError(nameof(Errors.CH0023), Errors.CH0023.Replace("{keyword}", "new"));
-        }
-
-        if (line.TrimmedContent.StartsWith("for") && line.TrimmedContent.Length > 3)
-        {
-            if (line.TrimmedContent[3] == '(')
-            {
-                line.AddError(nameof(Errors.CH0022), Errors.CH0022.Replace("{keyword}", "for"));
-            }
-            else if (line.TrimmedContent.StartsWith("foreach"))
-            {
-                if (line.TrimmedContent.Length > 7 && line.TrimmedContent[7] == '(')
-                {
-                    line.AddError(nameof(Errors.CH0022), Errors.CH0022.Replace("{keyword}", "foreach"));
-
-                    return;
-                }
-                else if (KeywordHasMoreThanOneSpaceBeforeParenthesisRegex().IsMatch(line.TrimmedContent))
-                {
-                    line.AddError(nameof(Errors.CH0024), Errors.CH0024.Replace("{keyword}", "foreach"));
-
-                    return;
-                }
-            }
-            else if (KeywordHasMoreThanOneSpaceBeforeParenthesisRegex().IsMatch(line.TrimmedContent))
-            {
-                line.AddError(nameof(Errors.CH0024), Errors.CH0024.Replace("{keyword}", "for"));
-            }
-
-            return;
-        }
-
-        string[] keywords = ["if", "do", "while"];
-
-        foreach (var keyword in keywords)
-        {
-            if (line.TrimmedContent.StartsWith(keyword)
-                && line.TrimmedContent.Length > keyword.Length)
-            {
-                if (line.TrimmedContent[keyword.Length] == '(')
-                {
-                    line.AddError(nameof(Errors.CH0022), Errors.CH0022.Replace("{keyword}", keyword));
-                }
-                else if (KeywordHasMoreThanOneSpaceBeforeParenthesisRegex().IsMatch(line.TrimmedContent))
-                {
-                    line.AddError(nameof(Errors.CH0024), Errors.CH0024.Replace("{keyword}", keyword));
-                }
-
-                break;
-            }
-        }
-    }
-
-    [GeneratedRegex(@"\b(?:for|foreach|do|while|if)\s{2,}\(")]
-    private static partial Regex KeywordHasMoreThanOneSpaceBeforeParenthesisRegex();
-
-    [GeneratedRegex(@"\bnew\s+\(")]
-    private static partial Regex KeywordHasSpacesBeforeParenthesisRegex();
 }

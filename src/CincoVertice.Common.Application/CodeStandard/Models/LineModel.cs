@@ -4,6 +4,10 @@ public class LineModel
 {
     public string Content { get; set; } = string.Empty;
 
+    /// <summary>
+    ///     <see cref="Content"/> without surrounding whitespace. After the comment checker runs, it also excludes
+    ///     a trailing // comment, so the code rules only see code.
+    /// </summary>
     public string TrimmedContent { get; set; } = string.Empty;
 
     public int Number { get; set; } = 0;

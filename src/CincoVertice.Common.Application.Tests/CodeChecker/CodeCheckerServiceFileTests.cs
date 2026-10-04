@@ -1,14 +1,30 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.CodeStandard.Models;
-using CincoVerticeCommon.Application.CodeChecker;
+using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeChecker;
 
 public class CodeCheckerServiceFileTests : IDisposable
 {
-    private readonly CodeCheckerService _checker = new();
+    private readonly CodeCheckerService _checker = new(new LineCheckerService());
     private readonly List<string> _tempFiles = [];
+
+    [Fact]
+    public void CheckFile_FileNotFound_AddsError()
+    {
+        // Arrange
+        string filePath = "non-existent_file.txt";
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Single(errors);
+        Assert.Equal(nameof(Errors.CH0001), errors[0].Code);
+        Assert.Equal(0, errors[0].Line);
+        Assert.Equal(Errors.CH0001, errors[0].Message);
+    }
 
     [Fact]
     public void CheckFile_WhenFileIsEmpty_ReturnsNoErrors()
@@ -17,7 +33,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         string filePath = CreateTempFile(string.Empty);
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert
         Assert.Empty(errors);
@@ -37,7 +53,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         string filePath = CreateTempFile(string.Join('\n', lines));
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert
         Assert.Empty(errors);
@@ -56,7 +72,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         string filePath = CreateTempFile(string.Join('\n', lines));
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert
         var error = Assert.Single(errors);
@@ -77,7 +93,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         string filePath = CreateTempFile(string.Join('\n', lines));
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert
         Assert.Equal(2, errors.Count);
@@ -108,7 +124,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         string filePath = CreateTempFile(string.Join("\r\n", lines));
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert - a one-level increase per line (even across blank lines) is valid.
         Assert.DoesNotContain(errors, e => e.Code == nameof(Errors.CH0014));
@@ -124,7 +140,7 @@ public class CodeCheckerServiceFileTests : IDisposable
         using var _ = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
 
         // Act
-        _checker.CheckFile(filePath, out List<ErrorModel> errors);
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
 
         // Assert
         var error = Assert.Single(errors);
