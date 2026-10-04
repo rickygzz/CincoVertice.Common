@@ -50,6 +50,8 @@ public static class Errors
 
     public const string CH0028 = "Blank line before closing brace.";
 
+    public const string CH0029 = "Namespace should be file-scoped: namespace Name;";
+
     public const string CH0030 = "Empty XML comments.";
     #endregion
 
