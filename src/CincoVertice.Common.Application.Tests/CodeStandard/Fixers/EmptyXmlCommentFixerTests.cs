@@ -22,10 +22,10 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "/// \n" +
-            "/// </summary>\n" +
-            "public void Foo() { }";
+            "/// <summary>\n"
+            + "/// \n"
+            + "/// </summary>\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -39,8 +39,8 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary></summary>\n" +
-            "public void Foo() { }";
+            "/// <summary></summary>\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -54,9 +54,9 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "///\n" +
-            "///\n" +
-            "public void Foo() { }";
+            "///\n"
+            + "///\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -72,10 +72,10 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "///     Does something useful.\n" +
-            "/// </summary>\n" +
-            "public void Foo() { }";
+            "/// <summary>\n"
+            + "///     Does something useful.\n"
+            + "/// </summary>\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -91,21 +91,21 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "///     Does something.\n" +
-            "/// </summary>\n" +
-            "/// <param name=\"x\"></param>\n" +
-            "public void Foo(int x) { }";
+            "/// <summary>\n"
+            + "///     Does something.\n"
+            + "/// </summary>\n"
+            + "/// <param name=\"x\"></param>\n"
+            + "public void Foo(int x) { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "/// <summary>\n" +
-            "///     Does something.\n" +
-            "/// </summary>\n" +
-            "public void Foo(int x) { }",
+            "/// <summary>\n"
+            + "///     Does something.\n"
+            + "/// </summary>\n"
+            + "public void Foo(int x) { }",
             result);
     }
 
@@ -114,21 +114,21 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "///     Gets the value.\n" +
-            "/// </summary>\n" +
-            "/// <returns></returns>\n" +
-            "public int GetValue() => 0;";
+            "/// <summary>\n"
+            + "///     Gets the value.\n"
+            + "/// </summary>\n"
+            + "/// <returns></returns>\n"
+            + "public int GetValue() => 0;";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "/// <summary>\n" +
-            "///     Gets the value.\n" +
-            "/// </summary>\n" +
-            "public int GetValue() => 0;",
+            "/// <summary>\n"
+            + "///     Gets the value.\n"
+            + "/// </summary>\n"
+            + "public int GetValue() => 0;",
             result);
     }
 
@@ -137,23 +137,23 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "///     Processes the request.\n" +
-            "/// </summary>\n" +
-            "/// <param name=\"a\"></param>\n" +
-            "/// <param name=\"b\"></param>\n" +
-            "/// <returns></returns>\n" +
-            "public int Process(int a, int b) => 0;";
+            "/// <summary>\n"
+            + "///     Processes the request.\n"
+            + "/// </summary>\n"
+            + "/// <param name=\"a\"></param>\n"
+            + "/// <param name=\"b\"></param>\n"
+            + "/// <returns></returns>\n"
+            + "public int Process(int a, int b) => 0;";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "/// <summary>\n" +
-            "///     Processes the request.\n" +
-            "/// </summary>\n" +
-            "public int Process(int a, int b) => 0;",
+            "/// <summary>\n"
+            + "///     Processes the request.\n"
+            + "/// </summary>\n"
+            + "public int Process(int a, int b) => 0;",
             result);
     }
 
@@ -192,10 +192,10 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\r\n" +
-            "/// \r\n" +
-            "/// </summary>\r\n" +
-            "public void Foo() { }";
+            "/// <summary>\r\n"
+            + "/// \r\n"
+            + "/// </summary>\r\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -211,11 +211,11 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>\n" +
-            "///     Does something.\n" +
-            "/// </summary>\n" +
-            "/// <param name=\"x\"></param>\n" +
-            "public void Foo(int x) { }";
+            "/// <summary>\n"
+            + "///     Does something.\n"
+            + "/// </summary>\n"
+            + "/// <param name=\"x\"></param>\n"
+            + "public void Foo(int x) { }";
 
         // Act
         var once = new EmptyXmlCommentFixer().Fix(content);
@@ -230,8 +230,8 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <inheritdoc/>\n" +
-            "public void Foo() { }";
+            "/// <inheritdoc/>\n"
+            + "public void Foo() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);
@@ -258,10 +258,10 @@ public class EmptyXmlCommentFixerTests
     {
         // Arrange
         string content =
-            "/// <summary>Text.</summary>\n" +
-            "/// <typeparam name=\"T\"></typeparam>\n" +
-            "/// <remarks></remarks>\n" +
-            "public void Foo<T>() { }";
+            "/// <summary>Text.</summary>\n"
+            + "/// <typeparam name=\"T\"></typeparam>\n"
+            + "/// <remarks></remarks>\n"
+            + "public void Foo<T>() { }";
 
         // Act
         var result = new EmptyXmlCommentFixer().Fix(content);

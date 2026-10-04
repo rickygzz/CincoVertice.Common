@@ -10,10 +10,10 @@ public class GetBinTest
     [InlineData("012345678", 2, 2, '2')]
     [InlineData("1110A", 4, 4, 'A')]
     public void GetBin_FindsBin_ChangesCharIndex(
-       string testStr,
-       int expectedLength,
-       int expectedNewIndex,
-       char expectedChar)
+        string testStr,
+        int expectedLength,
+        int expectedNewIndex,
+        char expectedChar)
     {
         // Arrange
         GenericLexer lexer = new(testStr);

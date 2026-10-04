@@ -17,8 +17,6 @@ public static class CGetKeyValueTokens
     /// {String-Quoted}   ::= [[] ['] ({Printable}|{EOL})* ["] []] {Spaces}*
     /// {String-Unquoted} ::= {Printable}*
     /// </summary>
-    /// <param name="lexer"></param>
-    /// <returns></returns>
     public static ConfigItemModel GetKeyValueTokens(this ConfigLexer lexer)
     {
         GenericToken nullToken = lexer.NullToken();

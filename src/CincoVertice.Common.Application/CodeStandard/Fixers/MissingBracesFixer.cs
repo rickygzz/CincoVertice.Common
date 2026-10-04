@@ -144,7 +144,10 @@ public sealed class MissingBracesFixer : IStringFixer
         }
 
         int bodyEnd = FindBodyEnd(lines, i);
-        if (bodyEnd < 0) bodyEnd = i;
+        if (bodyEnd < 0)
+        {
+            bodyEnd = i;
+        }
 
         sb.Append(indent).Append("{").Append(le);
         for (int j = i; j <= bodyEnd; j++)
@@ -170,19 +173,39 @@ public sealed class MissingBracesFixer : IStringFixer
 
                 if (inString)
                 {
-                    if (c == '\\') k++;
-                    else if (c == '"') inString = false;
+                    if (c == '\\')
+                    {
+                        k++;
+                    }
+                    else if (c == '"')
+                    {
+                        inString = false;
+                    }
                     continue;
                 }
 
                 if (c == '"') { inString = true; continue; }
 
-                if (c == '(') parenDepth++;
-                else if (c == ')') parenDepth--;
-                else if (c == '{') braceDepth++;
-                else if (c == '}') braceDepth--;
+                if (c == '(')
+                {
+                    parenDepth++;
+                }
+                else if (c == ')')
+                {
+                    parenDepth--;
+                }
+                else if (c == '{')
+                {
+                    braceDepth++;
+                }
+                else if (c == '}')
+                {
+                    braceDepth--;
+                }
                 else if (c == ';' && braceDepth == 0 && parenDepth == 0)
+                {
                     return j;
+                }
             }
         }
 
@@ -204,16 +227,27 @@ public sealed class MissingBracesFixer : IStringFixer
 
                 if (inString)
                 {
-                    if (c == '\\') k++;
-                    else if (c == '"') inString = false;
+                    if (c == '\\')
+                    {
+                        k++;
+                    }
+                    else if (c == '"')
+                    {
+                        inString = false;
+                    }
 
                     continue;
                 }
 
                 if (c == '"') { inString = true; continue; }
-                if (c == '(') depth++;
+                if (c == '(')
+                {
+                    depth++;
+                }
                 else if (c == ')' && --depth == 0)
+                {
                     return (j, k);
+                }
             }
         }
 

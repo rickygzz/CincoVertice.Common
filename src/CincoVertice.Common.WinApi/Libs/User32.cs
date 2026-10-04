@@ -232,7 +232,6 @@ public partial class User32
     ///     The relationship between the specified window and the window whose handle is to be retrieved. This
     ///     parameter can be one of the following values.
     /// </param>
-    /// <returns></returns>
     [LibraryImport("user32.dll", SetLastError = true)]
     public static partial nint GetWindow(nint hWnd, GetWindowCmd uCmd);
 

@@ -107,9 +107,9 @@ public class BlankLineFixerTests
     {
         // Arrange
         string content =
-            "    }\n" +
-            "\n" +
-            "}";
+            "    }\n"
+            + "\n"
+            + "}";
 
         // Act
         var result = new BlankLineFixer().Fix(content);
@@ -123,10 +123,10 @@ public class BlankLineFixerTests
     {
         // Arrange
         string content =
-            "    }\n" +
-            "\n" +
-            "\n" +
-            "}";
+            "    }\n"
+            + "\n"
+            + "\n"
+            + "}";
 
         // Act
         var result = new BlankLineFixer().Fix(content);
@@ -140,9 +140,9 @@ public class BlankLineFixerTests
     {
         // Arrange
         string content =
-            "    code;\n" +
-            "\n" +
-            "    }";
+            "    code;\n"
+            + "\n"
+            + "    }";
 
         // Act
         var result = new BlankLineFixer().Fix(content);
@@ -156,25 +156,25 @@ public class BlankLineFixerTests
     {
         // Arrange
         string content =
-            "class Foo\n" +
-            "{\n" +
-            "    void A() { }\n" +
-            "\n" +
-            "    void B() { }\n" +
-            "\n" +
-            "}";
+            "class Foo\n"
+            + "{\n"
+            + "    void A() { }\n"
+            + "\n"
+            + "    void B() { }\n"
+            + "\n"
+            + "}";
 
         // Act
         var result = new BlankLineFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "class Foo\n" +
-            "{\n" +
-            "    void A() { }\n" +
-            "\n" +
-            "    void B() { }\n" +
-            "}",
+            "class Foo\n"
+            + "{\n"
+            + "    void A() { }\n"
+            + "\n"
+            + "    void B() { }\n"
+            + "}",
             result);
     }
 

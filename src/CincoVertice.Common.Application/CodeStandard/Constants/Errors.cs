@@ -10,7 +10,6 @@ public static class Errors
     public const string CH0002 = "Error reading file: {message}";
     #endregion
 
-    #region
     public const string CH0010 = "Line contains whitespaces only.";
 
     public const string CH0011 = "Line ends with whitespace.";
@@ -30,7 +29,6 @@ public static class Errors
     public const string CH0018 = "Line ends with forbidden token: '{token}'";
 
     public const string CH0019 = "Line contains forbidden token: '{token}'";
-
 
     public const string CH0020 = "Character immediately following /// is not a space.";
 
@@ -55,7 +53,6 @@ public static class Errors
     public const string CH0030 = "Empty XML comments.";
 
     public const string CH0031 = "if / else body must be in braces.";
-    #endregion
 
     public static ErrorModel New(int line, string code, string message)
     {

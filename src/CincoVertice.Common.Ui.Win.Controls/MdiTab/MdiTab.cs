@@ -395,7 +395,7 @@ public class MdiTab : TabControl
 
             // Adjust tabcontrol.padding width to allocate space for the image
             // TextRenderer.DrawText(e.Graphics, page.Text, this.TabForms.Font, paddedBounds, page.ForeColor);
-            //e.Graphics.DrawImage(Properties.Resources.Close16, e.Bounds.Right - 21, 7);
+            // e.Graphics.DrawImage(Properties.Resources.Close16, e.Bounds.Right - 21, 7);
         }
 
         // if (e.Index == 0)

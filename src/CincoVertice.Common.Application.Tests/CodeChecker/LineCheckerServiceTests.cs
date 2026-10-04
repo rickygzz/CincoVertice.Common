@@ -116,7 +116,6 @@ public class LineCheckerServiceTests
         Assert.Equal(Errors.CH0013, line.Errors[0].Message);
     }
 
-
     [Fact]
     public void CheckLine_LineExceeds120Characters_AddsError()
     {
@@ -182,7 +181,6 @@ public class LineCheckerServiceTests
         Assert.Empty(line.Errors);
     }
 
-
     [Theory]
     [InlineData("    total > 100 &&", "&&")]
     [InlineData("    a > total && !", "!")]
@@ -225,7 +223,6 @@ public class LineCheckerServiceTests
         // Assert
         Assert.Empty(line.Errors);
     }
-
 
     [Fact]
     public void CheckLine_LineContainsForbiddenToken_AddsError()
@@ -281,7 +278,6 @@ public class LineCheckerServiceTests
             Number = 9
         };
 
-
         // Act
         _lineChecker.CheckLine(line);
 
@@ -327,7 +323,6 @@ public class LineCheckerServiceTests
             Content = lineContent,
             Number = 10
         };
-
 
         // Act
         _lineChecker.CheckLine(line);

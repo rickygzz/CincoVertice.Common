@@ -48,5 +48,4 @@ public enum ShowCmd
     ///     original size and position. An application should specify this flag when restoring a minimized window.
     /// </summary>
     SW_RESTORE = 9,
-
 }

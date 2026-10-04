@@ -146,7 +146,7 @@ public class IShellLinkW
         ///     The maximum number of characters that can be copied to the buffer supplied by the pszArgs parameter.
         ///     In the case of a Unicode string, there is no limitation on maximum string length. In the case of an
         ///     ANSI string, the maximum length of the returned string varies depending on the version of
-        ///     Windows—MAX_PATH prior to Windows 2000 and INFOTIPSIZE (defined in Commctrl.h) in Windows 2000 and
+        ///     Windows-MAX_PATH prior to Windows 2000 and INFOTIPSIZE (defined in Commctrl.h) in Windows 2000 and
         ///     later.
         /// </param>
         [PreserveSig]
@@ -160,7 +160,7 @@ public class IShellLinkW
         /// <param name="pszArgs">
         ///     A pointer to a buffer that contains the new command-line arguments. In the case of a Unicode string,
         ///     there is no limitation on maximum string length. In the case of an ANSI string, the maximum length
-        ///     of the returned string varies depending on the version of Windows—MAX_PATH prior to Windows 2000 and
+        ///     of the returned string varies depending on the version of Windows-MAX_PATH prior to Windows 2000 and
         ///     INFOTIPSIZE (defined in Commctrl.h) in Windows 2000 and later.
         /// </param>
         [PreserveSig]

@@ -26,7 +26,6 @@ public static partial class Dwmapi
     ///     The size, in bytes, of the attribute value being received via the pvAttribute parameter. The type of the
     ///     retrieved value, and therefore its size in bytes, depends on the value of the dwAttribute parameter.
     /// </param>
-    /// <returns></returns>
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmGetWindowAttribute(
         nint hwnd,

@@ -48,23 +48,23 @@ public class FileScopedNamespaceFixerTests
     {
         // Arrange
         string content =
-            "namespace Foo\r\n" +
-            "{\r\n" +
-            "    public class X\r\n" +
-            "    {\r\n" +
-            "    }\r\n" +
-            "}";
+            "namespace Foo\r\n"
+            + "{\r\n"
+            + "    public class X\r\n"
+            + "    {\r\n"
+            + "    }\r\n"
+            + "}";
 
         // Act
         var result = new FileScopedNamespaceFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "namespace Foo;\r\n" +
-            "\r\n" +
-            "public class X\r\n" +
-            "{\r\n" +
-            "}\r\n",
+            "namespace Foo;\r\n"
+            + "\r\n"
+            + "public class X\r\n"
+            + "{\r\n"
+            + "}\r\n",
             result);
     }
 
@@ -73,22 +73,22 @@ public class FileScopedNamespaceFixerTests
     {
         // Arrange
         string content =
-            "namespace Foo {\r\n" +
-            "    class X\r\n" +
-            "    {\r\n" +
-            "    }\r\n" +
-            "}";
+            "namespace Foo {\r\n"
+            + "    class X\r\n"
+            + "    {\r\n"
+            + "    }\r\n"
+            + "}";
 
         // Act
         var result = new FileScopedNamespaceFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "namespace Foo;\r\n" +
-            "\r\n" +
-            "class X\r\n" +
-            "{\r\n" +
-            "}\r\n",
+            "namespace Foo;\r\n"
+            + "\r\n"
+            + "class X\r\n"
+            + "{\r\n"
+            + "}\r\n",
             result);
     }
 
@@ -97,23 +97,23 @@ public class FileScopedNamespaceFixerTests
     {
         // Arrange
         string content =
-            "using System;\r\n" +
-            "\r\n" +
-            "namespace Foo\r\n" +
-            "{\r\n" +
-            "    class X { }\r\n" +
-            "}";
+            "using System;\r\n"
+            + "\r\n"
+            + "namespace Foo\r\n"
+            + "{\r\n"
+            + "    class X { }\r\n"
+            + "}";
 
         // Act
         var result = new FileScopedNamespaceFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "using System;\r\n" +
-            "\r\n" +
-            "namespace Foo;\r\n" +
-            "\r\n" +
-            "class X { }\r\n",
+            "using System;\r\n"
+            + "\r\n"
+            + "namespace Foo;\r\n"
+            + "\r\n"
+            + "class X { }\r\n",
             result);
     }
 
@@ -122,25 +122,25 @@ public class FileScopedNamespaceFixerTests
     {
         // Arrange
         string content =
-            "namespace Foo\r\n" +
-            "{\r\n" +
-            "    class X\r\n" +
-            "    {\r\n" +
-            "        int y;\r\n" +
-            "    }\r\n" +
-            "}";
+            "namespace Foo\r\n"
+            + "{\r\n"
+            + "    class X\r\n"
+            + "    {\r\n"
+            + "        int y;\r\n"
+            + "    }\r\n"
+            + "}";
 
         // Act
         var result = new FileScopedNamespaceFixer().Fix(content);
 
         // Assert
         Assert.Equal(
-            "namespace Foo;\r\n" +
-            "\r\n" +
-            "class X\r\n" +
-            "{\r\n" +
-            "    int y;\r\n" +
-            "}\r\n",
+            "namespace Foo;\r\n"
+            + "\r\n"
+            + "class X\r\n"
+            + "{\r\n"
+            + "    int y;\r\n"
+            + "}\r\n",
             result);
     }
 

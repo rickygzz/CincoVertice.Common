@@ -129,14 +129,14 @@ public class InputSimulator
             .Replace("\x0C", "+{ENTER}");
 
         // text.Replace("+", "{+}").Replace("^", "{^}").Replace("%", "{%}").Replace("~", "{~}")
-        //try
-        //{
+        // try
+        // {
         //    System.Windows.Forms.SendKeys.SendWait(text);
-        //}
-        //catch (Exception ex)
-        //{
+        // }
+        // catch (Exception ex)
+        // {
         //    //MC.Message.Error("SendText()", ex.Message);
-        //}
+        // }
 
         List<INPUT> textToSend = [];
 
