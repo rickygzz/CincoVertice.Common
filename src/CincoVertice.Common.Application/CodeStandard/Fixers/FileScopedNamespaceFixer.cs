@@ -5,6 +5,10 @@ using CincoVertice.Common.Application.CodeStandard.Models;
 
 namespace CincoVertice.Common.Application.CodeStandard.Fixers;
 
+/// <summary>
+///     Fixes CH0029 (see FileScopedNamespaceChecker): converts the first block namespace to a file-scoped one
+///     and de-indents its body. Leaves the file unchanged when the braces are not on their own lines.
+/// </summary>
 public sealed class FileScopedNamespaceFixer : IStringFixer
 {
     private const string Keyword = "namespace ";

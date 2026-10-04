@@ -174,6 +174,44 @@ public class CodeCheckerServiceFileTests : IDisposable
             errors.Select(e => (e.Line, e.Code)));
     }
 
+    [Theory]
+    [InlineData("namespace CincoVertice.Common; // Comment", 0)]
+    [InlineData("namespace CincoVertice.Common // Comment", 1)]
+    public void CheckFile_ChecksNamespaceWithoutTrailingComment(string namespaceLine, int expectedErrors)
+    {
+        // Arrange
+        string filePath = CreateTempFile(namespaceLine);
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Equal(expectedErrors, errors.Count(e => e.Code == nameof(Errors.CH0029)));
+    }
+
+    [Fact]
+    public void CheckFile_ReportsBlockNamespaceOnce()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "namespace CincoVertice.Common",
+            "{",
+            "    public class Test",
+            "    {",
+            "    }",
+            "}"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal((1, nameof(Errors.CH0029)), (error.Line, error.Code));
+    }
+
     private string CreateTempFile(string content)
     {
         string filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cs");
