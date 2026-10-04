@@ -61,6 +61,7 @@ public class RtfText
     {
         _fonts[0] = new Font(theme.DefaultFont, theme.DefaultFontSize);
 
+        // RTF color index = position in theme.Colors + 1 (index 0 is the automatic color)
         _colors.Clear();
         foreach (var color in theme.Colors.Values)
         {
@@ -122,7 +123,8 @@ public class RtfText
         }
         if (_contentList[0].Format.Size is null)
         {
-            sb.Append(@"\fs22\smult1\sl480");
+            // Default 11 pt, double spacing. Trailing space ends the control word before the text.
+            sb.Append(@"\fs22\sl480\slmult1 ");
         }
 
         RtfFormat prevFormat = new();

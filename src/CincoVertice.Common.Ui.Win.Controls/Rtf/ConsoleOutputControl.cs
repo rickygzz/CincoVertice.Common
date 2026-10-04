@@ -25,8 +25,6 @@ public class ConsoleOutputControl : RichTextBox
 
         CreateControl();
 
-        SetTheme(new ModernConsole());
-
         _contextMenu = new ContextMenuStrip();
         InitializeContextMenu();
     }
@@ -45,17 +43,7 @@ public class ConsoleOutputControl : RichTextBox
 
         if (updateContent)
         {
-            UpdateText(true);
-        }
-    }
-
-    public void AddText(string text, bool updateContent = false)
-    {
-        _rtf.AddText(text);
-
-        if (updateContent)
-        {
-            UpdateText(true);
+            UpdateText(scrollToBottom: true);
         }
     }
 
@@ -65,7 +53,7 @@ public class ConsoleOutputControl : RichTextBox
 
         if (updateContent)
         {
-            UpdateText(true);
+            UpdateText(scrollToBottom: true);
         }
     }
 
@@ -110,10 +98,24 @@ public class ConsoleOutputControl : RichTextBox
         ContextMenuStrip = _contextMenu;
     }
 
-    public void ClearContent()
+    public void SetText(
+        string text,
+        RtfFormat? formatModel = null,
+        bool updateContent = false)
     {
         _rtf.ClearContent();
-        Rtf = _rtf.Rtf(updateContent: true);
+        _rtf.AddText(text, formatModel);
+
+        if (updateContent)
+        {
+            UpdateText(scrollToBottom: true);
+        }
+    }
+
+    public void ClearContent(bool updateContent = true)
+    {
+        _rtf.ClearContent();
+        Rtf = _rtf.Rtf(updateContent);
     }
 
     private void ClearMenuItem_Click(object? sender, EventArgs e)

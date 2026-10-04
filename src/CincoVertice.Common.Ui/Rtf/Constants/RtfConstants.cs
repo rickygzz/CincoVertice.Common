@@ -4,12 +4,17 @@ namespace CincoVertice.Common.Ui.Rtf.Constants;
 
 public static class RtfConstants
 {
+    // RTF color table indexes. 0 is the automatic color; themes list Background first and Foreground second.
+    public const int AutomaticColorIndex = 0;
+    public const int BackgroundColorIndex = 1;
+    public const int ForegroundColorIndex = 2;
+
     public static readonly RtfFormat Normal = new()
     {
         Bold = false,
         Italic = false,
-        ForeColorIndex = 1,
-        HighlightColorIndex = 0,
+        ForeColorIndex = ForegroundColorIndex,
+        HighlightColorIndex = AutomaticColorIndex,
         Size = 11,
         FontIndex = 0,
         LineHeight = 1
@@ -19,9 +24,9 @@ public static class RtfConstants
     {
         Bold = false,
         Italic = false,
-        ForeColorIndex = 1,
-        HighlightColorIndex = 0,
-        Size = 12,
+        ForeColorIndex = ForegroundColorIndex,
+        HighlightColorIndex = AutomaticColorIndex,
+        Size = 16,
         LineHeight = 1.5
     };
 
@@ -32,9 +37,9 @@ public static class RtfConstants
     {
         Bold = false,
         Italic = false,
-        ForeColorIndex = 0,
-        HighlightColorIndex = 1,
-        Size = 11,
+        ForeColorIndex = 3,
+        HighlightColorIndex = 7,
+        Size = 12,
         FontIndex = 0,
         LineHeight = 1
     };

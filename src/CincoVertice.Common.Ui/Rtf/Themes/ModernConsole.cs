@@ -8,6 +8,8 @@ public class ModernConsole : IRtfTheme
 
     public float DefaultFontSize { get; set; } = 12;
 
+    // Order matters: the RTF color table is built in this order. Background and Foreground must stay
+    // first and second (RtfConstants.BackgroundColorIndex and ForegroundColorIndex).
     public Dictionary<string, RtfColor> Colors { get; set; } = new()
     {
         { "Background", new RtfColor(30, 30, 30) },
@@ -20,11 +22,14 @@ public class ModernConsole : IRtfTheme
     };
 
     /// <returns>
-    ///     The color index, or null if there is no color with that name (leaves the color unchanged).
+    ///     The RTF color index (for \cf and \highlight), or null if there is no color with that name
+    ///     (leaves the color unchanged).
     /// </returns>
     public int? ColorIndex(string colorName)
     {
         int index = Colors.Keys.ToList().IndexOf(colorName);
-        return index >= 0 ? index : null;
+
+        // RTF color index 0 is the automatic color, so the table starts at 1
+        return index >= 0 ? index + 1 : null;
     }
 }

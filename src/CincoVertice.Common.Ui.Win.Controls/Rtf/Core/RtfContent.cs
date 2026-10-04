@@ -54,14 +54,19 @@ public class RtfContent
             sb.Append("\\cf").Append(foreColorIndex).Append(' ');
         }
 
+        // RTF numeric parameters must be integers, and every control word must end with a space
+        // (or another control word), otherwise text starting with a digit becomes part of the number.
+
         if (Format.Size is float size && !FloatingPointHelper.AreEqual(size, prevFormat.Size))
         {
-            sb.Append("\\fs").Append(size * 2).Append(' ');
+            // \fs is in half-points
+            sb.Append("\\fs").Append((int)Math.Round(size * 2)).Append(' ');
         }
 
         if (Format.LineHeight is double lineHeight && !FloatingPointHelper.AreEqual(lineHeight, prevFormat.LineHeight))
         {
-            sb.Append(@"\smult1\sl" + 248 * lineHeight);
+            // With \slmult1, \sl is a multiple of single spacing in 240ths: 240 = single, 360 = 1.5 lines
+            sb.Append("\\sl").Append((int)Math.Round(240 * lineHeight)).Append("\\slmult1 ");
         }
 
         if (Format.FontIndex is int fontIndex && fontIndex != prevFormat.FontIndex)
