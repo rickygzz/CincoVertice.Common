@@ -5,15 +5,18 @@ using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeChecker.Checkers;
 
-public class CommentCheckerTests
+public class CommentSpaceCheckerTests
 {
-    private readonly CommentChecker _checker = new();
+    private readonly CommentSpaceChecker _checker = new();
 
     [Theory]
     [InlineData("// Comment")]
     [InlineData("    // Indented comment")]
     [InlineData("//")]
     [InlineData("/// <summary>")]
+    [InlineData("///")]
+    [InlineData("////////")]
+    [InlineData("////Commented out doc")]
     public void Check_WhenLineIsValidComment_StopsWithoutError(string content)
     {
         var line = TestLine.Create(content);
@@ -94,5 +97,34 @@ public class CommentCheckerTests
         Assert.Equal(nameof(Errors.CH0021), error.Code);
         Assert.Equal(11, error.Line);
         Assert.Equal(expectedCode, line.TrimmedContent);
+    }
+
+    [Theory]
+    [InlineData("///<summary>")]
+    [InlineData("    ///Text")]
+    [InlineData("///\tTabbed")]
+    public void Check_WhenNoSpaceAfterTripleSlash_AddsCh0020AndStops(string content)
+    {
+        var line = TestLine.Create(content, number: 10);
+
+        var result = _checker.Check(line);
+
+        Assert.False(result);
+        var error = Assert.Single(line.Errors);
+        Assert.Equal(nameof(Errors.CH0020), error.Code);
+        Assert.Equal(Errors.CH0020, error.Message);
+        Assert.Equal(10, error.Line);
+    }
+
+    [Fact]
+    public void Check_WhenTrailingTripleSlashCommentHasNoSpace_AddsCh0020AndContinues()
+    {
+        var line = TestLine.Create("var x = 1; ///Text");
+
+        var result = _checker.Check(line);
+
+        Assert.True(result);
+        Assert.Equal(nameof(Errors.CH0020), Assert.Single(line.Errors).Code);
+        Assert.Equal("var x = 1;", line.TrimmedContent);
     }
 }

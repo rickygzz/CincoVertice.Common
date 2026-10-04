@@ -1,28 +1,19 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 using CincoVertice.Common.Application.CodeStandard.Models;
 
 namespace CincoVertice.Common.Application.CodeStandard.Fixers;
 
+/// <summary>
+///     Fixes CH0030 (empty XML comments, see EmptyXmlCommentChecker): removes empty tag pairs such as
+///     &lt;returns&gt;&lt;/returns&gt;, drops a line left with no text, and drops a whole /// block that has no text.
+/// </summary>
 public sealed class EmptyXmlCommentFixer : IStringFixer
 {
-    // /// with nothing after (blank doc line)
-    private static readonly Regex _emptyDocLine =
-        new(@"^\s*///\s*$", RegexOptions.Compiled);
-
-    // /// containing only a single XML tag: <tag>, </tag>, <tag attr="val">, <tag/>, <tag attr="val"/>
-    private static readonly Regex _tagOnlyLine =
-        new(@"^\s*///\s*</?[\w:]+(?:\s+[^>]*)?\s*/?>\s*$", RegexOptions.Compiled);
-
-    // /// <tag></tag> or /// <tag attr="val"></tag> — complete empty inline tag pair
-    private static readonly Regex _inlineEmptyTag =
-        new(@"^\s*///\s*<[\w:]+(?:\s+[^>]*)?\s*></[\w:]+>\s*$", RegexOptions.Compiled);
-
     /// <summary>
     ///     Removes XML doc comment blocks that contain no meaningful text.
-    ///     Within a block that has content, removes individual empty inline tags.
+    ///     Within a block that has content, removes individual empty tags.
     /// </summary>
     /// <param name="content">The file content to fix.</param>
     /// <returns>The content with empty XML doc comments removed.</returns>
@@ -39,41 +30,56 @@ public sealed class EmptyXmlCommentFixer : IStringFixer
 
         while (i < lines.Count)
         {
-            if (IsXmlDocLine(lines[i].Content))
-            {
-                int start = i;
-                while (i < lines.Count && IsXmlDocLine(lines[i].Content))
-                {
-                    i++;
-                }
-
-                var block = lines.GetRange(start, i - start);
-
-                if (BlockHasMeaningfulContent(block))
-                {
-                    foreach (var line in block)
-                    {
-                        if (!_inlineEmptyTag.IsMatch(line.Content))
-                        {
-                            sb.Append(line.Content).Append(line.LineEnding.ToText());
-                        }
-                    }
-                }
-                // else: drop the entire empty block
-            }
-            else
+            if (!XmlDocComment.IsDocLine(lines[i].Content))
             {
                 sb.Append(lines[i].Content).Append(lines[i].LineEnding.ToText());
                 i++;
+
+                continue;
+            }
+
+            var block = new List<LineModel>();
+
+            for (; i < lines.Count && XmlDocComment.IsDocLine(lines[i].Content); i++)
+            {
+                var cleaned = RemoveEmptyTags(lines[i]);
+
+                if (cleaned is not null)
+                {
+                    block.Add(cleaned);
+                }
+            }
+
+            // Drop the entire block when no line has text
+            if (block.Any(line => !XmlDocComment.IsWithoutText(line.Content)))
+            {
+                foreach (var line in block)
+                {
+                    sb.Append(line.Content).Append(line.LineEnding.ToText());
+                }
             }
         }
 
         return sb.ToString();
     }
 
-    private static bool IsXmlDocLine(string content) =>
-        content.TrimStart().StartsWith("///", StringComparison.Ordinal);
+    /// <summary>
+    ///     Returns the line without its empty tags, or null when only an empty tag was on it.
+    /// </summary>
+    private static LineModel? RemoveEmptyTags(LineModel line)
+    {
+        if (!XmlDocComment.ContainsEmptyTag(line.Content))
+        {
+            return line;
+        }
 
-    private static bool BlockHasMeaningfulContent(List<LineModel> block) =>
-        block.Any(line => !_emptyDocLine.IsMatch(line.Content) && !_tagOnlyLine.IsMatch(line.Content));
+        string cleaned = XmlDocComment.RemoveEmptyTags(line.Content).TrimEnd();
+
+        if (cleaned.TrimStart() == "///")
+        {
+            return null;
+        }
+
+        return new LineModel { Content = cleaned, LineEnding = line.LineEnding };
+    }
 }

@@ -224,4 +224,62 @@ public class EmptyXmlCommentFixerTests
         // Assert
         Assert.Equal(once, twice);
     }
+
+    [Fact]
+    public void Fix_KeepsInheritDocBlock()
+    {
+        // Arrange
+        string content =
+            "/// <inheritdoc/>\n" +
+            "public void Foo() { }";
+
+        // Act
+        var result = new EmptyXmlCommentFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(content, result);
+    }
+
+    [Theory]
+    [InlineData("/// <returns></returns> The value.", "/// The value.")]
+    [InlineData("///     Uses <c></c> nothing.", "///     Uses nothing.")]
+    [InlineData("/// Text <remarks></remarks>", "/// Text")]
+    public void Fix_RemovesEmptyTagFromLineWithText(string line, string expected)
+    {
+        // Act
+        var result = new EmptyXmlCommentFixer().Fix(line + "\npublic void Foo() { }");
+
+        // Assert
+        Assert.Equal(expected + "\npublic void Foo() { }", result);
+    }
+
+    [Fact]
+    public void Fix_RemovesEmptyTypeParamAndRemarks()
+    {
+        // Arrange
+        string content =
+            "/// <summary>Text.</summary>\n" +
+            "/// <typeparam name=\"T\"></typeparam>\n" +
+            "/// <remarks></remarks>\n" +
+            "public void Foo<T>() { }";
+
+        // Act
+        var result = new EmptyXmlCommentFixer().Fix(content);
+
+        // Assert
+        Assert.Equal("/// <summary>Text.</summary>\npublic void Foo<T>() { }", result);
+    }
+
+    [Fact]
+    public void Fix_LeavesSeparatorLinesUnchanged()
+    {
+        // Arrange
+        string content = "////////////\n//// <summary></summary>\nvar x = 1;";
+
+        // Act
+        var result = new EmptyXmlCommentFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(content, result);
+    }
 }
