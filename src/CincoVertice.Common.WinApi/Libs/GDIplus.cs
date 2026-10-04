@@ -2,7 +2,7 @@
 
 namespace CincoVertice.Common.WinApi.Libs;
 
-public class GDIplus
+public partial class GDIplus
 {
     /// <summary>
     ///     The GdiplusStartup function initializes Windows GDI+. Call GdiplusStartup before making any other GDI+
@@ -34,8 +34,8 @@ public class GDIplus
     ///     should be paired with a call to GdiplusShutdown.
     /// </summary>
     /// <param name="token">Token returned by a previous call to GdiplusStartup.</param>
-    [DllImport("gdiplus.dll", ExactSpelling = true)]
-    internal static extern void GdiplusShutdown(nint token);
+    [LibraryImport("gdiplus.dll")]
+    internal static partial void GdiplusShutdown(nint token);
 
     /// <summary>
     /// Creates a Bitmap object based on a BITMAPINFO structure and an array of pixel data.
@@ -47,8 +47,8 @@ public class GDIplus
     ///     If the function succeeds, it returns Ok (0), which is an element of the Status enumeration. If thw
     ///     function fails, it returns one of the other elements of the Status enumeration.
     /// </returns>
-    [DllImport("gdiplus.dll", ExactSpelling = true)]
-    internal static extern int GdipCreateBitmapFromGdiDib(nint gdiBitmapInfo, nint gdiBitmapData, out nint pBitmap);
+    [LibraryImport("gdiplus.dll")]
+    internal static partial int GdipCreateBitmapFromGdiDib(nint gdiBitmapInfo, nint gdiBitmapData, out nint pBitmap);
 
     /// <summary>
     /// Saves this image to a file.
@@ -96,8 +96,8 @@ public class GDIplus
     ///     If the function succeeds, it returns Ok (0), which is an element of the Status enumeration. If the
     ///     function fails, it returns one of the other elements of the Status enumeration.
     /// </returns>
-    [DllImport("gdiplus.dll", ExactSpelling = true)]
-    internal static extern int GdipDisposeImage(nint pBmp);
+    [LibraryImport("gdiplus.dll")]
+    internal static partial int GdipDisposeImage(nint pBmp);
 
     /// <summary>
     ///     The GdiplusStartupInput structure holds a block of arguments that are required by the GdiplusStartup

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace CincoVertice.Common.WinApi.Libs;
 
-public static class WinUser
+public static partial class WinUser
 {
     /// <summary>
     ///     Brings the specified window to the top of the Z order. If the window is a top-level window, it is activated.
@@ -18,8 +18,9 @@ public static class WinUser
     ///         GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool BringWindowToTop(nint hWnd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool BringWindowToTop(nint hWnd);
 
     /// <summary>
     ///     Creates an overlapped, pop-up, or child window with an extended window style; otherwise, this function is
@@ -164,8 +165,9 @@ public static class WinUser
     ///         GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool DestroyWindow([In] IntPtr hWnd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyWindow(nint hWnd);
 
     /// <summary>
     ///     Calls the default window procedure to provide default processing for any window messages that an application
@@ -275,8 +277,8 @@ public static class WinUser
     ///     The return value is a handle to the foreground window. The foreground window can be NULL in certain
     ///     circumstances, such as when a window is losing activation.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint GetForegroundWindow();
+    [LibraryImport("user32.dll")]
+    public static partial nint GetForegroundWindow();
 
     /// <summary>
     ///     Retrieves the window handle to the active window attached to the calling thread's message queue.
@@ -285,8 +287,8 @@ public static class WinUser
     ///     The return value is the handle to the active window attached to the calling thread's message queue.
     ///     Otherwise, the return value is NULL.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint GetActiveWindow();
+    [LibraryImport("user32.dll")]
+    public static partial nint GetActiveWindow();
 
     /// <summary>
     ///     Determines whether the specified window is minimized (iconic).
@@ -296,8 +298,9 @@ public static class WinUser
     ///     If the window is iconic, the return value is nonzero. If the window is not iconic, the return value is
     ///     zero.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern bool IsIconic(IntPtr hWnd);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsIconic(nint hWnd);
 
     /// <summary>
     ///     Activates a window. The window must be attached to the calling thread's message queue.
@@ -318,8 +321,8 @@ public static class WinUser
     ///     If the function succeeds, the return value is the handle to the window that was previously active.
     ///     If the function fails, the return value is NULL. To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint SetActiveWindow(IntPtr hWnd);
+    [LibraryImport("user32.dll")]
+    public static partial nint SetActiveWindow(nint hWnd);
 
     /// <summary>
     ///     Sends the specified message to a window or windows. The SendMessage function calls the window procedure for
@@ -346,8 +349,8 @@ public static class WinUser
     /// <returns>
     ///     The return value specifies the result of the message processing; it depends on the message sent.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int SendMessage(nint hWnd, WM wMsg, nint wParam, nint lParam);
+    [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "SendMessageW")]
+    public static partial int SendMessage(nint hWnd, WM wMsg, nint wParam, nint lParam);
 
     /// <summary>
     ///     Sends the specified message to a window or windows. The SendMessage function calls the window procedure for
@@ -374,8 +377,8 @@ public static class WinUser
     /// <returns>
     ///     The return value specifies the result of the message processing; it depends on the message sent.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int SendMessage(nint hWnd, WM wMsg, int wParam, int lParam);
+    [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "SendMessageW")]
+    public static partial int SendMessage(nint hWnd, WM wMsg, int wParam, int lParam);
 
     /// <summary>
     ///     Sends the specified message to a window or windows. The SendMessage function calls the window procedure for
@@ -402,8 +405,8 @@ public static class WinUser
     /// <returns>
     ///     The return value specifies the result of the message processing; it depends on the message sent.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int SendMessage(nint hWnd, WM wMsg, int wParam, ref POINT lParam);
+    [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "SendMessageW")]
+    public static partial int SendMessage(nint hWnd, WM wMsg, int wParam, ref POINT lParam);
 
     /// <summary>
     ///     Sets the specified window's show state.
@@ -419,8 +422,9 @@ public static class WinUser
     ///     If the window was previously visible, the return value is nonzero. If the window was previously hidden,
     ///     the return value is zero.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool ShowWindow(IntPtr hWnd, SW nCmdShow);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ShowWindow(nint hWnd, SW nCmdShow);
 
     /// <summary>
     ///     Retrieves a handle to the window that contains the specified point.
@@ -436,6 +440,6 @@ public static class WinUser
     ///     point, the return value is NULL. If the point is over a static text control, the return value is a
     ///     handle to the window under the static text control.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint WindowFromPoint(POINT point);
+    [LibraryImport("user32.dll")]
+    public static partial nint WindowFromPoint(POINT point);
 }

@@ -3,7 +3,7 @@ using CincoVertice.Common.WinApi.Libs.Structs;
 using System.Runtime.InteropServices;
 
 namespace CincoVertice.Common.WinApi.Libs;
-public class User32
+public partial class User32
 {
     /// <summary>
     ///     Contains information about the placement of a window on the screen.
@@ -53,9 +53,9 @@ public class User32
     ///     If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.
     ///     To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
+    [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool GetWindowPlacement(nint hWnd, ref WINDOWPLACEMENT lpwndpl);
+    public static partial bool GetWindowPlacement(nint hWnd, ref WINDOWPLACEMENT lpwndpl);
 
     /// <summary>
     ///     Sets the show state and the restored, minimized, and maximized positions of the specified window.
@@ -72,9 +72,9 @@ public class User32
     ///     If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.
     ///     To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
+    [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetWindowPlacement(nint hWnd, ref WINDOWPLACEMENT lpwndpl);
+    public static partial bool SetWindowPlacement(nint hWnd, ref WINDOWPLACEMENT lpwndpl);
 
     /// <summary>
     ///     Retrieves a handle to the top-level window whose class name and window name match the specified strings.
@@ -116,8 +116,8 @@ public class User32
     ///     The return value specifies the extra information. The meaning of the extra information is device
     ///     specific.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint GetMessageExtraInfo();
+    [LibraryImport("user32.dll")]
+    public static partial nint GetMessageExtraInfo();
 
     /// <summary>
     /// Retrieves the cursor position for the last message retrieved by the GetMessage function.
@@ -126,8 +126,8 @@ public class User32
     ///     The return value specifies the x- and y-coordinates of the cursor position. The x-coordinate is the low
     ///     order short and the y-coordinate is the high-order short
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern uint GetMessagePos();
+    [LibraryImport("user32.dll")]
+    public static partial uint GetMessagePos();
 
     /// <summary>
     ///     Retrieves the message time for the last message retrieved by the GetMessage function. The time is a long
@@ -135,16 +135,16 @@ public class User32
     ///     time the message was created (that is, placed in the thread's message queue).
     /// </summary>
     /// <returns>The return value specifies the message time.</returns>
-    [DllImport("user32.dll")]
-    public static extern int GetMessageTime();
+    [LibraryImport("user32.dll")]
+    public static partial int GetMessageTime();
 
     /// <summary>
     ///     Retrieves a handle to the desktop window. The desktop window covers the entire screen. The desktop
     ///     window is the area on top of which other windows are painted.
     /// </summary>
     /// <returns>The return value is a handle to the desktop window.</returns>
-    [DllImport("user32.dll")]
-    public static extern nint GetDesktopWindow();
+    [LibraryImport("user32.dll")]
+    public static partial nint GetDesktopWindow();
 
     /// <summary>
     ///     Retrieves a handle to the specified window's parent or owner. To retrieve a handle to a specified
@@ -159,8 +159,8 @@ public class User32
     ///         GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern nint GetParent(nint hWnd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint GetParent(nint hWnd);
 
     /// <summary>
     /// GetWindowCmd for GetWindow.
@@ -233,8 +233,8 @@ public class User32
     ///     parameter can be one of the following values.
     /// </param>
     /// <returns></returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern nint GetWindow(nint hWnd, GetWindowCmd uCmd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint GetWindow(nint hWnd, GetWindowCmd uCmd);
 
     /// <summary>
     ///     The GetWindowDC function retrieves the device context (DC) for the entire window, including title bar,
@@ -260,8 +260,8 @@ public class User32
     ///         If the function fails, the return value is NULL, indicating an error or an invalid hWnd parameter.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint GetWindowDC(nint hWnd);
+    [LibraryImport("user32.dll")]
+    public static partial nint GetWindowDC(nint hWnd);
 
     /// <summary>
     ///     The ReleaseDC function releases a device context (DC), freeing it for use by other applications. The
@@ -274,8 +274,8 @@ public class User32
     ///     The return value indicates whether the DC was released. If the DC was released, the return value is 1.
     ///     <para>If the DC was not released, the return value is zero.</para>
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern int ReleaseDC(nint hWnd, nint hDC);
+    [LibraryImport("user32.dll")]
+    public static partial int ReleaseDC(nint hWnd, nint hDC);
 
     /// <summary>
     ///     Retrieves the dimensions of the bounding rectangle of the specified window. The dimensions are given in
@@ -293,8 +293,8 @@ public class User32
     ///         GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int GetWindowRect(nint hWnd, out RECT lpRect);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int GetWindowRect(nint hWnd, out RECT lpRect);
 
     /// <summary>
     /// Retrieves a handle to the window that contains the specified point.
@@ -305,8 +305,8 @@ public class User32
     ///     point, the return value is NULL. If the point is over a static text control, the return value is a
     ///     handle to the window under the static text control.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint WindowFromPoint(POINT point);
+    [LibraryImport("user32.dll")]
+    public static partial nint WindowFromPoint(POINT point);
 
     /// <summary>
     ///     Determines which, if any, of the child windows belonging to a parent window contains the specified
@@ -324,8 +324,8 @@ public class User32
     ///     is within the parent window but not within any child window, the return value is a handle to the parent
     ///     window.
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern nint ChildWindowFromPoint(nint hWndParent, POINT pt);
+    [LibraryImport("user32.dll")]
+    public static partial nint ChildWindowFromPoint(nint hWndParent, POINT pt);
 
     /// <summary>
     ///     Determines whether a key is up or down at the time the function is called, and whether the key was
@@ -350,8 +350,8 @@ public class User32
     ///         journal record.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern short GetAsyncKeyState(KeyCode vKey);
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(KeyCode vKey);
 
     /// <summary>
     /// Retrieves the position of the mouse cursor, in screen coordinates.
@@ -363,8 +363,8 @@ public class User32
     /// <returns>
     ///     Returns nonzero if successful or zero otherwise. To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int GetCursorPos(out POINT lpPoint);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int GetCursorPos(out POINT lpPoint);
 
     /// <summary>
     ///     Moves the cursor to the specified screen coordinates. If the new coordinates are not within the screen
@@ -376,8 +376,8 @@ public class User32
     /// <returns>
     ///     Returns nonzero if successful or zero otherwise. To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int SetCursorPos(int x, int y);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int SetCursorPos(int x, int y);
 
     /// <summary>
     ///     Brings the thread that created the specified window into the foreground and activates the window.
@@ -407,8 +407,8 @@ public class User32
     ///     If the window was brought to the foreground, the return value is nonzero. If the window was not brought
     ///     to the foreground, the return value is zero.
     /// </returns>
-    [DllImport("User32.dll")]
-    public static extern int SetForegroundWindow(nint hWnd);
+    [LibraryImport("User32.dll")]
+    public static partial int SetForegroundWindow(nint hWnd);
 
     /// <summary>
     /// Synthesizes keystrokes, mouse motions, and button clicks.
@@ -427,8 +427,8 @@ public class User32
     ///     stream. If the function returns zero, the input was already blocked by another thread. To get extended
     ///     error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern uint SendInput(uint cInputs, INPUT[] pInputs, int cbSize);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial uint SendInput(uint cInputs, INPUT[] pInputs, int cbSize);
 
     /// <summary>
     ///     The MapWindowPoints function converts (maps) a set of points from a coordinate space relative to one
@@ -462,8 +462,8 @@ public class User32
     ///         differentiate an error return value from a legitimate "0" return value.
     ///     </para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int MapWindowPoints(nint hWndFrom, nint hWndTo, ref POINT lpPoints, uint cPoints);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int MapWindowPoints(nint hWndFrom, nint hWndTo, ref POINT lpPoints, uint cPoints);
 
     /// <summary>
     ///     The PrintWindow function copies a visual window into the specified device context (DC), typically a
@@ -478,8 +478,9 @@ public class User32
     /// <returns>
     ///     If the function succeeds, it returns a nonzero value. If the function fails, it returns zero.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool PrinWindow(nint hwnd, nint hdcBlt, uint nFlags);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PrintWindow(nint hwnd, nint hdcBlt, uint nFlags);
 
     /// <summary>
     /// Defines a system-wide hot key.
@@ -504,8 +505,8 @@ public class User32
     ///     If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.
     ///     To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int RegisterHotKey(nint hWnd, int id, FSModifiers fsModifiers, KeyCode vk);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int RegisterHotKey(nint hWnd, int id, FSModifiers fsModifiers, KeyCode vk);
 
     /// <summary>
     /// Frees a hot key previously registered by the calling thread.
@@ -519,6 +520,6 @@ public class User32
     ///     If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.
     ///     To get extended error information, call GetLastError.
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int UnregisterHotKey(nint hWnd, int id);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial int UnregisterHotKey(nint hWnd, int id);
 }

@@ -6,7 +6,7 @@ namespace CincoVertice.Common.WinApi.Libs;
 /// <summary>
 /// GDI32
 /// </summary>
-public class GDI32
+public partial class GDI32
 {
     /// <summary>
     ///     The BitBlt function performs a bit-block transfer of the color data corresponding to a rectangle of
@@ -39,8 +39,8 @@ public class GDI32
     ///         GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("gdi32.dll", SetLastError = true)]
-    public static extern int BitBlt(
+    [LibraryImport("gdi32.dll", SetLastError = true)]
+    public static partial int BitBlt(
         nint hdc,
         int x,
         int y,
@@ -62,8 +62,8 @@ public class GDI32
     ///     If the function succeeds, the return value is a handle to the compatible bitmap (DDB).
     ///     <para>If the function fails, the return value is NULL.</para>
     /// </returns>
-    [DllImport("gdi32.dll")]
-    public static extern nint CreateCompatibleBitmap(nint hDC, int cxWidth, int cyHeight);
+    [LibraryImport("gdi32.dll")]
+    public static partial nint CreateCompatibleBitmap(nint hDC, int cxWidth, int cyHeight);
 
     /// <summary>
     /// The CreateCompatibleDC function creates a memory device context (DC) compatible with the specified device.
@@ -90,8 +90,8 @@ public class GDI32
     ///     If the function succeeds, the return value is the handle to a memory DC.
     ///     <para>If the function fails, the return value is NULL.</para>
     /// </returns>
-    [DllImport("gdi32.dll")]
-    public static extern nint CreateCompatibleDC(nint hDC);
+    [LibraryImport("gdi32.dll")]
+    public static partial nint CreateCompatibleDC(nint hDC);
 
     /// <summary>
     ///     The DeleteDC function deletes the specified device context (DC).
@@ -101,8 +101,8 @@ public class GDI32
     ///     If the function succeeds, the return value is nonzero.
     ///     <para>If the function fails, the return value is zero.</para>
     /// </returns>
-    [DllImport("gdi32.dll")]
-    public static extern int DeleteDC(nint hDC);
+    [LibraryImport("gdi32.dll")]
+    public static partial int DeleteDC(nint hDC);
 
     /// <summary>
     ///     The DeleteObject function deletes a logical pen, brush, font, bitmap, region, or palette, freeing all
@@ -116,8 +116,8 @@ public class GDI32
     ///         If the specified handle is not valid or is currently selected into a DC, the return value is zero.
     ///     </para>
     /// </returns>
-    [DllImport("gdi32.dll")]
-    public static extern int DeleteObject(nint hObject);
+    [LibraryImport("gdi32.dll")]
+    public static partial int DeleteObject(nint hObject);
 
     /// <summary>
     ///     The SelectObject function selects an object into the specified device context (DC). The new object
@@ -132,6 +132,6 @@ public class GDI32
     ///     If an error occurs and the selected object is not a region, the return value is NULL. Otherwise, it is
     ///     HGDI_ERROR.
     /// </returns>
-    [DllImport("gdi32.dll")]
-    public static extern nint SelectObject(nint hDC, nint hObject);
+    [LibraryImport("gdi32.dll")]
+    public static partial nint SelectObject(nint hDC, nint hObject);
 }

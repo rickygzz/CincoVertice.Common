@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace CincoVertice.Common.WinApi.Libs;
 
-public static class Dwmapi
+public static partial class Dwmapi
 {
     /// <summary>
     ///     Retrieves the current value of a specified Desktop Window Manager (DWM) attribute applied to a window.
@@ -27,8 +27,8 @@ public static class Dwmapi
     ///     retrieved value, and therefore its size in bytes, depends on the value of the dwAttribute parameter.
     /// </param>
     /// <returns></returns>
-    [DllImport("dwmapi.dll")]
-    public static extern int DwmGetWindowAttribute(
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmGetWindowAttribute(
         nint hwnd,
         int dwAttribute,
         out RECT pvAttribute,

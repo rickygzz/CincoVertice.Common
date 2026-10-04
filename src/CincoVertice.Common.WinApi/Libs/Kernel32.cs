@@ -2,7 +2,7 @@
 
 namespace CincoVertice.Common.WinApi.Libs;
 
-public class Kernel32
+public partial class Kernel32
 {
     /// <summary>
     ///     Check if a DLL is present and able to load it
@@ -127,8 +127,8 @@ public class Kernel32
     ///         GetLastError function.
     ///     </para>
     /// </returns>
-    [DllImport("kernel32.dll", SetLastError = true)]
-    internal static extern nint FreeLibrary(nint hLibModule);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    internal static partial nint FreeLibrary(nint hLibModule);
 
     /// <summary>
     /// Retrieves a module handle for the specified module. The module must have been loaded by the calling process.
@@ -198,8 +198,8 @@ public class Kernel32
     /// <returns>
     ///     If the function succeeds, the return value is a handle to the newly allocated memory object.
     /// </returns>
-    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-    internal static extern nint GlobalAlloc(GlobalAllocFlags flags, uint dwBytes);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    internal static partial nint GlobalAlloc(GlobalAllocFlags flags, uint dwBytes);
 
     /// <summary>
     /// GlobalFree() Frees the specified global memory object and invalidates its handle.
@@ -216,8 +216,8 @@ public class Kernel32
     ///         extended error information, call GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-    internal static extern nint GlobalFree(nint hMem);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    internal static partial nint GlobalFree(nint hMem);
 
     /// <summary>
     ///     GlobalLock() Locks a global memory object and returns a pointer to the first byte of the object's memory
@@ -234,8 +234,8 @@ public class Kernel32
     ///     If the function fails, the return value is NULL. To get extended error information, call GetLastError.
     ///     </para>
     /// </returns>
-    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-    internal static extern nint GlobalLock(nint hMem);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    internal static partial nint GlobalLock(nint hMem);
 
     /// <summary>
     ///     GlobalUnlock() Decrements the lock count associated with a memory object that was allocated with
@@ -253,8 +253,9 @@ public class Kernel32
     ///         If the function fails, the return value is zero and GetLastError returns a value other than NO_ERROR.
     ///     </para>
     /// </returns>
-    [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-    internal static extern bool GlobalUnlock(nint hMem);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GlobalUnlock(nint hMem);
 
     /// <summary>
     ///     Retrieves the current value of the performance counter, which is a high resolution (less than 1us) time
@@ -271,8 +272,9 @@ public class Kernel32
     ///         thus never return zero.
     ///     </para>
     /// </returns>
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    public static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+    [LibraryImport("Kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool QueryPerformanceCounter(out long lpPerformanceCount);
 
     /// <summary>
     ///     Retrieves the frequency of the performance counter. The frequency of the performance counter is fixed at
@@ -292,6 +294,7 @@ public class Kernel32
     ///         thus never return zero.
     ///     </para>
     /// </returns>
-    [DllImport("Kernel32.dll")]
-    internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
+    [LibraryImport("Kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool QueryPerformanceFrequency(out long lpFrequency);
 }
