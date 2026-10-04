@@ -72,6 +72,24 @@ public class CSharpLiteralScannerTests
     }
 
     [Fact]
+    public void FindLiterals_ReturnsStringAndCharLiteralsButNotComments()
+    {
+        string content = "var a = \"x\"; var b = @\"y\"; var c = 'z'; var d = $\"{a}\"; // \"not\"";
+
+        var literals = CSharpLiteralScanner.FindLiterals(content).Select(l => content[l.Start..l.End]);
+
+        Assert.Equal(["\"x\"", "@\"y\"", "'z'", "$\"{a}\""], literals);
+    }
+
+    [Theory]
+    [InlineData("var @class = 1;")]
+    [InlineData("x = a / b; /* \"no\" */")]
+    public void FindLiterals_WhenNoLiterals_ReturnsEmpty(string content)
+    {
+        Assert.Empty(CSharpLiteralScanner.FindLiterals(content));
+    }
+
+    [Fact]
     public void FindComments_WhenNoComments_ReturnsEmpty()
     {
         Assert.Empty(CSharpLiteralScanner.FindComments("var url = \"http://example.com\"; var c = '/';"));

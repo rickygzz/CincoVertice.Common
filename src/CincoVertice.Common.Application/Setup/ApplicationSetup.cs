@@ -11,6 +11,9 @@ public static class ApplicationSetup
         services.AddSingleton<ILineCheckerService, LineCheckerService>();
         services.AddSingleton<ICodeCheckerService, CodeCheckerService>();
 
+        services.AddSingleton(_ => FixerPipeline.CreateFormatting());
+        services.AddSingleton<ICodeFixerService, CodeFixerService>();
+
         return services;
     }
 }

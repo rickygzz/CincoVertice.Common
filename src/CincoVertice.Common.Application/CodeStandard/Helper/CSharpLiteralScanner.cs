@@ -18,6 +18,36 @@ public static class CSharpLiteralScanner
     /// <param name="content">C# code: a whole file or a single line.</param>
     public static IEnumerable<CommentSpanModel> FindComments(string content)
     {
+        return Scan(content)
+            .Where(span => span.Kind != SpanKind.Literal)
+            .Select(span => new CommentSpanModel(span.Start, span.End, span.Kind == SpanKind.BlockComment));
+    }
+
+    /// <summary>
+    ///     The string and char literals in C# code, in order, including their quotes and $ / @ prefixes. Quotes
+    ///     inside comments are not literals. For a whole file, literals spanning several lines are followed.
+    /// </summary>
+    /// <param name="content">C# code: a whole file or a single line.</param>
+    /// <returns>Start and end (exclusive) of each literal.</returns>
+    public static IEnumerable<(int Start, int End)> FindLiterals(string content)
+    {
+        return Scan(content)
+            .Where(span => span.Kind == SpanKind.Literal)
+            .Select(span => (span.Start, span.End));
+    }
+
+    private enum SpanKind
+    {
+        LineComment,
+        BlockComment,
+        Literal,
+    }
+
+    /// <summary>
+    ///     Walks the code once, yielding comments and literals; everything between them is code.
+    /// </summary>
+    private static IEnumerable<(int Start, int End, SpanKind Kind)> Scan(string content)
+    {
         int i = 0;
 
         while (i < content.Length)
@@ -29,7 +59,7 @@ public static class CSharpLiteralScanner
             {
                 int end = IndexOfLineEnd(content, i);
 
-                yield return new CommentSpanModel(i, end, IsBlock: false);
+                yield return (i, end, SpanKind.LineComment);
                 i = end;
             }
             else if (c == '/' && next == '*')
@@ -37,12 +67,20 @@ public static class CSharpLiteralScanner
                 int close = content.IndexOf("*/", i + 2, StringComparison.Ordinal);
                 int end = close == -1 ? content.Length : close + 2;
 
-                yield return new CommentSpanModel(i, end, IsBlock: true);
+                yield return (i, end, SpanKind.BlockComment);
                 i = end;
             }
             else if (c is '"' or '\'' or '@' or '$')
             {
-                i = SkipLiteral(content, i);
+                int end = SkipLiteral(content, i);
+
+                // $ or @ not followed by a quote (e.g. @class) is code, and SkipLiteral returns i + 1
+                if (c is '"' or '\'' || end > i + 1)
+                {
+                    yield return (i, end, SpanKind.Literal);
+                }
+
+                i = end;
             }
             else
             {

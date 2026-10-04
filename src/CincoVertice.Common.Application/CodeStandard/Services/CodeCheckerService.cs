@@ -11,10 +11,6 @@ namespace CincoVertice.Common.Application.CodeStandard.Services;
 /// </summary>
 public class CodeCheckerService : ICodeCheckerService
 {
-    private static readonly string[] _skippedFolders = ["bin", "obj", ".git", ".vs"];
-
-    private static readonly string[] _generatedFileSuffixes = [".Designer.cs", ".g.cs", ".g.i.cs"];
-
     private readonly ILineCheckerService _lineChecker;
 
     public CodeCheckerService(ILineCheckerService lineChecker)
@@ -83,14 +79,9 @@ public class CodeCheckerService : ICodeCheckerService
     /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>
     public List<FileCheckResultModel> CheckFolder(string folderPath)
     {
-        if (!Directory.Exists(folderPath))
-        {
-            throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
-        }
-
         List<FileCheckResultModel> results = [];
 
-        foreach (string filePath in EnumerateSourceFiles(folderPath).Order(StringComparer.OrdinalIgnoreCase))
+        foreach (string filePath in SourceFileEnumerator.GetSourceFiles(folderPath))
         {
             List<ErrorModel> errors = CheckFile(filePath);
 
@@ -98,37 +89,6 @@ public class CodeCheckerService : ICodeCheckerService
         }
 
         return results;
-    }
-
-    /// <summary>
-    ///     C# source files in the folder and its subfolders, without walking into skipped folders.
-    /// </summary>
-    private static IEnumerable<string> EnumerateSourceFiles(string folderPath)
-    {
-        // The EnumerationOptions overload avoids the legacy pattern match where *.cs also matches *.csx
-        EnumerationOptions options = new() { IgnoreInaccessible = true };
-        Stack<string> folders = new([folderPath]);
-
-        while (folders.Count > 0)
-        {
-            string folder = folders.Pop();
-
-            foreach (string filePath in Directory.EnumerateFiles(folder, "*.cs", options))
-            {
-                if (!IsGeneratedFile(filePath))
-                {
-                    yield return filePath;
-                }
-            }
-
-            foreach (string subfolder in Directory.EnumerateDirectories(folder, "*", options))
-            {
-                if (!_skippedFolders.Contains(Path.GetFileName(subfolder), StringComparer.OrdinalIgnoreCase))
-                {
-                    folders.Push(subfolder);
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -140,10 +100,5 @@ public class CodeCheckerService : ICodeCheckerService
         string code = line.TrimmedContent;
 
         return code.Length > 0 && code[0] is not ('/' or '*' or '#');
-    }
-
-    private static bool IsGeneratedFile(string filePath)
-    {
-        return _generatedFileSuffixes.Any(suffix => filePath.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
     }
 }
