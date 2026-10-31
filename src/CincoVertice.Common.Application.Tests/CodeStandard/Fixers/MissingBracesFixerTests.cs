@@ -56,6 +56,182 @@ public class MissingBracesFixerTests
     }
 
     [Fact]
+    public void Fix_SplitsIfAndElseOnSameLine()
+    {
+        // Arrange
+        string content = "    if (indent) level++; else level--;\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "    if (indent)\n"
+            + "    {\n"
+            + "        level++;\n"
+            + "    }\n"
+            + "    else\n"
+            + "    {\n"
+            + "        level--;\n"
+            + "    }\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_SplitsIfElseIfElseOnSameLine()
+    {
+        // Arrange
+        string content = "if (a) A(); else if (b) B(\";\"); else C();\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "if (a)\n"
+            + "{\n"
+            + "    A();\n"
+            + "}\n"
+            + "else if (b)\n"
+            + "{\n"
+            + "    B(\";\");\n"
+            + "}\n"
+            + "else\n"
+            + "{\n"
+            + "    C();\n"
+            + "}\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_KeepsStatementAfterSingleLineBodyOutsideBraces()
+    {
+        // Arrange
+        string content = "if (x) A(); B();\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "if (x)\n"
+            + "{\n"
+            + "    A();\n"
+            + "}\n"
+            + "B();\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_AddsBracesToLoopAndNestedIf()
+    {
+        // Arrange
+        string content =
+            "foreach(var st in SUPPORTED_TYPES)\n"
+            + "    if(variantType == st)\n"
+            + "        return true;\n"
+            + "return false;\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "foreach(var st in SUPPORTED_TYPES)\n"
+            + "{\n"
+            + "    if(variantType == st)\n"
+            + "    {\n"
+            + "        return true;\n"
+            + "    }\n"
+            + "}\n"
+            + "return false;\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_KeepsElseOfNestedIfInsideLoopBraces()
+    {
+        // Arrange
+        string content =
+            "for (int i = 0; i < n; i++)\n"
+            + "    if (a)\n"
+            + "        A();\n"
+            + "    else\n"
+            + "        B();\n"
+            + "C();\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "for (int i = 0; i < n; i++)\n"
+            + "{\n"
+            + "    if (a)\n"
+            + "    {\n"
+            + "        A();\n"
+            + "    }\n"
+            + "    else\n"
+            + "    {\n"
+            + "        B();\n"
+            + "    }\n"
+            + "}\n"
+            + "C();\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_WrapsNestedLoopWithBlockAsOneBody()
+    {
+        // Arrange
+        string content =
+            "while (x)\n"
+            + "    foreach (var a in b)\n"
+            + "    {\n"
+            + "        A(a);\n"
+            + "    }\n"
+            + "C();\n";
+
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "while (x)\n"
+            + "{\n"
+            + "    foreach (var a in b)\n"
+            + "    {\n"
+            + "        A(a);\n"
+            + "    }\n"
+            + "}\n"
+            + "C();\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_AddsBracesToSingleLineLoop()
+    {
+        // Act
+        var result = new MissingBracesFixer().Fix("foreach (var a in b) A(a);\n");
+
+        // Assert
+        Assert.Equal("foreach (var a in b)\n{\n    A(a);\n}\n", result);
+    }
+
+    [Theory]
+    [InlineData("do\n{\n    A();\n} while (x);\n")]
+    [InlineData("do\n{\n    A();\n}\nwhile (x);\n")]
+    [InlineData("while (Next()) ;\n")]
+    public void Fix_LeavesDoWhileAndEmptyLoopUnchanged(string content)
+    {
+        // Act
+        var result = new MissingBracesFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(content, result);
+    }
+
+    [Fact]
     public void Fix_PreservesIndentationOfIfBlock()
     {
         // Arrange

@@ -6,7 +6,7 @@ using CincoVertice.Common.Application.CodeStandard.Models;
 namespace CincoVertice.Common.Application.CodeStandard.Checkers;
 
 /// <summary>
-///     CH0031: if, else if and else bodies must be in braces. Fixed by MissingBracesFixer.
+///     CH0031: if, else if, else, for, foreach and while bodies must be in braces. Fixed by MissingBracesFixer.
 ///     <para>A body on the same line (if (x) return;) is reported on the if line. A body on the next line is
 ///     reported on that line, using the state this checker leaves on <see cref="LineModel.PreviousCodeLine"/>.
 ///     Conditions spanning several lines are followed.</para>
@@ -31,7 +31,7 @@ public class MissingBracesChecker : ILineChecker
             line.AddError(nameof(Errors.CH0031), Errors.CH0031);
         }
 
-        var ifMatch = IfElseStatement.MatchIf(code);
+        var ifMatch = BracedStatement.MatchHeader(code);
 
         if (ifMatch.Success)
         {
@@ -40,7 +40,7 @@ public class MissingBracesChecker : ILineChecker
             return true;
         }
 
-        var elseMatch = IfElseStatement.MatchElse(code);
+        var elseMatch = BracedStatement.MatchElse(code);
 
         if (elseMatch.Success)
         {
@@ -91,11 +91,12 @@ public class MissingBracesChecker : ILineChecker
     {
         string body = afterHeader.Trim();
 
+        // A ; body is an empty statement, or the end of a do-while: "} while (x);"
         if (body.Length == 0)
         {
             line.AwaitsOpeningBrace = true;
         }
-        else if (!body.StartsWith('{'))
+        else if (!body.StartsWith('{') && !body.StartsWith(';'))
         {
             line.AddError(nameof(Errors.CH0031), Errors.CH0031);
         }

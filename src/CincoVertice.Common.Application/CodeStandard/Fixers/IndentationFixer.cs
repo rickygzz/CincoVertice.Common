@@ -18,16 +18,22 @@ public sealed class IndentationFixer : IStringFixer
         var lines = LineParser.GetLines(content);
         var sb = new StringBuilder(content.Length);
 
+        // The open indentation levels, as (level in the input, level in the output). A line may be at most one
+        // level deeper than the line before it (CH0014), so a deeper jump is closed up, and the lines nested
+        // under it move up with it. The first code line, or one less indented than every line before it, keeps
+        // its level.
+        var levels = new Stack<(int Original, int Fixed)>();
+
         foreach (var line in lines)
         {
-            sb.Append(FixIndentation(line.Content));
+            sb.Append(FixIndentation(line.Content, levels));
             sb.Append(line.LineEnding.ToText());
         }
 
         return sb.ToString();
     }
 
-    private static string FixIndentation(string lineContent)
+    private static string FixIndentation(string lineContent, Stack<(int Original, int Fixed)> levels)
     {
         int columns = 0;
         int i = 0;
@@ -59,8 +65,29 @@ public sealed class IndentationFixer : IStringFixer
         }
 
         // Round the indentation width to the nearest multiple of four.
-        int indentLevels = (columns + SpacesPerIndent / 2) / SpacesPerIndent;
+        int level = (columns + SpacesPerIndent / 2) / SpacesPerIndent;
 
-        return new string(' ', indentLevels * SpacesPerIndent) + lineContent[i..];
+        while (levels.Count > 0 && levels.Peek().Original > level)
+        {
+            levels.Pop();
+        }
+
+        int fixedLevel = level;
+
+        if (levels.Count == 0)
+        {
+            levels.Push((level, level));
+        }
+        else if (levels.Peek().Original == level)
+        {
+            fixedLevel = levels.Peek().Fixed;
+        }
+        else
+        {
+            fixedLevel = levels.Peek().Fixed + 1;
+            levels.Push((level, fixedLevel));
+        }
+
+        return new string(' ', fixedLevel * SpacesPerIndent) + lineContent[i..];
     }
 }

@@ -120,6 +120,56 @@ public class IndentationFixerTests
     }
 
     [Fact]
+    public void Fix_WhenLineIsMoreThanOneLevelDeeper_ClosesUpTheJump()
+    {
+        // Arrange
+        string content =
+            "            default:\n"
+            + "                throw new InvalidOperationException(\n"
+            + "                        \"Unknown (possibly, incorrect) TypedPropertyValue type: \"\n"
+            + "                                + _type);\n"
+            + "            case 1:\n";
+
+        // Act
+        var result = new IndentationFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "            default:\n"
+            + "                throw new InvalidOperationException(\n"
+            + "                    \"Unknown (possibly, incorrect) TypedPropertyValue type: \"\n"
+            + "                        + _type);\n"
+            + "            case 1:\n",
+            result);
+    }
+
+    [Fact]
+    public void Fix_WhenLineIsMoreThanOneLevelDeeper_MovesNestedLinesUpWithIt()
+    {
+        // Arrange
+        string content =
+            "Foo(\n"
+            + "        () =>\n"
+            + "        {\n"
+            + "            Bar();\n"
+            + "        });\n"
+            + "Baz();\n";
+
+        // Act
+        var result = new IndentationFixer().Fix(content);
+
+        // Assert
+        Assert.Equal(
+            "Foo(\n"
+            + "    () =>\n"
+            + "    {\n"
+            + "        Bar();\n"
+            + "    });\n"
+            + "Baz();\n",
+            result);
+    }
+
+    [Fact]
     public void Fix_WhenContentEndsWithNewline_DoesNotAppendExtraLine()
     {
         // Act

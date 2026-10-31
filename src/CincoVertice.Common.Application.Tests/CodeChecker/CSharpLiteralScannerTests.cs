@@ -82,6 +82,22 @@ public class CSharpLiteralScannerTests
     }
 
     [Theory]
+    [InlineData("$\"\\\"{Value.Replace(\"\\\"\", \"\\\"\\\"\")}\\\"\"")]
+    [InlineData("$\"{a[\"x\"]}  {b}\"")]
+    [InlineData("$\"{(ok ? \"yes\" : \"no\")}\"")]
+    [InlineData("$\"{{literal}} {x:N2} {new { A = 1 }.A}\"")]
+    [InlineData("$@\"{d[\"k\"]}\"\" \"")]
+    [InlineData("$\"{$\"{inner}\"}\"")]
+    public void FindLiterals_WhenInterpolationHoleHasQuotes_ReturnsWholeString(string literal)
+    {
+        string content = "var s = " + literal + "; x  =  1;";
+
+        var literals = CSharpLiteralScanner.FindLiterals(content).Select(l => content[l.Start..l.End]);
+
+        Assert.Equal([literal], literals);
+    }
+
+    [Theory]
     [InlineData("var @class = 1;")]
     [InlineData("x = a / b; /* \"no\" */")]
     public void FindLiterals_WhenNoLiterals_ReturnsEmpty(string content)

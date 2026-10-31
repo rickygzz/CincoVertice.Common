@@ -5,8 +5,9 @@ namespace CincoVertice.Common.Application.CodeStandard.Helper;
 /// <summary>
 ///     Finds where C# string and char literals end, so code and comments can be told apart from text inside
 ///     literals. Handles regular, verbatim (@), interpolated ($) and raw (""") strings, and char literals.
-///     <para>Limitation: quotes inside an interpolation hole, as in $"{a["x"]}", end the string early. The
-///     scanner resynchronizes at the next quote.</para>
+///     Interpolation holes are followed, so quotes inside them, as in $"{a["x"]}", do not end the string.
+///     <para>Limitation: holes in interpolated raw strings ($"""...""") are not followed; the string ends at the
+///     first closing delimiter.</para>
 /// </summary>
 public static class CSharpLiteralScanner
 {
@@ -128,10 +129,12 @@ public static class CSharpLiteralScanner
         // Prefixes: $ (interpolated), @ (verbatim), or both, in any order
         int quote = start;
         bool isVerbatim = false;
+        bool isInterpolated = false;
 
         while (quote < content.Length && content[quote] is '$' or '@')
         {
             isVerbatim |= content[quote] == '@';
+            isInterpolated |= content[quote] == '$';
             quote++;
         }
 
@@ -156,7 +159,100 @@ public static class CSharpLiteralScanner
             return close == -1 ? content.Length : close + quoteCount;
         }
 
+        if (isInterpolated)
+        {
+            return SkipInterpolated(content, quote + 1, isVerbatim);
+        }
+
         return isVerbatim ? SkipVerbatim(content, quote + 1) : SkipQuoted(content, quote + 1, '"');
+    }
+
+    /// <summary>
+    ///     Interpolated string ($"..." or $@"..."): {{ and }} are escaped braces, and a { starts a hole of code,
+    ///     which may hold strings of its own, as in $"{a["x"]}". Regular ones end at the line end if unclosed.
+    /// </summary>
+    private static int SkipInterpolated(string content, int i, bool isVerbatim)
+    {
+        while (i < content.Length)
+        {
+            char c = content[i];
+
+            if (!isVerbatim && c is '\r' or '\n')
+            {
+                return i;
+            }
+
+            if (!isVerbatim && c == '\\')
+            {
+                i += 2;
+            }
+            else if (c == '"')
+            {
+                if (!isVerbatim || i + 1 >= content.Length || content[i + 1] != '"')
+                {
+                    return i + 1;
+                }
+
+                i += 2;
+            }
+            else if (c is '{' or '}' && i + 1 < content.Length && content[i + 1] == c)
+            {
+                i += 2;
+            }
+            else if (c == '{')
+            {
+                i = SkipInterpolationHole(content, i + 1);
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        return content.Length;
+    }
+
+    /// <summary>
+    ///     End (after the closing }) of an interpolation hole starting at i, skipping the literals and nested
+    ///     brackets in it.
+    /// </summary>
+    private static int SkipInterpolationHole(string content, int i)
+    {
+        int depth = 0;
+
+        while (i < content.Length)
+        {
+            char c = content[i];
+
+            if (c is '"' or '\'' or '@' or '$')
+            {
+                i = SkipLiteral(content, i);
+
+                continue;
+            }
+
+            if (c is '(' or '[' or '{')
+            {
+                depth++;
+            }
+            else if (c is ')' or ']')
+            {
+                depth--;
+            }
+            else if (c == '}')
+            {
+                if (depth == 0)
+                {
+                    return i + 1;
+                }
+
+                depth--;
+            }
+
+            i++;
+        }
+
+        return content.Length;
     }
 
     /// <summary>

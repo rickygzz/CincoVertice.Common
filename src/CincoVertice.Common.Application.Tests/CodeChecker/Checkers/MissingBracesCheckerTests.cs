@@ -106,6 +106,41 @@ public class MissingBracesCheckerTests
         Assert.Equal([(2, nameof(Errors.CH0031)), (3, nameof(Errors.CH0031))], errors);
     }
 
+    [Fact]
+    public void Check_WhenLoopHasNoBraces_ReportsLoopAndNestedIfBodies()
+    {
+        var errors = CheckLines("foreach(var st in SUPPORTED_TYPES)", "if(variantType == st)", "return true;");
+
+        Assert.Equal([(2, nameof(Errors.CH0031)), (3, nameof(Errors.CH0031))], errors);
+    }
+
+    [Theory]
+    [InlineData("for (int i = 0; i < n; i++) A();")]
+    [InlineData("foreach (var a in b) A(a);")]
+    [InlineData("while (x) A();")]
+    public void Check_WhenLoopBodyIsOnSameLine_AddsCh0031(string content)
+    {
+        var line = TestLine.Create(content);
+
+        _checker.Check(line);
+
+        Assert.Equal(nameof(Errors.CH0031), Assert.Single(line.Errors).Code);
+    }
+
+    [Theory]
+    [InlineData("} while (x);")]
+    [InlineData("while (x);")]
+    [InlineData("while (Next()) ;")]
+    public void Check_WhenBodyIsEmptyStatementOrDoWhileEnd_ContinuesWithoutError(string content)
+    {
+        var line = TestLine.Create(content);
+
+        _checker.Check(line);
+
+        Assert.Empty(line.Errors);
+        Assert.False(line.AwaitsOpeningBrace);
+    }
+
     /// <summary>
     ///     Checks the lines in order, linking each to the previous one as CodeCheckerService does.
     /// </summary>

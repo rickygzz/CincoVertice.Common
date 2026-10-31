@@ -20,8 +20,6 @@ public static class Errors
 
     public const string CH0014 = "Additional indentation should be four spaces only.";
 
-    public const string CH0015 = "Reducing indentation should be four spaces only.";
-
     public const string CH0016 = "No lines should be greater than 120 characters.";
 
     public const string CH0017 = "Line starts with forbidden token: '{token}'";
@@ -52,7 +50,15 @@ public static class Errors
 
     public const string CH0030 = "Empty XML comments.";
 
-    public const string CH0031 = "if / else body must be in braces.";
+    public const string CH0031 = "if / else / loop body must be in braces.";
+
+    public const string CH0032 = "Line contains consecutive spaces.";
+
+    public const string CH0033 = "Braces need a space before and inside them: get { return x; }";
+
+    public const string CH0034 = "Block braces go on their own lines: \"if (x) {\" and \"} else\" are not allowed.";
+
+    public const string CH0035 = "No space after ( or before ): Read(a), not Read( a ).";
 
     public static ErrorModel New(int line, string code, string message)
     {

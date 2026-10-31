@@ -16,6 +16,12 @@ public partial class ForbiddenStartTokenChecker : ILineChecker
 
     public bool Check(LineModel line)
     {
+        // A line of a multi-line string is not code
+        if (line.StartsInsideLiteral)
+        {
+            return true;
+        }
+
         foreach (var token in _forbiddenStartTokens)
         {
             if (line.TrimmedContent.StartsWith(token))

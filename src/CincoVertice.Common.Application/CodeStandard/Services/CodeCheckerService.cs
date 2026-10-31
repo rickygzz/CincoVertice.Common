@@ -35,7 +35,10 @@ public class CodeCheckerService : ICodeCheckerService
         {
             using StreamReader reader = new(filePath);
 
-            lines = LineParser.GetLines(reader.ReadToEnd());
+            string content = reader.ReadToEnd();
+
+            lines = LineParser.GetLines(content);
+            MarkLinesInsideLiterals(content, lines);
         }
         catch (Exception ex)
         {
@@ -95,6 +98,28 @@ public class CodeCheckerService : ICodeCheckerService
     ///     False for blank, comment and preprocessor lines. Runs after the check, so a trailing comment is already
     ///     removed from <see cref="LineModel.TrimmedContent"/>.
     /// </summary>
+    /// <summary>
+    ///     Sets <see cref="LineModel.StartsInsideLiteral"/> on the lines that continue a multi-line verbatim or raw
+    ///     string, which a single line cannot tell.
+    /// </summary>
+    private static void MarkLinesInsideLiterals(string content, List<LineModel> lines)
+    {
+        var literals = CSharpLiteralScanner.FindLiterals(content).ToList();
+        int next = 0;
+        int lineStart = 0;
+
+        foreach (var line in lines)
+        {
+            while (next < literals.Count && literals[next].End <= lineStart)
+            {
+                next++;
+            }
+
+            line.StartsInsideLiteral = next < literals.Count && literals[next].Start < lineStart;
+            lineStart += line.Content.Length + line.LineEnding.ToText().Length;
+        }
+    }
+
     private static bool IsCodeLine(LineModel line)
     {
         string code = line.TrimmedContent;

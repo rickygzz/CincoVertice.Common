@@ -9,6 +9,17 @@ public class ForbiddenStartTokenCheckerTests
 {
     private readonly ForbiddenStartTokenChecker _checker = new();
 
+    [Fact]
+    public void Check_WhenLineStartsInsideLiteral_ReturnsNoErrors()
+    {
+        var line = TestLine.Create(" = B \";");
+        line.StartsInsideLiteral = true;
+
+        _checker.Check(line);
+
+        Assert.Empty(line.Errors);
+    }
+
     [Theory]
     [InlineData(", b", ",")]
     [InlineData("; i++", ";")]

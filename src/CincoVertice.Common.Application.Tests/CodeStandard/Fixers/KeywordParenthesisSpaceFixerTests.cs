@@ -50,29 +50,9 @@ public class KeywordParenthesisSpaceFixerTests
     }
 
     [Theory]
-    [InlineData("} while     (a > b)", "} while (a > b)")]
-    [InlineData("}    while     (a > b)", "} while (a > b)")]
-    [InlineData("    }    while     (a > b)", "    } while (a > b)")]
-    [InlineData("    }    if     (a > b)", "    }\n    if (a > b)")]
-    [InlineData("        }    if     (a > b)", "        }\n        if (a > b)")]
-    [InlineData("    }    else if     (a > b)", "    }\n    else if (a > b)")]
-    [InlineData("        }    else if     (a > b)", "        }\n        else if (a > b)")]
-    public void Fix_WhenLineStartsWithBraces_IndentProperly(string content, string expected)
-    {
-        // Act
-        var result = new KeywordParenthesisSpaceFixer().Fix(content);
-
-        // Assert
-        Assert.Equal(expected, result);
-    }
-
-    [Theory]
-    [InlineData("while     (a > b)   {", "while (a > b)\n{")]
-    [InlineData("    while     (a > b)   {", "    while (a > b)\n    {")]
-    [InlineData("    do     (a > b)    {", "    do (a > b)\n    {")]
-    [InlineData("        if     (a > b)  {", "        if (a > b)\n        {")]
-    [InlineData("    }    else if     (a > b)    {", "    }\n    else if (a > b)\n    {")]
-    public void Fix_WhenLineEndsWithOpenBrace_IndentProperly(string content, string expected)
+    [InlineData("} while     (a > b);", "} while (a > b);")]
+    [InlineData("    } else if     (a > b) {", "    } else if (a > b) {")]
+    public void Fix_WhenLineHasBraces_OnlyNormalizesKeywordSpace(string content, string expected)
     {
         // Act
         var result = new KeywordParenthesisSpaceFixer().Fix(content);

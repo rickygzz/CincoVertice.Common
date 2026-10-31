@@ -29,6 +29,10 @@ public class LineCheckerService : ILineCheckerService
         new FileScopedNamespaceChecker(),
         new ForbiddenStartTokenChecker(),
         new KeywordParenthesisSpaceChecker(),
+        new BracePlacementChecker(),
+        new BraceSpaceChecker(),
+        new ParenthesisSpaceChecker(),
+        new MultipleSpaceChecker(),
         new ForbiddenEndTokenChecker(),
         new ForbiddenTokenChecker(),
     ];

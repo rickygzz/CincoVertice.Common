@@ -260,6 +260,27 @@ public class CodeCheckerServiceFileTests : IDisposable
         Assert.DoesNotContain(after, e => e.Code == nameof(Errors.CH0031));
     }
 
+    [Fact]
+    public void CheckFile_WhenSpacesAreInsideMultiLineString_ReportsOnlyCodeLines()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "string s = @\"a  b",
+            "c  d",
+            "e  f\";",
+            "int x  = 1;"
+        ];
+        string filePath = CreateTempFile(string.Join("\r\n", lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors, e => e.Code == nameof(Errors.CH0032));
+        Assert.Equal(4, error.Line);
+    }
+
     private string CreateTempFile(string content)
     {
         string filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cs");

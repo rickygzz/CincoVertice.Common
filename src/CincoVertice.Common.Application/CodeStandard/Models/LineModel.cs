@@ -37,6 +37,12 @@ public class LineModel
     /// </summary>
     public bool AwaitsOpeningBrace { get; set; } = false;
 
+    /// <summary>
+    ///     True when the line starts inside a multi-line verbatim or raw string, so its text is not code. Set by the
+    ///     caller, like <see cref="PreviousIndentationLevel"/>.
+    /// </summary>
+    public bool StartsInsideLiteral { get; set; } = false;
+
     public int IndentationLevel { get; set; } = 0;
 
     public LineEndingEnum LineEnding = LineEndingEnum.None;
