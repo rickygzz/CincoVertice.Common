@@ -20,14 +20,23 @@ public class Hotkey : IDisposable
 
     public void Dispose()
     {
-        // unregister all the registered hot keys.
+        UnregisterAll();
+
+        // Dispose the inner native window.
+        _hotkeyWindow.Dispose();
+    }
+
+    /// <summary>
+    ///     Unregisters every hot key registered so far, e.g. before registering a new set.
+    /// </summary>
+    public void UnregisterAll()
+    {
         for (int i = 0; i < _hotkeys.Count; i++)
         {
             _ = Libs.User32.UnregisterHotKey(_hotkeyWindow.Handle, _hotkeys[i].Id);
         }
 
-        // Dispose the inner native window.
-        _hotkeyWindow.Dispose();
+        _hotkeys.Clear();
     }
 
     /// <summary>
