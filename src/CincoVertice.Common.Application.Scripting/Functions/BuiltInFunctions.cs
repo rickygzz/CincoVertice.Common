@@ -15,7 +15,15 @@ public static class BuiltInFunctions
     // More key presses than this is more likely a mistake than intended
     private const int MaxPressTimes = 100;
 
-    public static IReadOnlyDictionary<string, ScriptFunction> Create(IScriptHost host)
+    /// <param name="host">What scripts do on the desktop.</param>
+    /// <param name="globals">The global variables.</param>
+    /// <param name="argument">What script.argument() returns; empty for none.</param>
+    /// <param name="includeAsync">Runs the script with the given name with the caller's variables.</param>
+    public static IReadOnlyDictionary<string, ScriptFunction> Create(
+        IScriptHost host,
+        IScriptVariableStore globals,
+        string argument,
+        Func<string, Task> includeAsync)
     {
         return new ScriptFunction[]
         {
@@ -57,6 +65,16 @@ public static class BuiltInFunctions
                 return ScriptValue.Nothing;
             }),
             new("script.stop", 0, 0, _ => throw new ScriptStopException()),
+            // argument(): the value after the shortcut in hotkeys.cfg; argument(default) when there is none
+            new("script.argument", 0, 1, a => Value(argument.Length > 0 ? argument : a.Text(0, string.Empty))),
+            new("script.include", 1, 1, a => IncludeAsync(includeAsync, a)),
+
+            // global: values kept between runs and shared by all scripts
+            new("global.set", 2, 2, a => Done(() => globals.Set(GlobalName(a), a.Value(1)))),
+            new("global.get", 1, 2, a => Value(GetGlobal(globals, a))),
+            new("global.has", 1, 1, a => Value(globals.TryGet(GlobalName(a), out _))),
+            new("global.remove", 1, 1, a => Done(() => globals.Remove(GlobalName(a)))),
+            new("global.names", 0, 0, _ => Value(globals.GetNames().Cast<object>().ToList().AsReadOnly())),
 
             new("text.length", 1, 1, a => Value(NotList(a, "list.length").Length)),
             new("text.upper", 1, 1, a => Value(a.Text(0).ToUpperInvariant())),
@@ -161,6 +179,60 @@ public static class BuiltInFunctions
         }
 
         return (int)milliseconds;
+    }
+
+    /// <summary>
+    ///     Runs another script. An error in it is reported at this call, with its place in the other script.
+    /// </summary>
+    private static async Task<object> IncludeAsync(Func<string, Task> includeAsync, ScriptArguments a)
+    {
+        string name = a.Text(0).Trim();
+
+        try
+        {
+            await includeAsync(name);
+        }
+        catch (ScriptException ex)
+        {
+            throw a.Error($"in {name}, line {ex.Line}, column {ex.Column}: {ex.Message}");
+        }
+
+        return ScriptValue.Nothing;
+    }
+
+    /// <summary>
+    ///     Argument 1 as the name of a global variable: a text that is not empty.
+    /// </summary>
+    private static string GlobalName(ScriptArguments a)
+    {
+        if (a.Value(0) is not string name)
+        {
+            throw a.Error($"the name must be a text, not {ScriptValue.Describe(a.Value(0))}");
+        }
+
+        if (name.Trim().Length == 0)
+        {
+            throw a.Error("the name can't be empty");
+        }
+
+        return name.Trim();
+    }
+
+    /// <summary>
+    ///     The value of a global variable, or the default (argument 2) when it was never set.
+    /// </summary>
+    private static object GetGlobal(IScriptVariableStore globals, ScriptArguments a)
+    {
+        string name = GlobalName(a);
+
+        if (globals.TryGet(name, out object? value))
+        {
+            return value;
+        }
+
+        return a.Count > 1
+            ? a.Value(1)
+            : throw a.Error($"there is no global variable '{name}'; global.get(\"{name}\", value) gives a value then");
     }
 
     private static int ToTimes(ScriptArguments a)

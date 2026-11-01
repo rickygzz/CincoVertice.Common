@@ -41,6 +41,12 @@ public class ScriptInterpreter
         }
     }
 
+    /// <summary>
+    ///     Runs the statements of an included script with this script's variables, so each sees what the other sets.
+    ///     A stop() in them ends the whole script.
+    /// </summary>
+    public Task RunIncludedAsync(IReadOnlyList<Statement> statements) => ExecuteBlockAsync(statements);
+
     private async Task ExecuteBlockAsync(IReadOnlyList<Statement> statements)
     {
         foreach (var statement in statements)
