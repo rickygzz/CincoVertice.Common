@@ -15,6 +15,12 @@ public class ForbiddenEndTokenChecker : ILineChecker
 
     public bool Check(LineModel line)
     {
+        // The end of a line inside a multi-line string is text, not an operator
+        if (line.StartsInsideLiteral)
+        {
+            return true;
+        }
+
         foreach (var token in _forbiddenEndTokens)
         {
             if (line.TrimmedContent.EndsWith(token))

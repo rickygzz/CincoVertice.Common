@@ -9,6 +9,17 @@ public class ForbiddenEndTokenCheckerTests
 {
     private readonly ForbiddenEndTokenChecker _checker = new();
 
+    [Fact]
+    public void Check_WhenLineStartsInsideLiteral_ReturnsNoErrors()
+    {
+        var line = TestLine.Create("# To ask several things in one dialog:");
+        line.StartsInsideLiteral = true;
+
+        _checker.Check(line);
+
+        Assert.Empty(line.Errors);
+    }
+
     [Theory]
     [InlineData("if (a &&", "&&")]
     [InlineData("if (a ||", "||")]

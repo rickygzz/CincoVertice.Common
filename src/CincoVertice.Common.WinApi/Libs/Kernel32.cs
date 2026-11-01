@@ -297,4 +297,11 @@ public partial class Kernel32
     [LibraryImport("Kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool QueryPerformanceFrequency(out long lpFrequency);
+
+    /// <summary>
+    ///     Retrieves the thread identifier of the calling thread.
+    /// </summary>
+    /// <returns>The thread identifier of the calling thread.</returns>
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
 }

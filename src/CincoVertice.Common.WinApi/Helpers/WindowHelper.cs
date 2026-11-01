@@ -24,4 +24,42 @@ public static class WindowHelper
 
         return User32.SetForegroundWindow(windowHandle);
     }
+
+    /// <summary>
+    ///     Brings a window of this application to the foreground and gives it the keyboard focus, even when another
+    ///     application is active, e.g. a dialog opened from a global hotkey. Plain SetForegroundWindow is refused
+    ///     then, so the calling thread briefly shares the input state of the foreground window's thread.
+    /// </summary>
+    /// <param name="windowHandle">A window created by the calling thread.</param>
+    /// <returns>True when the window is the foreground window afterwards.</returns>
+    public static bool ForceForeground(nint windowHandle)
+    {
+        nint foreground = WinUser.GetForegroundWindow();
+
+        if (foreground == windowHandle)
+        {
+            return true;
+        }
+
+        uint currentThread = Kernel32.GetCurrentThreadId();
+        uint foregroundThread = foreground == 0 ? 0 : WinUser.GetWindowThreadProcessId(foreground, out _);
+        bool attached = foregroundThread != 0
+            && foregroundThread != currentThread
+            && WinUser.AttachThreadInput(currentThread, foregroundThread, true);
+
+        try
+        {
+            WinUser.BringWindowToTop(windowHandle);
+            User32.SetForegroundWindow(windowHandle);
+        }
+        finally
+        {
+            if (attached)
+            {
+                WinUser.AttachThreadInput(currentThread, foregroundThread, false);
+            }
+        }
+
+        return WinUser.GetForegroundWindow() == windowHandle;
+    }
 }

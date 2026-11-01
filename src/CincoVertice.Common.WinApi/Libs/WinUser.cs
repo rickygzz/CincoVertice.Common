@@ -442,4 +442,29 @@ public static partial class WinUser
     /// </returns>
     [LibraryImport("user32.dll")]
     public static partial nint WindowFromPoint(POINT point);
+
+    /// <summary>
+    ///     Retrieves the identifier of the thread that created the specified window and, optionally, the identifier
+    ///     of the process that created the window.
+    /// </summary>
+    /// <param name="hWnd">A handle to the window.</param>
+    /// <param name="lpdwProcessId">Receives the process identifier.</param>
+    /// <returns>The identifier of the thread that created the window, or zero when the handle is not valid.</returns>
+    [LibraryImport("user32.dll")]
+    public static partial uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
+
+    /// <summary>
+    ///     Attaches or detaches the input processing mechanism of one thread to that of another thread. Attached
+    ///     threads share their input state, such as the keyboard focus and the active window.
+    /// </summary>
+    /// <param name="idAttach">The identifier of the thread to be attached to another thread.</param>
+    /// <param name="idAttachTo">The identifier of the thread to which idAttach will be attached.</param>
+    /// <param name="fAttach">True to attach the threads, false to detach them.</param>
+    /// <returns>
+    ///     If the function succeeds, the return value is nonzero. If the function fails, the return value is zero.
+    /// </returns>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AttachThreadInput(
+        uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool fAttach);
 }
