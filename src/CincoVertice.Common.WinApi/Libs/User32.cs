@@ -353,6 +353,18 @@ public partial class User32
     public static partial short GetAsyncKeyState(KeyCode vKey);
 
     /// <summary>
+    ///     Translates a character to the virtual-key code and shift state that type it on the current keyboard
+    ///     layout.
+    /// </summary>
+    /// <param name="ch">The character to translate.</param>
+    /// <returns>
+    ///     The low byte is the virtual-key code and the high byte the shift state: 1 Shift, 2 Ctrl, 4 Alt (Ctrl+Alt
+    ///     is AltGr). -1 when no key on the layout types the character.
+    /// </returns>
+    [LibraryImport("user32.dll", EntryPoint = "VkKeyScanW")]
+    public static partial short VkKeyScan(ushort ch);
+
+    /// <summary>
     /// Retrieves the position of the mouse cursor, in screen coordinates.
     /// <para>BOOL GetCursorPos(LPPOINT lpPoint)</para>
     /// </summary>

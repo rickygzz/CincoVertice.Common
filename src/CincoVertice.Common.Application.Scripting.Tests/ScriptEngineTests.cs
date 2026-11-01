@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace CincoVertice.Common.Application.Scripting.Tests;
 
@@ -125,6 +125,8 @@ public class ScriptEngineTests
             + "    clipboard.settext(clipboard.gettext() + \"!\")\n"
             + "    script.wait(250)\n"
             + "    keyboard.type(\"Hello\")\n"
+            + "    keyboard.press(\"Ctrl+V\")\n"
+            + "    keyboard.press(\"Tab\", 3)\n"
             + "    tray.notify(\"Done\")\n"
             + "end";
 
@@ -133,8 +135,70 @@ public class ScriptEngineTests
 
         // Assert
         Assert.Equal(
-            ["confirm: Go?", "run: notepad.exe [a.txt]", "copy: copied!", "wait: 250", "type: Hello", "notify: Done"],
+            [
+                "confirm: Go?",
+                "run: notepad.exe [a.txt]",
+                "copy: copied!",
+                "wait: 250",
+                "type: Hello",
+                "press: Ctrl+V [1]",
+                "press: Tab [3]",
+                "notify: Done",
+            ],
             calls);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReadsActiveWindowTitle()
+    {
+        // Arrange
+        _host.ActiveWindowTitle = "Inbox - Outlook";
+
+        // Act
+        var calls = await RunAsync(
+            "if text.contains(window.title(), \"outlook\")\n    dialog.message(window.title())\nend");
+
+        // Assert
+        Assert.Equal(["say: Inbox - Outlook"], calls);
+    }
+
+    [Theory]
+    [InlineData("Bold text", new[] { "paste: Bold text" })]
+    [InlineData("", new string[0])]
+    public async Task RunAsync_PasteAsTextPastesTheClipboardText(string clipboard, string[] expected)
+    {
+        // Arrange
+        _host.Clipboard = clipboard;
+
+        // Act
+        var calls = await RunAsync("clipboard.pasteastext()");
+
+        // Assert
+        Assert.Equal(expected, calls);
+    }
+
+    [Fact]
+    public async Task RunAsync_ClearEmptiesTheClipboard()
+    {
+        // Act
+        var calls = await RunAsync("clipboard.clear()");
+
+        // Assert
+        Assert.Equal(["copy: "], calls);
+    }
+
+    [Theory]
+    [InlineData("keyboard.press(\"Foo\")", "keyboard.press(): 'Foo' is not a key.")]
+    [InlineData("keyboard.press(\"Tab\", 0)", "keyboard.press(): the times must be a whole number from 1 to 100")]
+    [InlineData("keyboard.press(\"Tab\", 1.5)", "the times must be a whole number from 1 to 100, not 1.5")]
+    [InlineData("keyboard.press(\"Tab\", 101)", "the times must be a whole number from 1 to 100, not 101")]
+    public async Task RunAsync_ReportsPressErrors(string script, string message)
+    {
+        // Act
+        var error = await RunWithErrorAsync(script);
+
+        // Assert
+        Assert.Contains(message, error.Message);
     }
 
     [Fact]
@@ -215,11 +279,13 @@ public class ScriptEngineTests
     }
 
     [Theory]
-    [InlineData("copy(\"x\")", "Unknown function 'copy': it is now clipboard.settext()")]
-    [InlineData("say(\"x\")", "Unknown function 'say': it is now dialog.message()")]
-    [InlineData("x = len(\"ab\")", "Unknown function 'len': it is now text.length() or list.length()")]
-    [InlineData("x = clipboard", "Unknown variable 'clipboard': the function clipboard() is now clipboard.gettext()")]
-    [InlineData("clipboard.copy(\"x\")", "Unknown function 'clipboard.copy': clipboard has gettext, settext")]
+    [InlineData("copy(\"x\")", "Unknown function 'copy'")]
+    [InlineData("say(\"x\")", "Unknown function 'say'")]
+    [InlineData("x = len(\"ab\")", "Unknown function 'len'")]
+    [InlineData("x = clipboard", "Unknown variable 'clipboard'")]
+    [InlineData(
+        "clipboard.copy(\"x\")",
+        "Unknown function 'clipboard.copy': clipboard has clear, gettext, pasteastext, settext")]
     [InlineData("files.read(\"a.txt\")", "Unknown function 'files.read': there is no module 'files'")]
     [InlineData("my.name = 1", "A variable name can't contain '.': 'my.name' looks like a function")]
     [InlineData("x = text.length([1, 2])", "text.length(): argument 1 is a list: use list.length()")]

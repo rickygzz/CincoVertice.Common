@@ -12,6 +12,9 @@ public static class BuiltInFunctions
     // A longer wait is more likely a mistake (seconds instead of milliseconds) than intended
     private const int MaxWaitMilliseconds = 10 * 60 * 1000;
 
+    // More key presses than this is more likely a mistake than intended
+    private const int MaxPressTimes = 100;
+
     public static IReadOnlyDictionary<string, ScriptFunction> Create(IScriptHost host)
     {
         return new ScriptFunction[]
@@ -26,8 +29,19 @@ public static class BuiltInFunctions
 
             new("clipboard.gettext", 0, 0, _ => Task.FromResult<object>(host.GetClipboard())),
             new("clipboard.settext", 1, 1, a => Done(() => host.SetClipboard(a.Text(0)))),
+            new("clipboard.clear", 0, 0, _ => Done(() => host.SetClipboard(string.Empty))),
+            new("clipboard.pasteastext", 0, 0, _ => PasteAsTextAsync(host)),
 
             new("keyboard.type", 1, 1, async a => { await host.TypeAsync(a.Text(0)); return ScriptValue.Nothing; }),
+            // press("Ctrl+V"), press("Tab", 3): keys as in hotkeys.cfg
+            new("keyboard.press", 1, 2, async a =>
+            {
+                await host.PressAsync(a.Text(0), ToTimes(a));
+
+                return ScriptValue.Nothing;
+            }),
+
+            new("window.title", 0, 0, _ => Task.FromResult<object>(host.GetActiveWindowTitle())),
 
             new("shell.open", 1, 1, a => Done(() => host.Open(a.Text(0)))),
             new("shell.run", 1, 2, a => Done(() => host.Run(a.Text(0), a.Text(1, string.Empty)))),
@@ -73,6 +87,22 @@ public static class BuiltInFunctions
         action();
 
         return Task.FromResult(ScriptValue.Nothing);
+    }
+
+    /// <summary>
+    ///     Pastes the clipboard's text without its formatting; the clipboard keeps its formatted content. Nothing
+    ///     happens when the clipboard has no text.
+    /// </summary>
+    private static async Task<object> PasteAsTextAsync(IScriptHost host)
+    {
+        string text = host.GetClipboard();
+
+        if (text.Length > 0)
+        {
+            await host.PasteTextAsync(text);
+        }
+
+        return ScriptValue.Nothing;
     }
 
     private static async Task<object> FormAsync(IScriptHost host, ScriptArguments a)
@@ -131,6 +161,23 @@ public static class BuiltInFunctions
         }
 
         return (int)milliseconds;
+    }
+
+    private static int ToTimes(ScriptArguments a)
+    {
+        if (a.Count < 2)
+        {
+            return 1;
+        }
+
+        decimal times = a.Number(1);
+
+        if (times < 1 || times > MaxPressTimes || times != decimal.Truncate(times))
+        {
+            throw a.Error($"the times must be a whole number from 1 to {MaxPressTimes}, not {times}");
+        }
+
+        return (int)times;
     }
 
     /// <summary>

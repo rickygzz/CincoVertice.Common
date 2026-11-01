@@ -39,6 +39,20 @@ public interface IScriptHost
     /// <summary>Types text into the active window, as if from the keyboard.</summary>
     Task TypeAsync(string text);
 
+    /// <summary>
+    ///     Pastes text into the active window with Ctrl+V, as plain text, then puts back what the clipboard held.
+    /// </summary>
+    Task PasteTextAsync(string text);
+
+    /// <summary>Presses keys in the active window, such as "Ctrl+V" or "Enter".</summary>
+    /// <param name="keys">The keys, written as in hotkeys.cfg; a key without modifiers is allowed.</param>
+    /// <param name="times">How many times to press them, at least 1.</param>
+    /// <exception cref="ArgumentException">The keys can't be read; the message says why.</exception>
+    Task PressAsync(string keys, int times);
+
+    /// <summary>The title of the window the user works in; empty when there is none or it has no title.</summary>
+    string GetActiveWindowTitle();
+
     Task WaitAsync(int milliseconds);
 
     /// <summary>Shows a notification that does not wait for the user.</summary>

@@ -6,10 +6,17 @@ namespace CincoVertice.Common.WinApi.Hotkey;
 ///     Reads and writes shortcuts as text, e.g. "Ctrl+Alt+M" or "Shift+F5".
 ///     <para>Modifiers: Ctrl (or Control), Alt, Shift, Win. Keys: A-Z, 0-9, F1-F24, NumPad0-NumPad9, names such as
 ///     Space, Enter, Esc, Tab, Delete, Home, PageUp, Up, PrintScreen, or any <see cref="KeyCode"/> name with or
-///     without "VK_". Case is ignored. A shortcut needs a modifier, except for the function keys.</para>
+///     without "VK_". A key can also be the character it types on the current keyboard layout, such as "Ctrl+Alt+&lt;";
+///     Shift is added when the layout needs it. Case is ignored. A shortcut needs a modifier, except for the function
+///     keys.</para>
 /// </summary>
 public static class HotkeyParser
 {
+    // Shift state bits in the high byte of VkKeyScan's result
+    private const int ShiftStateShift = 1;
+    private const int ShiftStateCtrl = 2;
+    private const int ShiftStateAlt = 4;
+
     private static readonly Dictionary<string, FSModifiers> _modifiers = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Ctrl"] = FSModifiers.MOD_CONTROL,
@@ -66,11 +73,55 @@ public static class HotkeyParser
     /// <param name="key">The key.</param>
     /// <param name="error">Why the text is not a shortcut; empty when it is.</param>
     /// <returns>True when the text is a valid shortcut.</returns>
-    public static bool TryParse(string? text, out FSModifiers modifiers, out KeyCode key, out string error)
+    public static bool TryParse(string? text, out FSModifiers modifiers, out KeyCode key, out string error) =>
+        TryParse(text, c => Libs.User32.VkKeyScan(c), out modifiers, out key, out error);
+
+    /// <summary>
+    ///     Parses a shortcut such as "Ctrl+Alt+M", finding the key of a character such as "&lt;" with
+    ///     <paramref name="keyScan"/> instead of the current keyboard layout, e.g. in tests.
+    /// </summary>
+    /// <param name="text">The shortcut; spaces around the parts are ignored.</param>
+    /// <param name="keyScan">
+    ///     Like VkKeyScan: the key of a character in the low byte and its shift state in the high byte; -1 when no
+    ///     key types it.
+    /// </param>
+    /// <param name="modifiers">The modifier keys.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="error">Why the text is not a shortcut; empty when it is.</param>
+    /// <returns>True when the text is a valid shortcut.</returns>
+    public static bool TryParse(
+        string? text,
+        Func<char, short> keyScan,
+        out FSModifiers modifiers,
+        out KeyCode key,
+        out string error) =>
+        Parse(text, keyScan, requireModifier: true, out modifiers, out key, out error);
+
+    /// <summary>
+    ///     Parses keys to press, such as "Ctrl+V" or "Enter": like a shortcut, but a key alone is allowed.
+    /// </summary>
+    /// <param name="text">The keys; spaces around the parts are ignored.</param>
+    /// <param name="modifiers">The modifier keys.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="error">Why the text is not a key; empty when it is.</param>
+    /// <returns>True when the text names a key.</returns>
+    public static bool TryParseKeys(string? text, out FSModifiers modifiers, out KeyCode key, out string error) =>
+        Parse(text, c => Libs.User32.VkKeyScan(c), requireModifier: false, out modifiers, out key, out error);
+
+    private static bool Parse(
+        string? text,
+        Func<char, short> keyScan,
+        bool requireModifier,
+        out FSModifiers modifiers,
+        out KeyCode key,
+        out string error)
     {
         modifiers = 0;
         key = 0;
         error = string.Empty;
+
+        // Shift that a character needs on the layout, e.g. "<" on a US keyboard; not a modifier the user typed
+        FSModifiers characterShift = 0;
 
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -105,7 +156,14 @@ public static class HotkeyParser
                 return false;
             }
 
-            if (!TryParseKey(part, out key))
+            if (part.Length == 1 && !char.IsAsciiLetterOrDigit(part[0]))
+            {
+                if (!TryParseCharacter(part[0], keyScan, out key, out characterShift, out error))
+                {
+                    return false;
+                }
+            }
+            else if (!TryParseKey(part, out key))
             {
                 error = $"'{part}' is not a key.";
 
@@ -122,12 +180,14 @@ public static class HotkeyParser
             return false;
         }
 
-        if (modifiers == 0 && key is < KeyCode.VK_F1 or > KeyCode.VK_F24)
+        if (requireModifier && modifiers == 0 && key is < KeyCode.VK_F1 or > KeyCode.VK_F24)
         {
             error = $"'{text}' needs a modifier (Ctrl, Alt, Shift or Win).";
 
             return false;
         }
+
+        modifiers |= characterShift;
 
         return true;
     }
@@ -162,6 +222,50 @@ public static class HotkeyParser
         parts.Add(FormatKey(key));
 
         return string.Join('+', parts);
+    }
+
+    /// <summary>
+    ///     The key that types <paramref name="c"/> on the layout, and Shift when the character needs it: "&lt;" is
+    ///     Shift+OEM_COMMA on a US keyboard and OEM_102 on a Spanish one.
+    /// </summary>
+    private static bool TryParseCharacter(
+        char c,
+        Func<char, short> keyScan,
+        out KeyCode key,
+        out FSModifiers shift,
+        out string error)
+    {
+        key = 0;
+        shift = 0;
+        error = string.Empty;
+
+        short scan = keyScan(c);
+
+        if (scan == -1)
+        {
+            error = $"No key types '{c}' on the current keyboard layout.";
+
+            return false;
+        }
+
+        int shiftState = (scan >> 8) & 0xFF;
+
+        // AltGr is Ctrl+Alt to Windows: a hotkey on that key would stop the character from being typed anywhere
+        if ((shiftState & (ShiftStateCtrl | ShiftStateAlt)) != 0)
+        {
+            error = $"'{c}' is typed with AltGr, and a hotkey on its key would stop you from typing it.";
+
+            return false;
+        }
+
+        key = (KeyCode)(scan & 0xFF);
+
+        if ((shiftState & ShiftStateShift) != 0)
+        {
+            shift = FSModifiers.MOD_SHIFT;
+        }
+
+        return true;
     }
 
     private static bool TryParseKey(string name, out KeyCode key)

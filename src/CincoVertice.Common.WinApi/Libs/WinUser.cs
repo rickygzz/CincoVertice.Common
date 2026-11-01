@@ -265,8 +265,20 @@ public static partial class WinUser
     ///     information, call GetLastError.
     ///     <para>This function cannot retrieve the text of an edit control in another application.</para>
     /// </returns>
-    [DllImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern int GetWindowText(nint hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+
+    /// <summary>
+    ///     Retrieves the length, in characters, of the specified window's title bar text (if the window has a title
+    ///     bar).
+    /// </summary>
+    /// <param name="hWnd">A handle to the window or control.</param>
+    /// <returns>
+    ///     The length of the text, not including the terminating null character; zero when the window has no text.
+    ///     It may be larger than the text, never smaller.
+    /// </returns>
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowTextLengthW", SetLastError = true)]
+    public static partial int GetWindowTextLength(nint hWnd);
 
     /// <summary>
     ///     Retrieves a handle to the foreground window (the window with which the user is currently working). The

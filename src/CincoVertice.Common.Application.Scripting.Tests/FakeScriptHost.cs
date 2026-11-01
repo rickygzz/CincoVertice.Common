@@ -75,6 +75,29 @@ internal sealed class FakeScriptHost : IScriptHost
         return Task.CompletedTask;
     }
 
+    public Task PasteTextAsync(string text)
+    {
+        Calls.Add($"paste: {text}");
+
+        return Task.CompletedTask;
+    }
+
+    public Task PressAsync(string keys, int times)
+    {
+        if (keys == "Foo")
+        {
+            throw new ArgumentException("'Foo' is not a key.");
+        }
+
+        Calls.Add($"press: {keys} [{times}]");
+
+        return Task.CompletedTask;
+    }
+
+    public string ActiveWindowTitle { get; set; } = string.Empty;
+
+    public string GetActiveWindowTitle() => ActiveWindowTitle;
+
     public Task WaitAsync(int milliseconds)
     {
         Calls.Add($"wait: {milliseconds}");

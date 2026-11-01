@@ -1,4 +1,5 @@
-﻿using CincoVertice.Common.WinApi.Libs;
+﻿using System.Text;
+using CincoVertice.Common.WinApi.Libs;
 using CincoVertice.Common.WinApi.Libs.Enums;
 
 namespace CincoVertice.Common.WinApi.Helpers;
@@ -61,5 +62,25 @@ public static class WindowHelper
         }
 
         return WinUser.GetForegroundWindow() == windowHandle;
+    }
+
+    /// <summary>
+    ///     The title of the foreground window, the one the user works in.
+    /// </summary>
+    /// <returns>The title; empty when no window is in the foreground or it has no title.</returns>
+    public static string GetForegroundWindowTitle()
+    {
+        nint foreground = WinUser.GetForegroundWindow();
+        int length = foreground == 0 ? 0 : WinUser.GetWindowTextLength(foreground);
+
+        if (length == 0)
+        {
+            return string.Empty;
+        }
+
+        var title = new StringBuilder(length + 1);
+        WinUser.GetWindowText(foreground, title, title.Capacity);
+
+        return title.ToString();
     }
 }

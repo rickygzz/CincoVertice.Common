@@ -7,6 +7,14 @@ namespace CincoVertice.Common.WinApi.Helpers;
 
 public class InputSimulator
 {
+    // Keys that share a virtual-key code with a numpad key unless sent as extended
+    private static readonly KeyCode[] _extendedKeys =
+    [
+        KeyCode.VK_INSERT, KeyCode.VK_DELETE, KeyCode.VK_HOME, KeyCode.VK_END, KeyCode.VK_PRIOR, KeyCode.VK_NEXT,
+        KeyCode.VK_LEFT, KeyCode.VK_UP, KeyCode.VK_RIGHT, KeyCode.VK_DOWN, KeyCode.VK_DIVIDE, KeyCode.VK_SNAPSHOT,
+        KeyCode.VK_LWIN, KeyCode.VK_RWIN, KeyCode.VK_APPS,
+    ];
+
     private readonly List<INPUT> toSend = [];
 
     /// <summary>
@@ -223,6 +231,62 @@ public class InputSimulator
         INPUT[] kbinputs = [.. list];
         User32.SendInput((uint)kbinputs.Length, kbinputs, Marshal.SizeOf(typeof(INPUT)));
     }
+
+    /// <summary>
+    ///     Presses a shortcut such as Ctrl+V, <paramref name="times"/> times: the modifiers down, the key down and
+    ///     up, then the modifiers up.
+    /// </summary>
+    public static void SendShortcut(FSModifiers modifiers, KeyCode key, int times = 1)
+    {
+        List<KeyCode> modifierKeys = [];
+
+        if (modifiers.HasFlag(FSModifiers.MOD_CONTROL))
+        {
+            modifierKeys.Add(KeyCode.VK_CONTROL);
+        }
+
+        if (modifiers.HasFlag(FSModifiers.MOD_ALT))
+        {
+            modifierKeys.Add(KeyCode.VK_MENU);
+        }
+
+        if (modifiers.HasFlag(FSModifiers.MOD_SHIFT))
+        {
+            modifierKeys.Add(KeyCode.VK_SHIFT);
+        }
+
+        if (modifiers.HasFlag(FSModifiers.MOD_WIN))
+        {
+            modifierKeys.Add(KeyCode.VK_LWIN);
+        }
+
+        List<INPUT> list = [];
+
+        foreach (var modifierKey in modifierKeys)
+        {
+            list.Add(KeyboardInput(modifierKey, ExtendedFlag(modifierKey)));
+        }
+
+        for (int i = 0; i < times; i++)
+        {
+            list.Add(KeyboardInput(key, ExtendedFlag(key)));
+            list.Add(KeyboardInput(key, ExtendedFlag(key) | KeyboardInputDwFlags.KEYEVENTF_KEYUP));
+        }
+
+        for (int i = modifierKeys.Count - 1; i >= 0; i--)
+        {
+            var keyUp = ExtendedFlag(modifierKeys[i]) | KeyboardInputDwFlags.KEYEVENTF_KEYUP;
+            list.Add(KeyboardInput(modifierKeys[i], keyUp));
+        }
+
+        INPUT[] kbinputs = [.. list];
+        User32.SendInput((uint)kbinputs.Length, kbinputs, Marshal.SizeOf(typeof(INPUT)));
+    }
+
+    private static KeyboardInputDwFlags ExtendedFlag(KeyCode key) =>
+        _extendedKeys.Contains(key)
+        ? KeyboardInputDwFlags.KEYEVENTF_EXTENDEDKEY
+        : KeyboardInputDwFlags.KEYEVENTF_KEYDOWN;
 
     /// <summary>
     ///     Simulates wheel scroll
