@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using CincoVertice.Common.Application.Scripting.Interfaces;
+using CincoVertice.Common.Application.Scripting.Models;
 
 namespace CincoVertice.Common.Application.Scripting.Functions;
 
@@ -123,10 +124,15 @@ public static class BuiltInFunctions
         return ScriptValue.Nothing;
     }
 
+    /// <summary>
+    ///     form(title, prompts, defaults): a default that is a list makes its box a fixed list of those items, the
+    ///     first selected; [[items], selected] selects another. Any other default is the starting text of a text box.
+    ///     Prompts without a default start empty.
+    /// </summary>
     private static async Task<object> FormAsync(IScriptHost host, ScriptArguments a)
     {
         List<string> prompts = [.. a.List(1).Select(ScriptValue.ToText)];
-        List<string> defaults = a.Count > 2 ? [.. a.List(2).Select(ScriptValue.ToText)] : [];
+        IReadOnlyList<object> defaults = a.Count > 2 ? a.List(2) : [];
 
         if (prompts.Count == 0)
         {
@@ -135,13 +141,45 @@ public static class BuiltInFunctions
 
         if (defaults.Count > prompts.Count)
         {
-            throw a.Error($"there are {defaults.Count} default texts for {prompts.Count} prompts");
+            throw a.Error($"there are {defaults.Count} defaults for {prompts.Count} prompts");
         }
 
-        // Prompts without a default start empty
-        defaults.AddRange(Enumerable.Repeat(string.Empty, prompts.Count - defaults.Count));
+        List<FormFieldModel> fields = [];
 
-        var answers = await host.FormAsync(a.Text(0), prompts, defaults) ?? throw new ScriptStopException();
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            object value = i < defaults.Count ? defaults[i] : string.Empty;
+
+            if (value is not IReadOnlyList<object> choices)
+            {
+                fields.Add(new FormFieldModel(prompts[i], ScriptValue.ToText(value)));
+
+                continue;
+            }
+
+            string selected = string.Empty;
+
+            // [[items], selected]: the items, and the one to select
+            if (choices.Count > 0 && choices[0] is IReadOnlyList<object> items)
+            {
+                if (choices.Count != 2 || choices[1] is IReadOnlyList<object>)
+                {
+                    throw a.Error($"the choices for '{prompts[i]}' must be [items] or [[items], selected item]");
+                }
+
+                selected = ScriptValue.ToText(choices[1]);
+                choices = items;
+            }
+
+            if (choices.Count == 0)
+            {
+                throw a.Error($"the list of choices for '{prompts[i]}' is empty");
+            }
+
+            fields.Add(new FormFieldModel(prompts[i], selected, [.. choices.Select(ScriptValue.ToText)]));
+        }
+
+        var answers = await host.FormAsync(a.Text(0), fields) ?? throw new ScriptStopException();
 
         return answers.Cast<object>().ToList().AsReadOnly();
     }

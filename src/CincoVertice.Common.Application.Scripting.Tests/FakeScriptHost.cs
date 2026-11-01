@@ -1,4 +1,5 @@
 using CincoVertice.Common.Application.Scripting.Interfaces;
+using CincoVertice.Common.Application.Scripting.Models;
 
 namespace CincoVertice.Common.Application.Scripting.Tests;
 
@@ -27,10 +28,13 @@ internal sealed class FakeScriptHost : IScriptHost
     /// <summary>The answers form() gets; null means the user cancelled.</summary>
     public Queue<IReadOnlyList<string>?> FormAnswers { get; } = new();
 
-    public Task<IReadOnlyList<string>?> FormAsync(
-        string title, IReadOnlyList<string> prompts, IReadOnlyList<string> defaultTexts)
+    // A list field shows as Prompt={a, b}, or Prompt={a, b} b with an item to select; a text field as Prompt=default
+    public Task<IReadOnlyList<string>?> FormAsync(string title, IReadOnlyList<FormFieldModel> fields)
     {
-        Calls.Add($"form: {title} [{string.Join(" | ", prompts.Zip(defaultTexts, (p, d) => $"{p}={d}"))}]");
+        var shown = fields.Select(f => f.Choices is null
+            ? $"{f.Prompt}={f.DefaultText}"
+            : $"{f.Prompt}={{{string.Join(", ", f.Choices)}}}{(f.DefaultText.Length > 0 ? " " + f.DefaultText : "")}");
+        Calls.Add($"form: {title} [{string.Join(" | ", shown)}]");
 
         return Task.FromResult(FormAnswers.Dequeue());
     }

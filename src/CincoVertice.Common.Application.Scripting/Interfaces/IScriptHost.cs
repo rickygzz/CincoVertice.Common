@@ -1,3 +1,5 @@
+using CincoVertice.Common.Application.Scripting.Models;
+
 namespace CincoVertice.Common.Application.Scripting.Interfaces;
 
 /// <summary>
@@ -10,13 +12,11 @@ public interface IScriptHost
     /// <returns>The text entered, or null when the user cancels.</returns>
     Task<string?> AskAsync(string prompt, string defaultText);
 
-    /// <summary>Asks several texts in one dialog, one box per prompt.</summary>
+    /// <summary>Asks several things in one dialog: a text box, or a fixed list to pick from, per field.</summary>
     /// <param name="title">Shown at the top of the dialog.</param>
-    /// <param name="prompts">One per box, at least one.</param>
-    /// <param name="defaultTexts">The starting text of each box; as many as the prompts.</param>
-    /// <returns>The texts entered, one per prompt, or null when the user cancels.</returns>
-    Task<IReadOnlyList<string>?> FormAsync(
-        string title, IReadOnlyList<string> prompts, IReadOnlyList<string> defaultTexts);
+    /// <param name="fields">One per box, at least one.</param>
+    /// <returns>The text entered or the item picked, one per field, or null when the user cancels.</returns>
+    Task<IReadOnlyList<string>?> FormAsync(string title, IReadOnlyList<FormFieldModel> fields);
 
     /// <summary>Shows a message and waits until the user closes it.</summary>
     Task SayAsync(string text);

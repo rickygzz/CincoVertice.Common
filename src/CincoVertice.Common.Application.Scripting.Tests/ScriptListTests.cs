@@ -61,6 +61,38 @@ public class ScriptListTests
     }
 
     [Fact]
+    public async Task RunAsync_FormDefaultThatIsAListIsAFixedList()
+    {
+        // Arrange
+        _host.FormAnswers.Enqueue(["DEV-1", "Blue", "x"]);
+        string script =
+            "answers = dialog.form(\"PR\",\n"
+            + "    [\"Task:\", \"Color:\", \"Note:\"],\n"
+            + "    [\"DEV-700\", [\"Red\", \"Blue\", 3]])\n"
+            + "dialog.message(answers[2])";
+
+        // Act
+        var calls = await RunAsync(script);
+
+        // Assert
+        Assert.Equal(["form: PR [Task:=DEV-700 | Color:={Red, Blue, 3} | Note:=]", "say: Blue"], calls);
+    }
+
+    [Fact]
+    public async Task RunAsync_FormListWithSelectedItem_PassesWhichToSelect()
+    {
+        // Arrange
+        _host.FormAnswers.Enqueue(["Mobile"]);
+
+        // Act
+        var calls = await RunAsync(
+            "app = \"Mobile\"\nanswers = dialog.form(\"PR\", [\"App:\"], [[[\"Finpro\", \"Mobile\", \"Life\"], app]])");
+
+        // Assert
+        Assert.Equal(["form: PR [App:={Finpro, Mobile, Life} Mobile]"], calls);
+    }
+
+    [Fact]
     public async Task RunAsync_WhenFormIsCancelled_StopsWithoutError()
     {
         // Arrange
@@ -106,7 +138,11 @@ public class ScriptListTests
     [InlineData("dialog.message([1] < [2])", 1, 20, "compares two numbers or two texts, not a list and a list")]
     [InlineData("dialog.form(\"T\", \"A:\")", 1, 1, "dialog.form(): argument 2 must be a list, not a text")]
     [InlineData("dialog.form(\"T\", [])", 1, 1, "dialog.form(): the list of prompts is empty")]
-    [InlineData("dialog.form(\"T\", [\"A:\"], [\"1\", \"2\"])", 1, 1, "there are 2 default texts for 1 prompts")]
+    [InlineData("dialog.form(\"T\", [\"A:\"], [\"1\", \"2\"])", 1, 1, "there are 2 defaults for 1 prompts")]
+    [InlineData("dialog.form(\"T\", [\"Color:\"], [[]])", 1, 1, "the list of choices for 'Color:' is empty")]
+    [InlineData("dialog.form(\"T\", [\"Color:\"], [[[], \"x\"]])", 1, 1, "the list of choices for 'Color:' is empty")]
+    [InlineData("dialog.form(\"T\", [\"C:\"], [[[\"a\"], \"a\", \"b\"]])", 1, 1, "must be [items] or [[items], sel")]
+    [InlineData("dialog.form(\"T\", [\"C:\"], [[[\"a\"], [\"a\"]]])", 1, 1, "must be [items] or [[items], sel")]
     public async Task RunAsync_ReportsListErrorsWithPosition(string script, int line, int column, string message)
     {
         // Act
