@@ -24,7 +24,6 @@ public class ForbiddenStartTokenCheckerTests
     [InlineData(", b", ",")]
     [InlineData("; i++", ";")]
     [InlineData(");", ")")]
-    [InlineData("(a + b) * c;", "(")]
     [InlineData("= 1;", "=")]
     [InlineData("+= 1;", "+=")]
     [InlineData("-= 1;", "-=")]
@@ -57,7 +56,10 @@ public class ForbiddenStartTokenCheckerTests
     [InlineData("() => 1;")]
     [InlineData("(x) => x * 2;")]
     [InlineData("(item)=> item.Id;")]
-    public void Check_WhenLineStartsWithLambdaParameterList_AddsNoError(string content)
+    [InlineData("(a + b) * c;")]
+    [InlineData("(int)value,")]
+    [InlineData("(\"US\", ',') => 0x00BC,")]
+    public void Check_WhenLineStartsWithParenthesis_AddsNoError(string content)
     {
         var line = TestLine.Create(content);
 

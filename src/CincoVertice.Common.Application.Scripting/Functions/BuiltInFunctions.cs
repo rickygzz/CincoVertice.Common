@@ -30,7 +30,9 @@ public static class BuiltInFunctions
             new("clipboard.gettext", 0, 0, _ => Task.FromResult<object>(host.GetClipboard())),
             new("clipboard.settext", 1, 1, a => Done(() => host.SetClipboard(a.Text(0)))),
             new("clipboard.clear", 0, 0, _ => Done(() => host.SetClipboard(string.Empty))),
-            new("clipboard.pasteastext", 0, 0, _ => PasteAsTextAsync(host)),
+            new("clipboard.pasteastext", 0, 0, _ => PasteAsync(host, host.GetClipboard())),
+            // paste(text): faster than keyboard.type for long texts, and editors don't auto-indent it
+            new("clipboard.paste", 1, 1, a => PasteAsync(host, a.Text(0))),
 
             new("keyboard.type", 1, 1, async a => { await host.TypeAsync(a.Text(0)); return ScriptValue.Nothing; }),
             // press("Ctrl+V"), press("Tab", 3): keys as in hotkeys.cfg
@@ -90,13 +92,11 @@ public static class BuiltInFunctions
     }
 
     /// <summary>
-    ///     Pastes the clipboard's text without its formatting; the clipboard keeps its formatted content. Nothing
-    ///     happens when the clipboard has no text.
+    ///     Pastes the text as plain text; the clipboard keeps what it had. Nothing happens for an empty text, e.g.
+    ///     pasteastext() when the clipboard has no text.
     /// </summary>
-    private static async Task<object> PasteAsTextAsync(IScriptHost host)
+    private static async Task<object> PasteAsync(IScriptHost host, string text)
     {
-        string text = host.GetClipboard();
-
         if (text.Length > 0)
         {
             await host.PasteTextAsync(text);

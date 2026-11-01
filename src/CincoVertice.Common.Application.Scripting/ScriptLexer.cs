@@ -7,7 +7,8 @@ namespace CincoVertice.Common.Application.Scripting;
 /// <summary>
 ///     Splits a script into tokens. # starts a comment to the end of the line. A new line ends a statement, except
 ///     inside parentheses or brackets, so a long call or list can span lines. Text literals use double quotes,
-///     with the escapes \" \\ \n and \t. A name can have dotted parts, as in the function clipboard.gettext.
+///     with the escapes \" \\ \n and \t; a text of several lines goes between lines with """ and has no escapes.
+///     A name can have dotted parts, as in the function clipboard.gettext.
 /// </summary>
 public class ScriptLexer
 {
@@ -71,6 +72,10 @@ public class ScriptLexer
             else if (char.IsAsciiLetter(current) || current == '_')
             {
                 ReadIdentifier();
+            }
+            else if (current == '"' && Peek(1) == '"' && Peek(2) == '"')
+            {
+                ReadMultiLineText();
             }
             else if (current == '"')
             {
@@ -226,6 +231,85 @@ public class ScriptLexer
         }
 
         _tokens.Add(new Token(TokenType.Text, sb.ToString(), _line, column));
+    }
+
+    /// <summary>
+    ///     A text of several lines: the lines between a """ at the end of a line and a line starting with """. It is
+    ///     taken as it is, without escapes. The spaces before the closing """ are removed from every line, so the
+    ///     text can be indented with the script.
+    /// </summary>
+    private void ReadMultiLineText()
+    {
+        int line = _line;
+        int column = Column;
+
+        _index += 3;
+
+        while (Peek(0) is ' ' or '\t' or '\r')
+        {
+            _index++;
+        }
+
+        if (_index < _source.Length && Peek(0) != '\n')
+        {
+            throw new ScriptException("Start the text on the line after \"\"\"", _line, Column);
+        }
+
+        List<string> lines = [];
+
+        while (true)
+        {
+            if (_index >= _source.Length)
+            {
+                throw new ScriptException(
+                    "The text is not closed: add a line starting with \"\"\" after it", line, column);
+            }
+
+            // Past the new line, to the start of the next line
+            _index++;
+            _line++;
+            _lineStart = _index;
+
+            int end = _source.IndexOf('\n', _index);
+            string text = _source[_index..(end < 0 ? _source.Length : end)].TrimEnd('\r');
+
+            // The closing line may go on, e.g. """) to end a call
+            if (text.TrimStart().StartsWith("\"\"\"", StringComparison.Ordinal))
+            {
+                int indent = text.Length - text.TrimStart().Length;
+                _index += indent + 3;
+                _tokens.Add(new Token(TokenType.Text, RemoveIndent(lines, text[..indent], line), line, column));
+
+                return;
+            }
+
+            lines.Add(text);
+            _index = end < 0 ? _source.Length : end;
+        }
+    }
+
+    private static string RemoveIndent(List<string> lines, string indent, int openingLine)
+    {
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (lines[i].Trim().Length == 0)
+            {
+                lines[i] = string.Empty;
+            }
+            else if (lines[i].StartsWith(indent, StringComparison.Ordinal))
+            {
+                lines[i] = lines[i][indent.Length..];
+            }
+            else
+            {
+                throw new ScriptException(
+                    "This line starts left of the closing \"\"\": indent it at least as much",
+                    openingLine + 1 + i,
+                    1);
+            }
+        }
+
+        return string.Join('\n', lines);
     }
 
     private void ReadOperator()
