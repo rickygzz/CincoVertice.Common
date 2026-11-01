@@ -285,7 +285,7 @@ public class ScriptEngineTests
     [InlineData("x = clipboard", "Unknown variable 'clipboard'")]
     [InlineData(
         "clipboard.copy(\"x\")",
-        "Unknown function 'clipboard.copy': clipboard has clear, gettext, pasteastext, settext")]
+        "Unknown function 'clipboard.copy': clipboard has clear, gettext, paste, pasteastext, settext")]
     [InlineData("files.read(\"a.txt\")", "Unknown function 'files.read': there is no module 'files'")]
     [InlineData("my.name = 1", "A variable name can't contain '.': 'my.name' looks like a function")]
     [InlineData("x = text.length([1, 2])", "text.length(): argument 1 is a list: use list.length()")]

@@ -57,6 +57,80 @@ public class HotkeyParserTests
     }
 
     [Theory]
+    [InlineData("Ctrl+Alt+<", "US", CtrlAlt | FSModifiers.MOD_SHIFT, KeyCode.VK_OEM_COMMA)]
+    [InlineData("Ctrl+Alt+,", "US", CtrlAlt, KeyCode.VK_OEM_COMMA)]
+    [InlineData("Ctrl+Shift+<", "US", FSModifiers.MOD_CONTROL | FSModifiers.MOD_SHIFT, KeyCode.VK_OEM_COMMA)]
+    [InlineData("Ctrl+Alt+<", "ES", CtrlAlt, KeyCode.VK_OEM_102)]
+    [InlineData("Ctrl+Alt+>", "ES", CtrlAlt | FSModifiers.MOD_SHIFT, KeyCode.VK_OEM_102)]
+    [InlineData("Ctrl+ñ", "ES", FSModifiers.MOD_CONTROL, KeyCode.VK_OEM_3)]
+    public void TryParse_ReadsCharacterAsTheKeyThatTypesIt(
+        string text,
+        string layout,
+        FSModifiers expectedModifiers,
+        KeyCode expectedKey)
+    {
+        // Act
+        bool ok = HotkeyParser.TryParse(text, KeyScan(layout), out var modifiers, out var key, out string error);
+
+        // Assert
+        Assert.True(ok, error);
+        Assert.Equal((expectedModifiers, expectedKey), (modifiers, key));
+    }
+
+    [Theory]
+    [InlineData("Ctrl+Alt+@", "ES", "is typed with AltGr")]
+    [InlineData("Ctrl+€", "US", "No key types '€'")]
+    [InlineData("<", "US", "needs a modifier")]
+    [InlineData("Ctrl+<+,", "US", "more than one key")]
+    public void TryParse_WhenCharacterCantBeAKey_ReturnsFalseWithError(string text, string layout, string message)
+    {
+        // Act
+        bool ok = HotkeyParser.TryParse(text, KeyScan(layout), out _, out _, out string error);
+
+        // Assert
+        Assert.False(ok);
+        Assert.Contains(message, error);
+    }
+
+    // What VkKeyScan returns for a few characters on a US and a Spanish keyboard: key | shift state << 8
+    private static readonly Dictionary<string, Dictionary<char, short>> _layouts = new()
+    {
+        ["US"] = new() { [','] = 0x00BC, ['<'] = 0x01BC },
+        ["ES"] = new() { ['<'] = 0x00E2, ['>'] = 0x01E2, ['ñ'] = 0x00C0, ['@'] = 0x0632 },
+    };
+
+    private static Func<char, short> KeyScan(string layout) => c => _layouts[layout].GetValueOrDefault(c, (short)-1);
+
+    [Theory]
+    [InlineData("Ctrl+V", FSModifiers.MOD_CONTROL, KeyCode.V)]
+    [InlineData("Enter", (FSModifiers)0, KeyCode.VK_RETURN)]
+    [InlineData("tab", (FSModifiers)0, KeyCode.VK_TAB)]
+    [InlineData("Shift+Down", FSModifiers.MOD_SHIFT, KeyCode.VK_DOWN)]
+    public void TryParseKeys_AllowsKeyWithoutModifier(string text, FSModifiers expectedModifiers, KeyCode expectedKey)
+    {
+        // Act
+        bool ok = HotkeyParser.TryParseKeys(text, out var modifiers, out var key, out string error);
+
+        // Assert
+        Assert.True(ok, error);
+        Assert.Equal((expectedModifiers, expectedKey), (modifiers, key));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("Ctrl")]
+    [InlineData("Ctrl+Foo")]
+    public void TryParseKeys_WhenNotAKey_ReturnsFalseWithError(string text)
+    {
+        // Act
+        bool ok = HotkeyParser.TryParseKeys(text, out _, out _, out string error);
+
+        // Assert
+        Assert.False(ok);
+        Assert.NotEmpty(error);
+    }
+
+    [Theory]
     [InlineData(CtrlAlt, KeyCode.M, "Ctrl+Alt+M")]
     [InlineData(FSModifiers.MOD_SHIFT | FSModifiers.MOD_WIN, KeyCode.VK_F5, "Shift+Win+F5")]
     [InlineData(FSModifiers.MOD_CONTROL, KeyCode.D7, "Ctrl+7")]
