@@ -1,4 +1,5 @@
-﻿using CincoVertice.Common.WinApi.Helpers;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 using CincoVertice.Common.WinApi.Hotkey.Window;
 
 namespace CincoVertice.Common.WinApi.Hotkey;
@@ -33,22 +34,24 @@ public class Hotkey : IDisposable
     ///     Registers a hot key in the system.
     /// </summary>
     /// <param name="hotkey">Hotkey.</param>
-    public void RegisterHotKey(HotkeyData hotkey)
+    /// <param name="error">Why it failed (e.g. another application uses the shortcut); empty on success.</param>
+    /// <returns>True when the hot key was registered.</returns>
+    public bool TryRegisterHotKey(HotkeyData hotkey, out string error)
     {
-        // Increment the counter.
         _currentId++;
-
         hotkey.Id = _currentId;
 
-        // Register the hot key.
         if (Libs.User32.RegisterHotKey(_hotkeyWindow.Handle, hotkey.Id, hotkey.Modifier, hotkey.Key) == 0)
         {
-            MessageHelper.ShowLastWin32Error("RegisterHotKey() key " + hotkey.Key.ToString() + " modifier" + hotkey.Modifier.ToString());
+            error = new Win32Exception(Marshal.GetLastPInvokeError()).Message;
+
+            return false;
         }
-        else
-        {
-            _hotkeys.Add(hotkey);
-        }
+
+        _hotkeys.Add(hotkey);
+        error = string.Empty;
+
+        return true;
     }
 
     private void Window_HotKeyPressed(object? sender, HotkeyKeyPressedEventArgs args)
