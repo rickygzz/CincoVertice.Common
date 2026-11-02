@@ -106,6 +106,9 @@ public class GenericLexer : IGenericLexer
                 lines.Add(new Line() { CharStart = charStart, CharEnd = charEnd });
 
                 charStart = CharIndex;
+
+                // Already on the next line's first character, which may be another line end
+                continue;
             }
             NextChar();
         }
@@ -182,6 +185,15 @@ public class GenericLexer : IGenericLexer
         }
     }
 
+    /// <summary>
+    ///     Gets the line and column of a character in this.text, both numbered from 1.
+    ///     <para>A line's end belongs to that line, and text.Length is a position on the last line.</para>
+    /// </summary>
+    /// <param name="charIndex">The zero-based character position.</param>
+    /// <returns>
+    ///     The position of the character. If charIndex is above text.Length, the last line, with the Column set to the
+    ///     character position of that line's end.
+    /// </returns>
     public Position Position(int charIndex)
     {
         for (int i = 0; i < lines.Count; i++)

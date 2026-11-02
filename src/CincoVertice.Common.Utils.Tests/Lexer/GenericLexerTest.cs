@@ -161,6 +161,30 @@ public class GenericLexerTest
     }
 
     [Fact]
+    public void Position_CountsBlankLines()
+    {
+        // Arrange
+        GenericLexer lexer = new("a\n\nb\r\n\r\nc");
+
+        // Act & Assert
+        Position pos = lexer.Position(2);
+        Assert.Equal(2, pos.Line);
+        Assert.Equal(1, pos.Column);
+
+        pos = lexer.Position(3);
+        Assert.Equal(3, pos.Line);
+        Assert.Equal(1, pos.Column);
+
+        pos = lexer.Position(6);
+        Assert.Equal(4, pos.Line);
+        Assert.Equal(1, pos.Column);
+
+        pos = lexer.Position(8);
+        Assert.Equal(5, pos.Line);
+        Assert.Equal(1, pos.Column);
+    }
+
+    [Fact]
     public void Position_SecondTest()
     {
         // Arrange
