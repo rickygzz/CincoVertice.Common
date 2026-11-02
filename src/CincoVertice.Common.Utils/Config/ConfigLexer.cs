@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using CincoVertice.Common.Utils.Config.Models;
 using CincoVertice.Common.Utils.Config.Tokens;
 using CincoVertice.Common.Utils.Lexer;
 using CincoVertice.Common.Utils.Lexer.Extensions;
@@ -11,6 +12,13 @@ public class ConfigLexer : GenericLexer
     ///     List with indexes of all keys processed in Process().
     /// </summary>
     public ConfigItems Items;
+
+    private readonly List<ConfigBadLine> _badLines = [];
+
+    /// <summary>
+    ///     Lines that are not blank, a comment or a key with a value, which are left out of <see cref="Items"/>.
+    /// </summary>
+    public IReadOnlyList<ConfigBadLine> BadLines => _badLines;
 
     public ConfigLexer()
         : base()
@@ -38,6 +46,7 @@ public class ConfigLexer : GenericLexer
     {
         Tokens.Clear();
         Items.Clear();
+        _badLines.Clear();
 
         Char(0);
 
@@ -79,7 +88,15 @@ public class ConfigLexer : GenericLexer
         // Error: Unknown token.
         token.Type = ConfigTokenType.ErrorUnknown;
 
+        int start = CharIndex;
+
         this.SkipCharsToNextLineOrEOF();
+
+        // Also gets here at the end of the text, where there is no line
+        if (CharIndex > start)
+        {
+            _badLines.Add(new ConfigBadLine(LineNumber(start), Substring(start, CharIndex - start).Trim()));
+        }
 
         if (CurrentChar == '\0')
         {
@@ -146,5 +163,24 @@ public class ConfigLexer : GenericLexer
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Gets the line of a character, numbered from 1.
+    /// </summary>
+    private int LineNumber(int charIndex)
+    {
+        int line = 1;
+
+        for (int i = 0; i < charIndex; i++)
+        {
+            // \r\n is one line end
+            if (Text[i] == '\n' || (Text[i] == '\r' && Text[i + 1] != '\n'))
+            {
+                line++;
+            }
+        }
+
+        return line;
     }
 }

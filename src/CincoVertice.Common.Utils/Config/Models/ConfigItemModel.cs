@@ -1,6 +1,6 @@
 ﻿using CincoVertice.Common.Utils.Lexer;
 
-namespace CincoVertice.Common.Utils.Config;
+namespace CincoVertice.Common.Utils.Config.Models;
 
 public class ConfigItemModel
 {

@@ -1,4 +1,5 @@
-﻿using CincoVertice.Common.Utils.Lexer;
+﻿using CincoVertice.Common.Utils.Config.Models;
+using CincoVertice.Common.Utils.Lexer;
 using CincoVertice.Common.Utils.Lexer.Extensions;
 using CincoVertice.Common.Utils.Lexer.Tokens;
 

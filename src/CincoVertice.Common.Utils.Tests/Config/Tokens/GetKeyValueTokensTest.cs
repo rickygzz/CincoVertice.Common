@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Utils.Config;
+using CincoVertice.Common.Utils.Config.Models;
 using CincoVertice.Common.Utils.Config.Tokens;
 using Xunit;
 
