@@ -6,8 +6,8 @@ namespace CincoVertice.Common.WinApi.Helpers;
 
 /// <summary>
 ///     Keeps the session active while the user is away: every tick moves the mouse to a random point of the
-///     window under the cursor and presses Print Screen. When the user moves the mouse, it waits
-///     <see cref="IdleTicksBeforeMove"/> ticks without movement before moving it again.
+///     window under the cursor and presses the Print key. When the user moves the mouse, it waits
+///     <see cref="MouseMoveSettings.IdleTicksBeforeMove"/> ticks without movement before moving it again.
 ///     <para>Created stopped. The timer runs on a thread pool thread.</para>
 /// </summary>
 public sealed class MouseMoveSimulator : IDisposable
@@ -15,6 +15,7 @@ public sealed class MouseMoveSimulator : IDisposable
     private readonly System.Threading.Timer _timer;
     private readonly Random _random = new();
 
+    private MouseMoveSettings _settings = MouseMoveSettings.Default;
     private POINT _prevPosition;
     private int _idleTicksLeft;
 
@@ -26,33 +27,40 @@ public sealed class MouseMoveSimulator : IDisposable
         _timer = new System.Threading.Timer(Timer_Tick, null, Timeout.Infinite, Timeout.Infinite);
     }
 
-    /// <summary>Milliseconds between ticks. Takes effect on the next <see cref="Start"/>.</summary>
-    public int Interval { get; set; } = 5000;
-
-    /// <summary>Ticks without the user moving the mouse before it is moved.</summary>
-    public int IdleTicksBeforeMove { get; set; } = 20;
-
-    /// <summary>Slowest and fastest move; see <see cref="InputSimulator.IncrementalMouseMove"/>.</summary>
-    public int SpeedMin { get; set; } = 20;
-
-    public int SpeedMax { get; set; } = 100;
-
     /// <summary>
-    ///     True to move the mouse as soon as it starts; false to first wait <see cref="IdleTicksBeforeMove"/> ticks, as
-    ///     if the user had just moved it. Takes effect on the next <see cref="Start"/>.
+    ///     The settings, replaced as a whole: a tick reads them once, so even a tick still running after
+    ///     <see cref="Stop"/> never mixes old and new values. Interval and MoveImmediately take effect on the next
+    ///     <see cref="Start"/>.
     /// </summary>
-    public bool MoveImmediately { get; set; } = true;
+    /// <exception cref="ArgumentException">
+    ///     The settings can't be used. Thrown here, as on the timer's thread an exception would end the application.
+    /// </exception>
+    public MouseMoveSettings Settings
+    {
+        get => Volatile.Read(ref _settings);
+        set
+        {
+            if (value.Interval <= 0 || value.IdleTicksBeforeMove < 0 || value.SpeedMin > value.SpeedMax)
+            {
+                throw new ArgumentException($"These mouse move settings can't be used: {value}", nameof(value));
+            }
+
+            Volatile.Write(ref _settings, value);
+        }
+    }
 
     public bool IsRunning { get; private set; } = false;
 
     public void Start()
     {
+        MouseMoveSettings settings = Settings;
+
         _ = User32.GetCursorPos(out _prevPosition);
 
-        _idleTicksLeft = MoveImmediately ? 0 : IdleTicksBeforeMove;
+        _idleTicksLeft = settings.MoveImmediately ? 0 : settings.IdleTicksBeforeMove;
 
         IsRunning = true;
-        _timer.Change(MoveImmediately ? 0 : Interval, Interval);
+        _timer.Change(settings.MoveImmediately ? 0 : settings.Interval, settings.Interval);
     }
 
     public void Stop()
@@ -85,13 +93,15 @@ public sealed class MouseMoveSimulator : IDisposable
 
     private void Tick()
     {
+        MouseMoveSettings settings = Settings;
+
         _ = User32.GetCursorPos(out POINT point);
 
         if (point.X != _prevPosition.X && point.Y != _prevPosition.Y)
         {
             // The user moved the mouse: wait again before moving it
             _prevPosition = point;
-            _idleTicksLeft = IdleTicksBeforeMove;
+            _idleTicksLeft = settings.IdleTicksBeforeMove;
 
             return;
         }
@@ -115,7 +125,7 @@ public sealed class MouseMoveSimulator : IDisposable
 
         int endX = _random.Next(rec.Left, rec.Right);
         int endY = _random.Next(rec.Top, rec.Bottom);
-        int speed = _random.Next(SpeedMin, SpeedMax);
+        int speed = _random.Next(settings.SpeedMin, settings.SpeedMax);
 
         // Remember where the move ends, so it is not taken for the user moving the mouse
         _prevPosition.X = endX;
@@ -125,6 +135,6 @@ public sealed class MouseMoveSimulator : IDisposable
 
         InputSimulator.SendKey(KeyCode.VK_PRINT);
 
-        _idleTicksLeft = IdleTicksBeforeMove;
+        _idleTicksLeft = settings.IdleTicksBeforeMove;
     }
 }
