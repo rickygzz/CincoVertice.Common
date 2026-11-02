@@ -8,6 +8,8 @@ namespace CincoVertice.Common.Utils.Tests.Config.Tokens;
 public class GerCommentTest
 {
     [Theory]
+    [InlineData("#", 1, 1, '\0')]
+    [InlineData("#\nAnother line", 1, 2, 'A')]
     [InlineData("# ABC", 5, 5, '\0')]
     [InlineData(@"# ABC
 Another line", 5, 7, 'A')]
@@ -18,7 +20,7 @@ Another line", 5, 7, 'A')]
         string testStr,
         int expectedLength,
         int expectedNewIndex,
-        char expectedChar)
+        char expectedCurrentChar)
     {
         // Arrange
         ConfigLexer lexer = new(testStr);
@@ -34,6 +36,6 @@ Another line", 5, 7, 'A')]
         Assert.Equal(expectedNewIndex, lexer.CharIndex);
         Assert.Equal(expectedLength, ret.Length);
         Assert.Equal(ConfigTokenType.Comment, ret.Type);
-        Assert.Equal(expectedChar, lexer.CurrentChar);
+        Assert.Equal(expectedCurrentChar, lexer.CurrentChar);
     }
 }

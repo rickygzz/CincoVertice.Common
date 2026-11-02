@@ -8,7 +8,7 @@ public static class CGetComment
 {
     /// <summary>
     /// Gets comment from CharIndex.
-    /// <para>{Comment}  ::=  [#] {Printable} {EOL}.</para>
+    /// <para>{Comment}  ::=  [#] {Printable}* {EOL}.</para>
     /// </summary>
     /// <param name="lexer">Lexer instance.</param>
     /// <returns>GenericToken.
@@ -19,14 +19,20 @@ public static class CGetComment
     {
         GenericToken token = lexer.NullToken();
 
-        if (lexer.SkipChar('#') && lexer.SkipPrintables() && lexer.IsEOL())
+        if (lexer.SkipChar('#'))
         {
-            token.Length = lexer.CharIndex - token.StartPos;
-            token.Type = ConfigTokenType.Comment;
+            // Nothing after the # is still a comment
+            lexer.SkipPrintables();
 
-            lexer.SkipOneEOL();
+            if (lexer.IsEOL())
+            {
+                token.Length = lexer.CharIndex - token.StartPos;
+                token.Type = ConfigTokenType.Comment;
 
-            return token;
+                lexer.SkipOneEOL();
+
+                return token;
+            }
         }
 
         lexer.Char(token.StartPos);
