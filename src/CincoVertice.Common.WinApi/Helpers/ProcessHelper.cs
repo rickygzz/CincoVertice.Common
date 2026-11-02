@@ -6,11 +6,9 @@ public static class ProcessHelper
 {
     public static bool IsProcessCurrentlyRunning()
     {
-        string assemblyLocation = System.Reflection.Assembly.GetEntryAssembly()?.Location ?? string.Empty;
-        string file = Path.GetFileNameWithoutExtension(assemblyLocation);
-
-        Process[] processes = Process.GetProcessesByName(file);
+        // The process name, not the entry assembly's location: that is empty in a single-file build
         Process thisProcess = Process.GetCurrentProcess();
+        Process[] processes = Process.GetProcessesByName(thisProcess.ProcessName);
 
         foreach (Process process in processes)
         {
