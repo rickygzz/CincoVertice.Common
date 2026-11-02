@@ -37,17 +37,22 @@ public sealed class MouseMoveSimulator : IDisposable
 
     public int SpeedMax { get; set; } = 100;
 
+    /// <summary>
+    ///     True to move the mouse as soon as it starts; false to first wait <see cref="IdleTicksBeforeMove"/> ticks, as
+    ///     if the user had just moved it. Takes effect on the next <see cref="Start"/>.
+    /// </summary>
+    public bool MoveImmediately { get; set; } = true;
+
     public bool IsRunning { get; private set; } = false;
 
     public void Start()
     {
         _ = User32.GetCursorPos(out _prevPosition);
 
-        // Moves on the first tick; the wait only starts once the user moves the mouse
-        _idleTicksLeft = 0;
+        _idleTicksLeft = MoveImmediately ? 0 : IdleTicksBeforeMove;
 
         IsRunning = true;
-        _timer.Change(Interval, Interval);
+        _timer.Change(MoveImmediately ? 0 : Interval, Interval);
     }
 
     public void Stop()
