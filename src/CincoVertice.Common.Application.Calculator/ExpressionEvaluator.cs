@@ -1,4 +1,5 @@
 using CincoVertice.Common.Application.Calculator.Ast;
+using CincoVertice.Common.Application.Calculator.Conversions;
 using CincoVertice.Common.Application.Calculator.Functions;
 
 namespace CincoVertice.Common.Application.Calculator;
@@ -8,8 +9,12 @@ namespace CincoVertice.Common.Application.Calculator;
 /// </summary>
 public class ExpressionEvaluator
 {
+    // Enough for any practical conversion, instead of the 28 decimals of a result like 1 km to mi
+    private const int ConversionSignificantDigits = 10;
+
     /// <exception cref="ExpressionException">
-    ///     Division by zero, overflow, unknown name or function, wrong argument count, or invalid function input.
+    ///     Division by zero, overflow, unknown name or function, wrong argument count, invalid function input, or a
+    ///     unit that is unknown or can't be converted to the other.
     /// </exception>
     public decimal Evaluate(ExpressionNode node) => node switch
     {
@@ -18,6 +23,7 @@ public class ExpressionEvaluator
         UnaryNode unary => EvaluateUnary(unary),
         BinaryNode binary => EvaluateBinary(binary),
         FunctionCallNode functionCall => EvaluateFunctionCall(functionCall),
+        ConversionNode conversion => EvaluateConversion(conversion),
         // A text is only valid as a function argument (see EvaluateArgument)
         StringNode text => throw new ExpressionException("Text can only be used as a function argument", text.Position),
         _ => throw new ArgumentException($"Unknown node type '{node.GetType().Name}'", nameof(node))
@@ -57,6 +63,23 @@ public class ExpressionEvaluator
             BinaryOperator.Power => DecimalMath.Pow(left, right),
             _ => throw new ArgumentOutOfRangeException(nameof(node), node.Operator, null)
         });
+    }
+
+    private decimal EvaluateConversion(ConversionNode node)
+    {
+        UnitDefinition from = UnitTable.Find(node.From, node.FromPosition);
+        UnitDefinition to = UnitTable.Find(node.To, node.ToPosition);
+
+        if (from.Group != to.Group)
+        {
+            throw new ExpressionException($"Can't convert {from.Symbol} to {to.Symbol}", node.Position);
+        }
+
+        decimal value = Evaluate(node.Value);
+
+        return Calculate(
+            node.Position,
+            () => DecimalMath.RoundToSignificantDigits(to.FromBase(from.ToBase(value)), ConversionSignificantDigits));
     }
 
     private decimal EvaluateFunctionCall(FunctionCallNode node)

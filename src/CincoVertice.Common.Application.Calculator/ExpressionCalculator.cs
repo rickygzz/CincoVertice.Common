@@ -1,3 +1,5 @@
+using CincoVertice.Common.Application.Calculator.Ast;
+using CincoVertice.Common.Application.Calculator.Conversions;
 using System.Globalization;
 
 namespace CincoVertice.Common.Application.Calculator;
@@ -13,10 +15,31 @@ public class ExpressionCalculator
     /// <exception cref="ExpressionException">The expression is invalid or cannot be calculated.</exception>
     public decimal Evaluate(string? expression)
     {
-        var tokens = new ExpressionTokenizer().Tokenize(expression);
-        var tree = new ExpressionParser().Parse(tokens);
+        return _evaluator.Evaluate(Parse(expression));
+    }
 
-        return _evaluator.Evaluate(tree);
+    /// <summary>
+    ///     Evaluates an expression and formats the result for display (see <see cref="Format"/>). The result of a unit
+    ///     conversion is followed by its unit: 6.213711922 mi.
+    /// </summary>
+    /// <param name="expression">The expression.</param>
+    /// <param name="groupThousands">Separate thousands with ','.</param>
+    /// <exception cref="ExpressionException">The expression is invalid or cannot be calculated.</exception>
+    public string EvaluateToText(string? expression, bool groupThousands = false)
+    {
+        ExpressionNode tree = Parse(expression);
+        string result = Format(_evaluator.Evaluate(tree), groupThousands);
+
+        return tree is ConversionNode conversion
+            ? $"{result} {UnitTable.Find(conversion.To, conversion.ToPosition).Symbol}"
+            : result;
+    }
+
+    private static ExpressionNode Parse(string? expression)
+    {
+        var tokens = new ExpressionTokenizer().Tokenize(expression);
+
+        return new ExpressionParser().Parse(tokens);
     }
 
     /// <summary>

@@ -6,6 +6,8 @@ namespace CincoVertice.Common.Application.Calculator;
 
 /// <summary>
 ///     Builds a syntax tree from the tokens returned by <see cref="ExpressionTokenizer"/> (recursive descent).
+///     <para>{Calculation} ::= {Expression} ({Unit} 'to' {Unit})?</para>
+///     <para>{Unit}       ::= {Identifier} ('/' {Identifier} | '^' {Number})?</para>
 ///     <para>{Expression} ::= {Term} (('+' | '-') {Term})*</para>
 ///     <para>{Term}       ::= {Unary} (('*' | '/' | '%') {Unary})*</para>
 ///     <para>{Unary}      ::= ('+' | '-') {Unary} | {Power}</para>
@@ -45,6 +47,11 @@ public class ExpressionParser
 
         ExpressionNode node = ParseExpression();
 
+        if (Current.Type == TokenType.Identifier)
+        {
+            node = ParseConversion(node);
+        }
+
         if (Current.Type != TokenType.EndOfExpression)
         {
             throw new ExpressionException($"Unexpected '{Current.Value}'", Current.Position);
@@ -52,6 +59,59 @@ public class ExpressionParser
 
         return node;
     }
+
+    private ConversionNode ParseConversion(ExpressionNode value)
+    {
+        Token fromToken = Current;
+
+        if (IsToWord(fromToken))
+        {
+            throw new ExpressionException("Expected a unit before 'to'", fromToken.Position);
+        }
+
+        string from = ParseUnit();
+
+        if (!IsToWord(Current))
+        {
+            throw new ExpressionException($"Expected 'to' after '{from}'", fromToken.Position);
+        }
+
+        Token toWord = Current;
+        Advance();
+
+        Token toToken = Current;
+
+        if (toToken.Type != TokenType.Identifier)
+        {
+            throw new ExpressionException("Expected a unit after 'to'", toToken.Position);
+        }
+
+        return new ConversionNode(value, from, fromToken.Position, ParseUnit(), toToken.Position, toWord.Position);
+    }
+
+    /// <summary>
+    ///     Reads a unit's name, which can have an operator in it: km/h, m^2.
+    /// </summary>
+    private string ParseUnit()
+    {
+        string name = Current.Value;
+        Advance();
+
+        Token next = _tokens[Math.Min(_index + 1, _tokens.Count - 1)];
+
+        if ((Current.Type == TokenType.Divide && next.Type == TokenType.Identifier)
+            || (Current.Type == TokenType.Power && next.Type == TokenType.Number))
+        {
+            name += Current.Value + next.Value;
+            Advance();
+            Advance();
+        }
+
+        return name;
+    }
+
+    private static bool IsToWord(Token token) =>
+        token.Type == TokenType.Identifier && token.Value.Equals("to", StringComparison.OrdinalIgnoreCase);
 
     private ExpressionNode ParseExpression()
     {

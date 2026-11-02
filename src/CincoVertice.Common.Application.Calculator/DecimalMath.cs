@@ -8,6 +8,23 @@ namespace CincoVertice.Common.Application.Calculator;
 public static class DecimalMath
 {
     /// <summary>
+    ///     Rounds to this many significant digits, midpoints away from zero: 1234.5678 to 6 digits is 1234.57. The
+    ///     digits before the decimal point are always kept: 123456 to 2 digits is 123456.
+    /// </summary>
+    public static decimal RoundToSignificantDigits(decimal value, int digits)
+    {
+        if (value == 0)
+        {
+            return 0;
+        }
+
+        int exponent = (int)Math.Floor(Math.Log10((double)Math.Abs(value)));
+        int decimals = Math.Clamp(digits - 1 - exponent, 0, 28);
+
+        return Math.Round(value, decimals, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
     ///     x^y. Whole exponents are exact (repeated squaring); fractional exponents use double (about 15 digits).
     /// </summary>
     public static decimal Pow(decimal x, decimal y)
