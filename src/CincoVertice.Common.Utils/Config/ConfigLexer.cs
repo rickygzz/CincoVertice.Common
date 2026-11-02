@@ -95,7 +95,7 @@ public class ConfigLexer : GenericLexer
         // Also gets here at the end of the text, where there is no line
         if (CharIndex > start)
         {
-            _badLines.Add(new ConfigBadLine(LineNumber(start), Substring(start, CharIndex - start).Trim()));
+            _badLines.Add(new ConfigBadLine(Position(start).Line, Substring(start, CharIndex - start).Trim()));
         }
 
         if (CurrentChar == '\0')
@@ -127,7 +127,7 @@ public class ConfigLexer : GenericLexer
 
         StringBuilder sb = new(TextLength);
 
-        for (int i = fromIndex; i < toIndex; i++)
+        for (int i = fromIndex; i <= toIndex; i++)
         {
             GenericToken token = Tokens.Token(i);
             if (token.Type == ConfigTokenType.Comment)
@@ -156,31 +156,12 @@ public class ConfigLexer : GenericLexer
                 }
             }
 
-            if (i < toIndex - 1)
+            if (i < toIndex)
             {
                 sb.Append(Environment.NewLine);
             }
         }
 
         return sb.ToString();
-    }
-
-    /// <summary>
-    ///     Gets the line of a character, numbered from 1.
-    /// </summary>
-    private int LineNumber(int charIndex)
-    {
-        int line = 1;
-
-        for (int i = 0; i < charIndex; i++)
-        {
-            // \r\n is one line end
-            if (Text[i] == '\n' || (Text[i] == '\r' && Text[i + 1] != '\n'))
-            {
-                line++;
-            }
-        }
-
-        return line;
     }
 }

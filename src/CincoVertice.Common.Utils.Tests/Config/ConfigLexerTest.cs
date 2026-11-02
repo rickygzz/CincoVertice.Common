@@ -168,6 +168,26 @@ public class ConfigLexerTest
     }
 
     [Fact]
+    public void TokensToText_WithoutTokens_IsEmpty()
+    {
+        Assert.Equal(string.Empty, new ConfigLexer(string.Empty).TokensToText());
+    }
+
+    [Theory]
+    [InlineData("# only")]
+    [InlineData("key = 1\n# last")]
+    [InlineData("# first\nkey = 1\n# middle\nother = 2")]
+    [InlineData("key = 1\nother = 2\n# last")]
+    public void TokensToText_KeepsEveryCommentAndKey(string text)
+    {
+        // Act
+        string result = new ConfigLexer(text).TokensToText();
+
+        // Assert
+        Assert.Equal(text.Replace("\n", Environment.NewLine), result);
+    }
+
+    [Fact]
     public void Constructor_WithoutText_HasNothingToRead()
     {
         // Act
