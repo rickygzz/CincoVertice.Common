@@ -147,6 +147,10 @@ public class ConfigItems
         return _keyValueList[keyIndex].Value.Type;
     }
 
+    /// <summary>
+    ///     Creates a <typeparamref name="T"/> with each public field set from the key of the same name. A field keeps
+    ///     its initial value when there is no such key, or its value can't be converted to the field's type.
+    /// </summary>
     public T GetValues<T>()
         where T : class, new()
     {
@@ -179,7 +183,7 @@ public class ConfigItems
             {
                 field.SetValue(result, b);
             }
-            else
+            else if (field.FieldType == typeof(string) && GetKeyIndex(field.Name) != -1)
             {
                 field.SetValue(result, GetValue(field.Name));
             }
