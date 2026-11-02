@@ -37,4 +37,45 @@ public class GetKeyValueTokensTest
         Assert.Equal(expectedNewIndex, lexer.CharIndex);
         Assert.Equal(expectedChar, lexer.CurrentChar);
     }
+
+    [Theory]
+    [InlineData("first =\nsecond = 2")]
+    [InlineData("first =   \r\nsecond = 2\r\n")]
+    [InlineData("first =\n\n# comment\nsecond = 2")]
+    public void KeyWithoutValue_DoesNotTakeTheNextLine(string text)
+    {
+        // Act
+        ConfigItems items = new ConfigLexer(text).Items;
+
+        // Assert
+        Assert.Equal(2, items.KeysCount);
+        Assert.Equal("first", items.GetKeyName(0));
+        Assert.Equal(string.Empty, items.GetValue(0));
+        Assert.Equal(ConfigTokenType.ErrorNoValueFound, items.GetValueType(0));
+        Assert.Equal("second", items.GetKeyName(1));
+        Assert.Equal("2", items.GetValue(1));
+    }
+
+    [Theory]
+    [InlineData("123Search = a", "123Search")]
+    [InlineData("_private = a", "_private")]
+    [InlineData("123 = a", "123")]
+    [InlineData("a_1 = a", "a_1")]
+    public void Key_CanStartWithADigitOrUnderscore(string text, string expectedKey)
+    {
+        // Act
+        ConfigItems items = new ConfigLexer(text).Items;
+
+        // Assert
+        Assert.Equal(expectedKey, items.GetKeyName(0));
+        Assert.Equal("a", items.GetValue(0));
+    }
+
+    [Theory]
+    [InlineData("-key = a")]
+    [InlineData("= a")]
+    public void Key_MustStartWithALetterDigitOrUnderscore(string text)
+    {
+        Assert.Equal(0, new ConfigLexer(text).Items.KeysCount);
+    }
 }

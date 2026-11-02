@@ -10,7 +10,7 @@ public static class CGetKeyValueTokens
     /// {Token}     ::=  {Space}* ({Key-Value} | {Comment})
     /// {Key-Value} ::=  {Key} {Space}* [=] {Space}* {Value}
     /// {Comment}   ::=  [#] {Printable} {EOL}
-    /// {Key}             ::= {Letter} ({Letter} | {Digit} | [_])* {Space}* = {Space}*
+    /// {Key}             ::= ({Letter} | {Digit} | [_])+ {Space}* = {Space}*
     /// {Value}           ::= ({NumericValue} | {String}) {EOL}
     /// {NumericValue}    ::= ({Hex} | {Oct} | {Bin} | {Number}).
     /// {String}          ::= ({String-Quoted} | {String-Unquoted})
@@ -35,7 +35,8 @@ public static class CGetKeyValueTokens
             return new ConfigItemModel { Key = nullToken, Value = nullToken };
         }
 
-        lexer.SkipBlankChars();
+        // Only to the end of this line: a key without a value must not take the next line as its value
+        lexer.SkipSpacesAndTabs();
         GenericToken valueToken = lexer.GetValue();
 
         if (valueToken.Type == GenericTokenType.Null)

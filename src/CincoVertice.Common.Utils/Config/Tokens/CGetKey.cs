@@ -8,7 +8,7 @@ public static class CGetKey
 {
     /// <summary>
     /// Gets key from CharIndex.
-    /// <para>{Key}     ::= {Letter} ({Letter} | {Digit} | [_])*.</para>
+    /// <para>{Key}     ::= ({Letter} | {Digit} | [_])+.</para>
     /// </summary>
     /// <param name="lexer">Lexer instance.</param>
     /// <returns>GenericToken.
@@ -19,13 +19,13 @@ public static class CGetKey
     {
         GenericToken token = lexer.NullToken();
 
-        if (lexer.SkipLetter())
+        while (lexer.IsLetterChar() || lexer.IsDigit() || lexer.CurrentChar == '_')
         {
-            while (lexer.IsLetterChar() || lexer.IsDigit() || lexer.CurrentChar == '_')
-            {
-                lexer.NextChar();
-            }
+            lexer.NextChar();
+        }
 
+        if (lexer.CharIndex > token.StartPos)
+        {
             token.Length = lexer.CharIndex - token.StartPos;
             token.Type = ConfigTokenType.Key;
         }
