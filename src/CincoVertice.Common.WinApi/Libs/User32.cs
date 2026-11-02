@@ -533,4 +533,19 @@ public partial class User32
     /// </returns>
     [LibraryImport("user32.dll", SetLastError = true)]
     public static partial int UnregisterHotKey(nint hWnd, int id);
+
+    /// <summary>
+    ///     The DPI awareness context in which coordinates are physical pixels on every monitor, even when the
+    ///     monitors have different scaling; windows created in it get WM_DPICHANGED when they move between monitors.
+    /// </summary>
+    public const nint DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
+
+    /// <summary>
+    ///     Sets the DPI awareness of the calling thread. Windows created afterwards keep the awareness they were
+    ///     created with, and their window procedure runs in it.
+    /// </summary>
+    /// <param name="dpiContext">The new DPI awareness context, e.g. DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2.</param>
+    /// <returns>The previous DPI awareness context, to restore it; zero when dpiContext is not valid.</returns>
+    [LibraryImport("user32.dll")]
+    public static partial nint SetThreadDpiAwarenessContext(nint dpiContext);
 }

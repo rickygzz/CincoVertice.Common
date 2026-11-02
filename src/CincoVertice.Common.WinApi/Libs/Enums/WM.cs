@@ -600,6 +600,12 @@ public enum WM : uint
 
     WM_MOUSELEAVE = 675,
 
+    /// <summary>
+    ///     Sent to a per-monitor DPI aware window when its DPI changes, e.g. when it moves to a monitor with
+    ///     different scaling. The lParam points to the suggested new size and position of the window.
+    /// </summary>
+    WM_DPICHANGED = 0x02E0,
+
     WM_CUT = 768,
 
     WM_COPY = 769,
