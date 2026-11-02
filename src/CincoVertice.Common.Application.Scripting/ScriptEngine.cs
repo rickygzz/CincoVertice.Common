@@ -75,7 +75,7 @@ public class ScriptEngine
 
     private static IReadOnlyList<Statement> Parse(string source)
     {
-        var tokens = new ScriptLexer().Tokenize(source);
+        var tokens = ScriptLexer.Tokenize(source);
 
         return new ScriptParser().Parse(tokens);
     }
