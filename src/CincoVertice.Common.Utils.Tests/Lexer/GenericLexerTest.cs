@@ -185,6 +185,39 @@ public class GenericLexerTest
     }
 
     [Fact]
+    public void Position_WithoutText_IsTheStart()
+    {
+        // Act
+        Position pos = new GenericLexer().Position(5);
+
+        // Assert
+        Assert.Equal(1, pos.Line);
+        Assert.Equal(1, pos.Column);
+    }
+
+    [Theory]
+    [InlineData("", 0, 1, 1)]
+    [InlineData("", 5, 1, 1)]
+    [InlineData("abc", 3, 1, 4)]
+    [InlineData("abc", 10, 1, 4)]
+    [InlineData("a\nbc", 4, 2, 3)]
+    [InlineData("a\nbc", 99, 2, 3)]
+    [InlineData("a\n", 99, 2, 1)]
+    public void Position_AtOrAfterTheEnd_IsTheEndOfTheLastLine(
+        string text,
+        int charIndex,
+        int expectedLine,
+        int expectedColumn)
+    {
+        // Act
+        Position pos = new GenericLexer(text).Position(charIndex);
+
+        // Assert
+        Assert.Equal(expectedLine, pos.Line);
+        Assert.Equal(expectedColumn, pos.Column);
+    }
+
+    [Fact]
     public void Position_SecondTest()
     {
         // Arrange

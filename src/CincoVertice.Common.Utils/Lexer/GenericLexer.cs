@@ -191,11 +191,16 @@ public class GenericLexer : IGenericLexer
     /// </summary>
     /// <param name="charIndex">The zero-based character position.</param>
     /// <returns>
-    ///     The position of the character. If charIndex is above text.Length, the last line, with the Column set to the
-    ///     character position of that line's end.
+    ///     The position of the character. If charIndex is above text.Length, the position of text.Length. If no text
+    ///     was ever set, line 1 and column 1.
     /// </returns>
     public Position Position(int charIndex)
     {
+        if (lines.Count == 0)
+        {
+            return new Position { Line = 1, Column = 1 };
+        }
+
         for (int i = 0; i < lines.Count; i++)
         {
             if (charIndex <= lines[i].CharEnd)
@@ -208,6 +213,6 @@ public class GenericLexer : IGenericLexer
             }
         }
 
-        return new Position { Line = lines.Count, Column = lines[^1].CharEnd };
+        return new Position { Line = lines.Count, Column = lines[^1].CharEnd - lines[^1].CharStart + 1 };
     }
 }
