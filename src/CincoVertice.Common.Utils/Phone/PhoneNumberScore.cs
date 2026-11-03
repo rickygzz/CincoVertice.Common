@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Ganss.Excel;
 
 namespace CincoVertice.Common.Utils.Phone;
 
@@ -8,29 +7,8 @@ public class PhoneNumberScore
 
     public List<PhoneModel> PhonesList = [];
 
-    public List<PhoneScoreRuleModel> phoneScoreRuleModels = [];
+    public List<PhoneScoreRuleModel> phoneScoreRuleModels = PhoneScoreRules.Create();
 
-    public PhoneNumberScore(string rulesFile)
-    {
-        LoadRules(rulesFile);
-    }
-
-    public void LoadRules(string file)
-    {
-        phoneScoreRuleModels = [.. new ExcelMapper(file).Fetch<PhoneScoreRuleModel>()];
-    }
-
-    public void LoadPhones(string file)
-    {
-        PhonesList = [.. new ExcelMapper(file)
-            .Fetch<PhoneExcelModel>()
-            .Select(p => new PhoneModel
-            {
-                Phone = p.Phone,
-                Batch = p.Batch,
-                Score = p.Score,
-            })];
-    }
 
     public void Score(PhoneModel model)
     {
@@ -44,14 +22,5 @@ public class PhoneNumberScore
                 model.Rules.Add(rule);
             }
         }
-    }
-
-    public void Save(string file)
-    {
-        var excel = new ExcelMapper();
-
-        excel.AddMapping<PhoneModel>("Rules", p => p.Rules).AsJson();
-
-        excel.Save(file, PhonesList, "Phones");
     }
 }
