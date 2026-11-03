@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using CincoVertice.Common.Application.Scripting.Interfaces;
+using CincoVertice.Common.Utils.Helpers;
 
 namespace CincoVertice.Common.Application.Scripting.Services;
 
@@ -115,11 +116,12 @@ public sealed class JsonFileVariableStore : IScriptVariableStore
     private void Save(Dictionary<string, object> variables)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        string tempPath = FilePath + ".tmp";
 
-        using (var stream = File.Create(tempPath))
-        using (var writer = new Utf8JsonWriter(stream, _writeOptions))
+        AtomicFile.Write(FilePath, temporaryPath =>
         {
+            using var stream = File.Create(temporaryPath);
+            using var writer = new Utf8JsonWriter(stream, _writeOptions);
+
             writer.WriteStartObject();
 
             foreach (var (name, value) in variables.OrderBy(v => v.Key, StringComparer.OrdinalIgnoreCase))
@@ -129,9 +131,7 @@ public sealed class JsonFileVariableStore : IScriptVariableStore
             }
 
             writer.WriteEndObject();
-        }
-
-        File.Move(tempPath, FilePath, overwrite: true);
+        });
     }
 
     private static void WriteValue(Utf8JsonWriter writer, object value)
