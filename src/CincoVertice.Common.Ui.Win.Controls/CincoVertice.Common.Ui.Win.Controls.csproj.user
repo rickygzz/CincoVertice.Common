@@ -5,6 +5,9 @@
     <Compile Update="MdiTab\MdiTab.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="Rtf\CodeTextControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="Rtf\ConsoleOutputControl.cs">
       <SubType>Component</SubType>
     </Compile>

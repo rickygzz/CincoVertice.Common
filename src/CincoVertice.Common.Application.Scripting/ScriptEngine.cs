@@ -73,6 +73,25 @@ public class ScriptEngine
         await interpreter.RunAsync(statements);
     }
 
+    /// <summary>
+    ///     Checks a script without running it. Parsing stops at the first error; what's only known when it runs, like an
+    ///     unknown function, isn't found.
+    /// </summary>
+    /// <returns>The first syntax error, or null when there is none.</returns>
+    public static ScriptException? FindSyntaxError(string source)
+    {
+        try
+        {
+            Parse(source);
+
+            return null;
+        }
+        catch (ScriptException ex)
+        {
+            return ex;
+        }
+    }
+
     private static IReadOnlyList<Statement> Parse(string source)
     {
         var tokens = ScriptLexer.Tokenize(source);

@@ -91,6 +91,21 @@ public class ConfigItems
     }
 
     /// <summary>
+    ///     Gets the 1-based line of the key at the provided key index.
+    /// </summary>
+    /// <param name="keyIndex">The key index to look for.</param>
+    /// <returns>Returns the line if found, otherwise returns 0.</returns>
+    public int GetLine(int keyIndex)
+    {
+        if (keyIndex >= _keyValueList.Count || keyIndex < 0)
+        {
+            return 0;
+        }
+
+        return _lexer.Position(_keyValueList[keyIndex].Key.StartPos).Line;
+    }
+
+    /// <summary>
     ///     Gets the value of the first key found matching provided key name.
     /// </summary>
     /// <param name="key">The key name to look for.</param>

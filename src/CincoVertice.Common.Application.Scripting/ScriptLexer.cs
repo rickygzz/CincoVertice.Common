@@ -18,6 +18,8 @@ public static class ScriptLexer
 
     private static readonly string[] _operators = ["==", "!=", "<=", ">=", "+", "-", "*", "/", "%", "=", "<", ">"];
 
+    public static bool IsKeyword(string name) => _keywords.Contains(name);
+
     /// <summary>
     ///     Splits the script into tokens, ending with <see cref="TokenType.EndOfScript"/>. Each call uses its own
     ///     <see cref="Scanner"/>, so calls never share state.

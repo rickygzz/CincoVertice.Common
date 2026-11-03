@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CincoVertice.Common.Utils\CincoVertice.Common.Utils.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="CincoVertice.Common.Application.Scripting.Tests" />
   </ItemGroup>
 
