@@ -5,6 +5,21 @@ using System.Runtime.InteropServices;
 namespace CincoVertice.Common.WinApi.Libs;
 public partial class User32
 {
+    /// <summary>The handle to send a message to all top-level windows.</summary>
+    public const nint HWND_BROADCAST = 0xffff;
+
+    /// <summary>
+    ///     Sends the message and returns immediately, without waiting for the window to process it, so a window that
+    ///     doesn't respond can't block the caller.
+    /// </summary>
+    /// <param name="hWnd">A handle to the window, or <see cref="HWND_BROADCAST"/> for all top-level windows.</param>
+    /// <param name="msg">The message.</param>
+    /// <param name="wParam">Additional message-specific information.</param>
+    /// <param name="lParam">Additional message-specific information.</param>
+    /// <returns>Nonzero if the function succeeds.</returns>
+    [LibraryImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
+    public static partial int SendNotifyMessage(nint hWnd, uint msg, nint wParam, nint lParam);
+
     /// <summary>
     ///     Contains information about the placement of a window on the screen.
     /// </summary>

@@ -9,6 +9,18 @@ namespace CincoVertice.Common.WinApi.Libs;
 public partial class GDI32
 {
     /// <summary>
+    ///     The AddFontResource function adds the font resource from the specified file to the system font table, until
+    ///     the session ends. Any application can then use the font.
+    /// </summary>
+    /// <param name="fileName">The path of a font file.</param>
+    /// <returns>
+    ///     If the function succeeds, the return value specifies the number of fonts added.
+    ///     <para>If the function fails, the return value is zero.</para>
+    /// </returns>
+    [LibraryImport("gdi32.dll", EntryPoint = "AddFontResourceW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int AddFontResource(string fileName);
+
+    /// <summary>
     ///     The BitBlt function performs a bit-block transfer of the color data corresponding to a rectangle of
     ///     pixels from the specified source device context into a destination device context.
     /// </summary>
