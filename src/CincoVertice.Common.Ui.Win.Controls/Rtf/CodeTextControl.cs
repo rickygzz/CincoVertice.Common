@@ -43,6 +43,8 @@ public class CodeTextControl : RichTextBox
     private int _gutterDigits;
     private bool _hadSelection;
     private string? _shownMessage;
+    private float _zoom = 1;
+    private Font? _zoomedFont;
 
     // While colors are applied, which selects text; and while undo puts back a text, which it has already recorded
     private bool _isColoring;
@@ -64,6 +66,13 @@ public class CodeTextControl : RichTextBox
         AcceptsTab = true;
         Font = new Font("Consolas", 10);
     }
+
+    /// <summary>Raised when the zoom changes, as with Ctrl+wheel, which RichTextBox does itself.</summary>
+    public event EventHandler? ZoomChanged;
+
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public int ZoomPercent => (int)Math.Round(_zoom * 100);
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Color GutterBackColor { get; set; } = Color.FromArgb(240, 240, 240);
@@ -164,6 +173,14 @@ public class CodeTextControl : RichTextBox
         }
     }
 
+    public void ResetZoom()
+    {
+        // Read first: the setter does nothing when the value is the last one it read, and Ctrl+wheel doesn't update that
+        _ = ZoomFactor;
+        ZoomFactor = 1;
+        CheckZoom();
+    }
+
     public void GoToLine(int line)
     {
         int start = GetFirstCharIndexFromLine(Math.Max(0, line - 1));
@@ -246,7 +263,11 @@ public class CodeTextControl : RichTextBox
             // Scrolling moves the pixels of what was painted over the control, without a full paint
             case WM_HSCROLL:
             case WM_VSCROLL:
+                Invalidate();
+                break;
+
             case WM_MOUSEWHEEL:
+                CheckZoom();
                 Invalidate();
                 break;
         }
@@ -266,6 +287,8 @@ public class CodeTextControl : RichTextBox
     {
         base.OnFontChanged(e);
 
+        _zoomedFont?.Dispose();
+        _zoomedFont = null;
         UpdateGutterWidth(force: true);
     }
 
@@ -339,6 +362,7 @@ public class CodeTextControl : RichTextBox
         if (disposing)
         {
             _toolTip.Dispose();
+            _zoomedFont?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -440,6 +464,36 @@ public class CodeTextControl : RichTextBox
         ScrollToCaret();
     }
 
+    /// <summary>The font at the size the text shows now, for what's painted over it.</summary>
+    private Font ShownFont
+    {
+        get
+        {
+            if (_zoom == 1)
+            {
+                return Font;
+            }
+
+            return _zoomedFont ??= new Font(Font.FontFamily, Font.Size * _zoom, Font.Style);
+        }
+    }
+
+    private void CheckZoom()
+    {
+        float zoom = ZoomFactor;
+
+        if (zoom == _zoom)
+        {
+            return;
+        }
+
+        _zoom = zoom;
+        _zoomedFont?.Dispose();
+        _zoomedFont = null;
+        UpdateGutterWidth(force: true);
+        ZoomChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private void DrawGutter(Graphics graphics, int firstLine, int lastLine)
     {
         using var background = new SolidBrush(GutterBackColor);
@@ -450,9 +504,9 @@ public class CodeTextControl : RichTextBox
         for (int line = firstLine; line <= lastLine; line++)
         {
             int top = GetPositionFromCharIndex(GetFirstCharIndexFromLine(line)).Y;
-            var bounds = new Rectangle(0, top, _gutterWidth - GutterPadding, Font.Height);
+            var bounds = new Rectangle(0, top, _gutterWidth - GutterPadding, ShownFont.Height);
 
-            TextRenderer.DrawText(graphics, (line + 1).ToString(), Font, bounds, GutterForeColor, flags);
+            TextRenderer.DrawText(graphics, (line + 1).ToString(), ShownFont, bounds, GutterForeColor, flags);
         }
     }
 
@@ -487,7 +541,7 @@ public class CodeTextControl : RichTextBox
 
         Point from = GetPositionFromCharIndex(lineStart + start);
         int right = length == 0 ? from.X + BlankMarkWidth : RightOf(text, lineStart + start + length - 1);
-        int bottom = from.Y + Font.Height;
+        int bottom = from.Y + ShownFont.Height;
 
         using var pen = new Pen(mark.Color ?? SquiggleColor);
         graphics.DrawLines(pen, SquigglePoints(from.X, right, bottom));
@@ -497,7 +551,7 @@ public class CodeTextControl : RichTextBox
     {
         int left = GetPositionFromCharIndex(index).X;
 
-        return left + TextRenderer.MeasureText(text[index].ToString(), Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+        return left + TextRenderer.MeasureText(text[index].ToString(), ShownFont, Size.Empty, TextFormatFlags.NoPadding).Width;
     }
 
     private static Point[] SquigglePoints(int left, int right, int bottom)
@@ -539,9 +593,10 @@ public class CodeTextControl : RichTextBox
         }
 
         _gutterDigits = digits;
-        _gutterWidth = TextRenderer.MeasureText(new string('9', digits), Font).Width + (GutterPadding * 2);
+        _gutterWidth = TextRenderer.MeasureText(new string('9', digits), ShownFont).Width + (GutterPadding * 2);
 
-        _ = SendMessage(Handle, EM_SETMARGINS, EC_LEFTMARGIN, _gutterWidth + TextGap);
+        // RichTextBox zooms its margin too
+        _ = SendMessage(Handle, EM_SETMARGINS, EC_LEFTMARGIN, (int)Math.Ceiling((_gutterWidth + TextGap) / _zoom));
         Invalidate();
     }
 }
