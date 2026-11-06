@@ -35,6 +35,7 @@ public class CodeTextControl : RichTextBox
 
     private readonly ToolTip _toolTip = new();
     private readonly CodeUndoHistory _history = new();
+    private readonly CodeGutter _gutter;
 
     private IReadOnlyList<CodeMark> _marks = [];
     private IReadOnlyList<CodeSpan> _colored = [];
@@ -65,6 +66,9 @@ public class CodeTextControl : RichTextBox
         HideSelection = false;
         AcceptsTab = true;
         Font = new Font("Consolas", 10);
+
+        // Beside it on its parent, not inside it: it moves the windows inside it when it scrolls
+        _gutter = new CodeGutter(this);
     }
 
     /// <summary>Raised when the zoom changes, as with Ctrl+wheel, which RichTextBox does itself.</summary>
@@ -262,13 +266,18 @@ public class CodeTextControl : RichTextBox
 
             // Scrolling moves the pixels of what was painted over the control, without a full paint
             case WM_HSCROLL:
+                Invalidate();
+                break;
+
             case WM_VSCROLL:
                 Invalidate();
+                _gutter.Invalidate();
                 break;
 
             case WM_MOUSEWHEEL:
                 CheckZoom();
                 Invalidate();
+                _gutter.Invalidate();
                 break;
         }
     }
@@ -281,6 +290,7 @@ public class CodeTextControl : RichTextBox
         _ = SendMessage(Handle, EM_SETUNDOLIMIT, 0, 0);
 
         UpdateGutterWidth(force: true);
+        PlaceGutter();
     }
 
     protected override void OnFontChanged(EventArgs e)
@@ -308,6 +318,41 @@ public class CodeTextControl : RichTextBox
 
         UpdateGutterWidth(force: false);
         Invalidate();
+        _gutter.Invalidate();
+    }
+
+    protected override void OnClientSizeChanged(EventArgs e)
+    {
+        base.OnClientSizeChanged(e);
+
+        PlaceGutter();
+    }
+
+    protected override void OnLocationChanged(EventArgs e)
+    {
+        base.OnLocationChanged(e);
+
+        PlaceGutter();
+    }
+
+    protected override void OnVisibleChanged(EventArgs e)
+    {
+        base.OnVisibleChanged(e);
+
+        // Placed again: setting the text before the form is shown creates the window before the form lays it out,
+        // so it was placed while it had no size yet
+        PlaceGutter();
+        _gutter.Visible = Visible;
+    }
+
+    /// <summary>The gutter goes on the same parent, over this, so it covers the left margin.</summary>
+    protected override void OnParentChanged(EventArgs e)
+    {
+        base.OnParentChanged(e);
+
+        _gutter.Parent = Parent;
+        _gutter.BringToFront();
+        PlaceGutter();
     }
 
     protected override void OnSelectionChanged(EventArgs e)
@@ -335,6 +380,7 @@ public class CodeTextControl : RichTextBox
         base.OnVScroll(e);
 
         Invalidate();
+        _gutter.Invalidate();
     }
 
     protected override void OnHScroll(EventArgs e)
@@ -363,18 +409,53 @@ public class CodeTextControl : RichTextBox
         {
             _toolTip.Dispose();
             _zoomedFont?.Dispose();
+            _gutter.Dispose();
         }
 
         base.Dispose(disposing);
     }
 
+    /// <summary>What's painted over the text: the marks. The line numbers are in a window of their own (CodeGutter).</summary>
     protected void DrawOverlay(Graphics graphics)
     {
-        int firstLine = GetLineFromCharIndex(GetCharIndexFromPosition(new Point(_gutterWidth, 0)));
-        int lastLine = GetLineFromCharIndex(GetCharIndexFromPosition(new Point(_gutterWidth, ClientSize.Height - 1)));
+        (int firstLine, int lastLine) = ShownLines();
+
+        DrawMarks(graphics, firstLine, lastLine);
+    }
+
+    /// <summary>The line numbers, for the gutter's window, which is where they're painted.</summary>
+    internal void PaintGutter(Graphics graphics)
+    {
+        if (!IsHandleCreated)
+        {
+            return;
+        }
+
+        (int firstLine, int lastLine) = ShownLines();
 
         DrawGutter(graphics, firstLine, lastLine);
-        DrawMarks(graphics, firstLine, lastLine);
+    }
+
+    private (int First, int Last) ShownLines() => (
+        GetLineFromCharIndex(GetCharIndexFromPosition(new Point(_gutterWidth, 0))),
+        GetLineFromCharIndex(GetCharIndexFromPosition(new Point(_gutterWidth, ClientSize.Height - 1))));
+
+    /// <summary>
+    ///     The gutter's window over the left of the inside, past the border, as wide as the numbers need. Its mouse
+    ///     messages then have this one's points, so it passes them on unchanged.
+    /// </summary>
+    private void PlaceGutter()
+    {
+        if (Parent is not { } parent || !IsHandleCreated || !parent.IsHandleCreated)
+        {
+            return;
+        }
+
+        Rectangle inside = parent.RectangleToClient(RectangleToScreen(ClientRectangle));
+
+        _gutter.Bounds = new Rectangle(inside.Location, new Size(_gutterWidth, inside.Height));
+        _gutter.Visible = Visible;
+        _gutter.Invalidate();
     }
 
     private static Color ColorOf(CodeSpanKind kind) => kind switch
@@ -597,6 +678,7 @@ public class CodeTextControl : RichTextBox
 
         // RichTextBox zooms its margin too
         _ = SendMessage(Handle, EM_SETMARGINS, EC_LEFTMARGIN, (int)Math.Ceiling((_gutterWidth + TextGap) / _zoom));
+        PlaceGutter();
         Invalidate();
     }
 }
