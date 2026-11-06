@@ -34,6 +34,13 @@ public static partial class Dwmapi
         int cbAttribute);
 
     /// <summary>
+    ///     Waits until the Desktop Window Manager has drawn the screen again, so a change to a window shows from then on.
+    /// </summary>
+    /// <returns>0 when it worked; an HRESULT error code otherwise.</returns>
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmFlush();
+
+    /// <summary>
     /// GetWindowRectangle without adornments (like shadow).
     /// </summary>
     /// <param name="hWnd">hWnd.</param>

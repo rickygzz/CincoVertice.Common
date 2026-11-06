@@ -437,6 +437,27 @@ public partial class User32
     public static partial int SetForegroundWindow(nint hWnd);
 
     /// <summary>
+    ///     Says where a window may be shown: anywhere, or only on the monitors, leaving it out of screenshots and
+    ///     screen recordings.
+    /// </summary>
+    /// <param name="hWnd">A top-level window created by the calling process.</param>
+    /// <param name="dwAffinity">Where it may be shown.</param>
+    /// <returns>True when it worked; WDA_EXCLUDEFROMCAPTURE fails before Windows 10, version 2004.</returns>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWindowDisplayAffinity(nint hWnd, DisplayAffinity dwAffinity);
+
+    /// <summary>Where a window may be shown, for <see cref="SetWindowDisplayAffinity"/>.</summary>
+    public enum DisplayAffinity : uint
+    {
+        /// <summary>Anywhere.</summary>
+        WDA_NONE = 0x00,
+
+        /// <summary>Only on the monitors: in a capture, what's behind it shows instead.</summary>
+        WDA_EXCLUDEFROMCAPTURE = 0x11,
+    }
+
+    /// <summary>
     /// Synthesizes keystrokes, mouse motions, and button clicks.
     /// </summary>
     /// <param name="cInputs">The number of structures in the pInputs array.</param>
