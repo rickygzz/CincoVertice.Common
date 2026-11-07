@@ -139,6 +139,32 @@ public class ExpressionTokenizerTests
     }
 
     [Fact]
+    public void ExpressionTokenizer_ReadsATime_AsOneToken()
+    {
+        var tokens = new ExpressionTokenizer().Tokenize("10:30pm");
+
+        Assert.Equal(
+            [
+                new Token(TokenType.Time, "10:30", 0),
+                new Token(TokenType.Identifier, "pm", 5),
+                new Token(TokenType.EndOfExpression, string.Empty, 7),
+            ],
+            tokens);
+    }
+
+    [Theory]
+    [InlineData("10:", 3)]
+    [InlineData("10:x", 3)]
+    [InlineData("1.5:30", 3)]
+    [InlineData(":30", 0)]
+    public void ExpressionTokenizer_BrokenTime_ThrowsWithPosition(string expression, int expectedPosition)
+    {
+        var exception = Assert.Throws<ExpressionException>(() => new ExpressionTokenizer().Tokenize(expression));
+
+        Assert.Equal(expectedPosition, exception.Position);
+    }
+
+    [Fact]
     public void ExpressionTokenizer_ReusedInstance_DoesNotKeepPreviousPosition()
     {
         var tokenizer = new ExpressionTokenizer();

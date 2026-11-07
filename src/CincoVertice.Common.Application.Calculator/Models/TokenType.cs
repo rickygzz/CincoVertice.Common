@@ -3,6 +3,7 @@ namespace CincoVertice.Common.Application.Calculator.Models;
 public enum TokenType
 {
     Number,
+    Time,
     String,
     Identifier,
     Plus,

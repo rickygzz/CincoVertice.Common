@@ -1,13 +1,17 @@
 using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Models;
 using System.Globalization;
+using System.Text;
 
 namespace CincoVertice.Common.Application.Calculator;
 
 /// <summary>
 ///     Builds a syntax tree from the tokens returned by <see cref="ExpressionTokenizer"/> (recursive descent).
-///     <para>{Calculation} ::= {Expression} ({Unit} 'to' {Unit})?</para>
+///     <para>{Calculation} ::= {TimeConversion} | {Expression} ({Unit} 'to' {Unit})?</para>
 ///     <para>{Unit}       ::= {Identifier} ('/' {Identifier} | '^' {Number})?</para>
+///     <para>{TimeConversion} ::= ({Time} ('am' | 'pm')? | {Number} ('am' | 'pm') | 'now') {Zone}? 'to' {Zone}</para>
+///     <para>{Zone}       ::= {Identifier} ('/' {Identifier} | {Identifier})* (('+' | '-') ({Number} | {Time}))?
+///                          // the offset only after UTC or GMT; the words stop at 'to'</para>
 ///     <para>{Expression} ::= {Term} (('+' | '-') {Term})*</para>
 ///     <para>{Term}       ::= {Unary} (('*' | '/' | '%') {Unary})*</para>
 ///     <para>{Unary}      ::= ('+' | '-') {Unary} | {Power}</para>
@@ -20,10 +24,14 @@ namespace CincoVertice.Common.Application.Calculator;
 /// </summary>
 public class ExpressionParser
 {
+    private const string NowWord = "now";
+
     private IReadOnlyList<Token> _tokens = [];
     private int _index;
 
     private Token Current => _tokens[_index];
+
+    private Token Next => _tokens[Math.Min(_index + 1, _tokens.Count - 1)];
 
     /// <summary>
     ///     Parses the tokens of a whole expression.
@@ -45,9 +53,9 @@ public class ExpressionParser
             throw new ExpressionException("Empty expression", Current.Position);
         }
 
-        ExpressionNode node = ParseExpression();
+        ExpressionNode node = StartsWithTime() ? ParseTimeConversion() : ParseExpression();
 
-        if (Current.Type == TokenType.Identifier)
+        if (node is not TimeConversionNode && Current.Type == TokenType.Identifier)
         {
             node = ParseConversion(node);
         }
@@ -109,6 +117,181 @@ public class ExpressionParser
 
         return name;
     }
+
+    /// <summary>
+    ///     A time conversion starts with a time (10:30, 3 pm) or 'now'. A number without am or pm is a number:
+    ///     3 h to min.
+    /// </summary>
+    private bool StartsWithTime() => Current.Type switch
+    {
+        TokenType.Time => true,
+        TokenType.Number => IsHalfOfDay(Next),
+        TokenType.Identifier => Current.Value.Equals(NowWord, StringComparison.OrdinalIgnoreCase)
+            && Next.Type is TokenType.Identifier or TokenType.EndOfExpression,
+        _ => false,
+    };
+
+    private TimeConversionNode ParseTimeConversion()
+    {
+        Token timeToken = Current;
+        TimeOnly? time = null;
+        bool twelveHour = false;
+
+        if (timeToken.Type == TokenType.Identifier)
+        {
+            // now
+            Advance();
+        }
+        else
+        {
+            (time, twelveHour) = ParseTime();
+        }
+
+        string? from = null;
+        Token fromToken = Current;
+
+        if (!IsToWord(fromToken))
+        {
+            if (fromToken.Type != TokenType.Identifier)
+            {
+                throw new ExpressionException("Expected a time zone or 'to' after the time", fromToken.Position);
+            }
+
+            from = ParseTimeZone();
+
+            // The time zone's words go on until 'to', so only something else can stop them
+            if (!IsToWord(Current))
+            {
+                throw new ExpressionException($"Expected 'to' after '{from}'", Current.Position);
+            }
+        }
+
+        Token toWord = Current;
+        Advance();
+
+        Token toToken = Current;
+
+        if (toToken.Type != TokenType.Identifier)
+        {
+            throw new ExpressionException("Expected a time zone after 'to'", toToken.Position);
+        }
+
+        string to = ParseTimeZone();
+
+        return new TimeConversionNode(
+            time,
+            twelveHour,
+            timeToken.Position,
+            from,
+            fromToken.Position,
+            to,
+            toToken.Position,
+            toWord.Position);
+    }
+
+    /// <summary>
+    ///     Reads a time: 10:30 or 22:30 (24-hour), or 10 pm or 10:30 pm (12-hour).
+    /// </summary>
+    private (TimeOnly Time, bool TwelveHour) ParseTime()
+    {
+        Token token = Current;
+        Advance();
+
+        string[] parts = token.Value.Split(':');
+
+        if (parts[0].Contains('.'))
+        {
+            throw new ExpressionException("Write a time as 10:30 or 10:30 pm", token.Position);
+        }
+
+        bool twelveHour = IsHalfOfDay(Current);
+        bool pm = twelveHour && Current.Value.Equals("pm", StringComparison.OrdinalIgnoreCase);
+
+        if (twelveHour)
+        {
+            Advance();
+        }
+
+        int lowest = twelveHour ? 1 : 0;
+        int highest = twelveHour ? 12 : 23;
+
+        if (!int.TryParse(parts[0], CultureInfo.InvariantCulture, out int hours) || hours < lowest || hours > highest)
+        {
+            string message = twelveHour
+                ? "With am or pm, the hour must be from 1 to 12"
+                : "The hour must be from 0 to 23";
+            throw new ExpressionException(message, token.Position);
+        }
+
+        int minutes = 0;
+
+        if (parts.Length > 1)
+        {
+            int minutesPosition = token.Position + parts[0].Length + 1;
+
+            if (parts[1].Length != 2 || !int.TryParse(parts[1], CultureInfo.InvariantCulture, out minutes)
+                || minutes > 59)
+            {
+                throw new ExpressionException("The minutes must be two digits, from 00 to 59", minutesPosition);
+            }
+        }
+
+        if (twelveHour)
+        {
+            // 12 am is midnight and 12 pm is noon
+            hours = hours % 12 + (pm ? 12 : 0);
+        }
+
+        return (new TimeOnly(hours, minutes), twelveHour);
+    }
+
+    /// <summary>
+    ///     Reads a place or time zone, which can have several words (Sao Paulo), slashes (America/Lima) and, after
+    ///     UTC or GMT, an offset (UTC-5, UTC+5:30).
+    /// </summary>
+    private string ParseTimeZone()
+    {
+        var name = new StringBuilder(Current.Value);
+        Advance();
+
+        while (true)
+        {
+            if (Current.Type == TokenType.Divide && Next.Type == TokenType.Identifier)
+            {
+                name.Append('/').Append(Next.Value);
+                Advance();
+                Advance();
+            }
+            else if (Current.Type == TokenType.Identifier && !IsToWord(Current))
+            {
+                name.Append(' ').Append(Current.Value);
+                Advance();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        string text = name.ToString();
+        bool isUtc = text.Equals("utc", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("gmt", StringComparison.OrdinalIgnoreCase);
+
+        if (isUtc && Current.Type is TokenType.Plus or TokenType.Minus
+            && Next.Type is TokenType.Number or TokenType.Time)
+        {
+            name.Append(Current.Value).Append(Next.Value);
+            Advance();
+            Advance();
+        }
+
+        return name.ToString();
+    }
+
+    private static bool IsHalfOfDay(Token token) =>
+        token.Type == TokenType.Identifier
+        && (token.Value.Equals("am", StringComparison.OrdinalIgnoreCase)
+            || token.Value.Equals("pm", StringComparison.OrdinalIgnoreCase));
 
     private static bool IsToWord(Token token) =>
         token.Type == TokenType.Identifier && token.Value.Equals("to", StringComparison.OrdinalIgnoreCase);

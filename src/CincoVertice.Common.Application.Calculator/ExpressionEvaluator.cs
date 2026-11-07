@@ -24,6 +24,8 @@ public class ExpressionEvaluator
         BinaryNode binary => EvaluateBinary(binary),
         FunctionCallNode functionCall => EvaluateFunctionCall(functionCall),
         ConversionNode conversion => EvaluateConversion(conversion),
+        // Written by ExpressionCalculator.EvaluateToText instead
+        TimeConversionNode time => throw new ExpressionException("A time has no number value", time.Position),
         // A text is only valid as a function argument (see EvaluateArgument)
         StringNode text => throw new ExpressionException("Text can only be used as a function argument", text.Position),
         _ => throw new ArgumentException($"Unknown node type '{node.GetType().Name}'", nameof(node))

@@ -52,6 +52,14 @@ public class ExpressionParserTests
     [InlineData("pi m to ft", "(to pi m ft)")]
     [InlineData("100 km/h to m/s", "(to 100 km/h m/s)")]
     [InlineData("2 m^2 to ft^2", "(to 2 m^2 ft^2)")]
+    // Time conversions
+    [InlineData("10:30 Mexico to India", "(time 10:30 Mexico India)")]
+    [InlineData("3 pm sao paulo to new york", "(time 15:00 12h sao paulo new york)")]
+    [InlineData("12:15 am cali to Bogota", "(time 00:15 12h cali Bogota)")]
+    [InlineData("10:30 to China", "(time 10:30 local China)")]
+    [InlineData("now to China", "(time now local China)")]
+    [InlineData("9:00 America/Lima to UTC-5", "(time 09:00 America/Lima UTC-5)")]
+    [InlineData("9:00 GMT+5:30 to utc", "(time 09:00 GMT+5:30 utc)")]
     public void ExpressionParser_ValidExpression_BuildsTree(string expression, string expectedTree)
     {
         ExpressionNode node = Parse(expression);

@@ -7,6 +7,7 @@ namespace CincoVertice.Common.Application.Calculator;
 /// <summary>
 ///     Splits an expression into tokens.
 ///     <para>{Number}     ::= {Digit}+ ('.' {Digit}*)? | '.' {Digit}+</para>
+///     <para>{Time}       ::= {Digit}+ ':' {Digit}+</para>
 ///     <para>{Identifier} ::= ({Letter} | '_') ({Letter} | {Digit} | '_')*</para>
 ///     <para>{String}     ::= '"' ({Char} | '""')* '"'      // "" inside the text is one quote</para>
 ///     <para>{Symbol}     ::= [+-*/%^(),]</para>
@@ -105,6 +106,11 @@ public class ExpressionTokenizer
 
         string numberString = numberBuilder.ToString();
 
+        if (_currentChar == ':' && !hasDecimalPoint)
+        {
+            return ReadTime(numberString, startPosition);
+        }
+
         if (numberString == ".")
         {
             throw new ExpressionException("Invalid number format '.'", startPosition);
@@ -117,6 +123,29 @@ public class ExpressionTokenizer
         }
 
         return new Token(TokenType.Number, numberString, startPosition);
+    }
+
+    /// <summary>
+    ///     Reads the minutes of a time such as 10:30, after its hours. The parser checks the values.
+    /// </summary>
+    private Token ReadTime(string hours, int startPosition)
+    {
+        // Skip ':'
+        Advance();
+
+        int minutesPosition = _position;
+
+        while (char.IsAsciiDigit(_currentChar))
+        {
+            Advance();
+        }
+
+        if (_position == minutesPosition)
+        {
+            throw new ExpressionException("Expected minutes after ':'", _position);
+        }
+
+        return new Token(TokenType.Time, $"{hours}:{_expression[minutesPosition.._position]}", startPosition);
     }
 
     private Token ReadIdentifier()

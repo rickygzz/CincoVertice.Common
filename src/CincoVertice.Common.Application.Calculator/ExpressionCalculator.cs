@@ -1,5 +1,6 @@
 using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Conversions;
+using CincoVertice.Common.Application.Calculator.TimeZones;
 using System.Globalization;
 
 namespace CincoVertice.Common.Application.Calculator;
@@ -11,6 +12,18 @@ namespace CincoVertice.Common.Application.Calculator;
 public class ExpressionCalculator
 {
     private readonly ExpressionEvaluator _evaluator = new();
+    private readonly TimeProvider _clock;
+
+    public ExpressionCalculator()
+        : this(TimeProvider.System)
+    {
+    }
+
+    /// <param name="clock">Gives today's date, the time now and the local time zone to time conversions.</param>
+    public ExpressionCalculator(TimeProvider clock)
+    {
+        _clock = clock;
+    }
 
     /// <exception cref="ExpressionException">The expression is invalid or cannot be calculated.</exception>
     public decimal Evaluate(string? expression)
@@ -20,7 +33,8 @@ public class ExpressionCalculator
 
     /// <summary>
     ///     Evaluates an expression and formats the result for display (see <see cref="Format"/>). The result of a unit
-    ///     conversion is followed by its unit: 6.213711922 mi.
+    ///     conversion is followed by its unit: 6.213711922 mi. A time conversion is the time and the place:
+    ///     22:00 India (UTC+5:30).
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <param name="groupThousands">Separate thousands with ','.</param>
@@ -28,6 +42,12 @@ public class ExpressionCalculator
     public string EvaluateToText(string? expression, bool groupThousands = false)
     {
         ExpressionNode tree = Parse(expression);
+
+        if (tree is TimeConversionNode time)
+        {
+            return TimeZoneConverter.Convert(time, _clock);
+        }
+
         string result = Format(_evaluator.Evaluate(tree), groupThousands);
 
         return tree is ConversionNode conversion
