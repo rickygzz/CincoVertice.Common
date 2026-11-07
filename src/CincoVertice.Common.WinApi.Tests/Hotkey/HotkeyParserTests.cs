@@ -109,25 +109,94 @@ public class HotkeyParserTests
     public void TryParseKeys_AllowsKeyWithoutModifier(string text, FSModifiers expectedModifiers, KeyCode expectedKey)
     {
         // Act
-        bool ok = HotkeyParser.TryParseKeys(text, out var modifiers, out var key, out string error);
+        bool ok = HotkeyParser.TryParseKeys(text, out var modifiers, out bool altGr, out var key, out string error);
 
         // Assert
         Assert.True(ok, error);
         Assert.Equal((expectedModifiers, expectedKey), (modifiers, key));
+        Assert.False(altGr);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("Ctrl")]
     [InlineData("Ctrl+Foo")]
+    [InlineData("AltGr")]
     public void TryParseKeys_WhenNotAKey_ReturnsFalseWithError(string text)
     {
         // Act
-        bool ok = HotkeyParser.TryParseKeys(text, out _, out _, out string error);
+        bool ok = HotkeyParser.TryParseKeys(text, out _, out _, out _, out string error);
 
         // Assert
         Assert.False(ok);
         Assert.NotEmpty(error);
+    }
+
+    [Theory]
+    [InlineData("AltGr+2", (FSModifiers)0, KeyCode.D2)]
+    [InlineData("altgr + e", (FSModifiers)0, KeyCode.E)]
+    [InlineData("AltGr+Shift+E", FSModifiers.MOD_SHIFT, KeyCode.E)]
+    [InlineData("Shift+AltGr+VK_OEM_PLUS", FSModifiers.MOD_SHIFT, KeyCode.VK_OEM_PLUS)]
+    public void TryParseKeys_WithAltGr_SaysSo_AndKeepsItOutOfTheModifiers(
+        string text,
+        FSModifiers expectedModifiers,
+        KeyCode expectedKey)
+    {
+        // Act: the modifiers are RegisterHotKey's, which has no AltGr
+        bool ok = HotkeyParser.TryParseKeys(text, out var modifiers, out bool altGr, out var key, out string error);
+
+        // Assert
+        Assert.True(ok, error);
+        Assert.True(altGr);
+        Assert.Equal((expectedModifiers, expectedKey), (modifiers, key));
+    }
+
+    [Theory]
+    [InlineData("AltGr+Ctrl+2")]
+    [InlineData("Alt+AltGr+2")]
+    public void TryParseKeys_AltGrWithCtrlOrAlt_IsRefused(string text)
+    {
+        // Act: AltGr is already Ctrl+Alt, which would be pressed and released in the middle of it
+        bool ok = HotkeyParser.TryParseKeys(text, out _, out _, out _, out string error);
+
+        // Assert
+        Assert.False(ok);
+        Assert.Contains("already Ctrl+Alt", error);
+    }
+
+    [Theory]
+    [InlineData("Ctrl+AltGr+2")]
+    [InlineData("AltGr+F5")]
+    public void TryParse_AHotkeyWithAltGr_IsRefused(string text)
+    {
+        // Act: Windows sees it as Ctrl+Alt, so a hotkey on it would stop the characters it types
+        bool ok = HotkeyParser.TryParse(text, out _, out _, out string error);
+
+        // Assert
+        Assert.False(ok);
+        Assert.Contains("can't be part of a hotkey", error);
+    }
+
+    [Fact]
+    public void TryParseKeys_ACharacterTypedWithAltGr_SaysHowToWriteIt()
+    {
+        // Act: pressing its key would type it only on this layout
+        bool ok = HotkeyParser.TryParseKeys("@", KeyScan("ES"), out _, out _, out _, out string error);
+
+        // Assert
+        Assert.False(ok);
+        Assert.Contains("type it as text", error);
+    }
+
+    [Fact]
+    public void TryParseKeys_ACharacterTypedWithoutAltGr_IsItsKey()
+    {
+        // Act
+        bool ok = HotkeyParser.TryParseKeys(">", KeyScan("ES"), out var modifiers, out bool altGr, out var key, out _);
+
+        // Assert: and the Shift it needs
+        Assert.True(ok);
+        Assert.Equal((FSModifiers.MOD_SHIFT, false, KeyCode.VK_OEM_102), (modifiers, altGr, key));
     }
 
     [Theory]
