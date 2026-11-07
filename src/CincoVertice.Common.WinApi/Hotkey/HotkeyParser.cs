@@ -9,9 +9,13 @@ namespace CincoVertice.Common.WinApi.Hotkey;
 ///     without "VK_". A key can also be the character it types on the current keyboard layout, such as "Ctrl+Alt+&lt;";
 ///     Shift is added when the layout needs it. Case is ignored. A shortcut needs a modifier, except for the function
 ///     keys.</para>
+///     <para>Keys to press (<see cref="TryParseKeys(string?, out FSModifiers, out bool, out KeyCode, out string)"/>)
+///     can also have AltGr, which a hotkey can't: Windows sees it as Ctrl+Alt.</para>
 /// </summary>
 public static class HotkeyParser
 {
+    private const string AltGrName = "AltGr";
+
     // Shift state bits in the high byte of VkKeyScan's result
     private const int ShiftStateShift = 1;
     private const int ShiftStateCtrl = 2;
@@ -95,28 +99,53 @@ public static class HotkeyParser
         out FSModifiers modifiers,
         out KeyCode key,
         out string error) =>
-        Parse(text, keyScan, requireModifier: true, out modifiers, out key, out error);
+        Parse(text, keyScan, isHotkey: true, out modifiers, out _, out key, out error);
 
     /// <summary>
-    ///     Parses keys to press, such as "Ctrl+V" or "Enter": like a shortcut, but a key alone is allowed.
+    ///     Parses keys to press, such as "Ctrl+V", "Enter" or "AltGr+2": like a shortcut, but a key alone is allowed,
+    ///     and so is AltGr.
     /// </summary>
     /// <param name="text">The keys; spaces around the parts are ignored.</param>
     /// <param name="modifiers">The modifier keys.</param>
+    /// <param name="altGr">True to hold AltGr: Right Alt, with the Left Ctrl that Windows sees with it.</param>
     /// <param name="key">The key.</param>
     /// <param name="error">Why the text is not a key; empty when it is.</param>
     /// <returns>True when the text names a key.</returns>
-    public static bool TryParseKeys(string? text, out FSModifiers modifiers, out KeyCode key, out string error) =>
-        Parse(text, c => Libs.User32.VkKeyScan(c), requireModifier: false, out modifiers, out key, out error);
+    public static bool TryParseKeys(
+        string? text,
+        out FSModifiers modifiers,
+        out bool altGr,
+        out KeyCode key,
+        out string error) =>
+        TryParseKeys(text, c => Libs.User32.VkKeyScan(c), out modifiers, out altGr, out key, out error);
 
+    /// <summary>
+    ///     Parses keys to press, finding the key of a character with <paramref name="keyScan"/> instead of the
+    ///     current keyboard layout, e.g. in tests.
+    /// </summary>
+    public static bool TryParseKeys(
+        string? text,
+        Func<char, short> keyScan,
+        out FSModifiers modifiers,
+        out bool altGr,
+        out KeyCode key,
+        out string error) =>
+        Parse(text, keyScan, isHotkey: false, out modifiers, out altGr, out key, out error);
+
+    /// <param name="isHotkey">
+    ///     True for a hotkey, which needs a modifier and can't have AltGr; false for keys to press.
+    /// </param>
     private static bool Parse(
         string? text,
         Func<char, short> keyScan,
-        bool requireModifier,
+        bool isHotkey,
         out FSModifiers modifiers,
+        out bool altGr,
         out KeyCode key,
         out string error)
     {
         modifiers = 0;
+        altGr = false;
         key = 0;
         error = string.Empty;
 
@@ -149,6 +178,20 @@ public static class HotkeyParser
                 continue;
             }
 
+            if (part.Equals(AltGrName, StringComparison.OrdinalIgnoreCase))
+            {
+                if (isHotkey)
+                {
+                    error = $"'{text}' has AltGr, which can't be part of a hotkey: Windows sees it as Ctrl+Alt.";
+
+                    return false;
+                }
+
+                altGr = true;
+
+                continue;
+            }
+
             if (hasKey)
             {
                 error = $"'{text}' has more than one key.";
@@ -158,7 +201,7 @@ public static class HotkeyParser
 
             if (part.Length == 1 && !char.IsAsciiLetterOrDigit(part[0]))
             {
-                if (!TryParseCharacter(part[0], keyScan, out key, out characterShift, out error))
+                if (!TryParseCharacter(part[0], keyScan, isHotkey, out key, out characterShift, out error))
                 {
                     return false;
                 }
@@ -180,9 +223,17 @@ public static class HotkeyParser
             return false;
         }
 
-        if (requireModifier && modifiers == 0 && key is < KeyCode.VK_F1 or > KeyCode.VK_F24)
+        if (isHotkey && modifiers == 0 && key is < KeyCode.VK_F1 or > KeyCode.VK_F24)
         {
             error = $"'{text}' needs a modifier (Ctrl, Alt, Shift or Win).";
+
+            return false;
+        }
+
+        // AltGr already holds a Ctrl and an Alt: another would be pressed and released in the middle of it
+        if (altGr && (modifiers & (FSModifiers.MOD_CONTROL | FSModifiers.MOD_ALT)) != 0)
+        {
+            error = $"'{text}' has AltGr with Ctrl or Alt; AltGr is already Ctrl+Alt to Windows.";
 
             return false;
         }
@@ -231,6 +282,7 @@ public static class HotkeyParser
     private static bool TryParseCharacter(
         char c,
         Func<char, short> keyScan,
+        bool isHotkey,
         out KeyCode key,
         out FSModifiers shift,
         out string error)
@@ -250,10 +302,13 @@ public static class HotkeyParser
 
         int shiftState = (scan >> 8) & 0xFF;
 
-        // AltGr is Ctrl+Alt to Windows: a hotkey on that key would stop the character from being typed anywhere
+        // AltGr is Ctrl+Alt to Windows: a hotkey on that key would stop the character from being typed anywhere. To
+        // press, it would only type it on this layout, and the window may have another
         if ((shiftState & (ShiftStateCtrl | ShiftStateAlt)) != 0)
         {
-            error = $"'{c}' is typed with AltGr, and a hotkey on its key would stop you from typing it.";
+            error = isHotkey
+                ? $"'{c}' is typed with AltGr, and a hotkey on its key would stop you from typing it."
+                : $"'{c}' is typed with AltGr; to write it, type it as text, or press AltGr and its key.";
 
             return false;
         }

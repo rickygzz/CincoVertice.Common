@@ -7,12 +7,13 @@ namespace CincoVertice.Common.WinApi.Helpers;
 
 public class InputSimulator
 {
-    // Keys that share a virtual-key code with a numpad key unless sent as extended
+    // Keys that are sent as extended: those that share a scan code with a numpad key, and the right Alt and Ctrl,
+    // which are otherwise the left ones
     private static readonly KeyCode[] _extendedKeys =
     [
         KeyCode.VK_INSERT, KeyCode.VK_DELETE, KeyCode.VK_HOME, KeyCode.VK_END, KeyCode.VK_PRIOR, KeyCode.VK_NEXT,
         KeyCode.VK_LEFT, KeyCode.VK_UP, KeyCode.VK_RIGHT, KeyCode.VK_DOWN, KeyCode.VK_DIVIDE, KeyCode.VK_SNAPSHOT,
-        KeyCode.VK_LWIN, KeyCode.VK_RWIN, KeyCode.VK_APPS,
+        KeyCode.VK_LWIN, KeyCode.VK_RWIN, KeyCode.VK_APPS, KeyCode.VK_RMENU, KeyCode.VK_RCONTROL,
     ];
 
     private readonly List<INPUT> toSend = [];
@@ -236,9 +237,29 @@ public class InputSimulator
     ///     Presses a shortcut such as Ctrl+V, <paramref name="times"/> times: the modifiers down, the key down and
     ///     up, then the modifiers up.
     /// </summary>
-    public static void SendShortcut(FSModifiers modifiers, KeyCode key, int times = 1)
+    /// <param name="modifiers">The modifiers to hold.</param>
+    /// <param name="key">The key to press.</param>
+    /// <param name="times">How many times to press it.</param>
+    /// <param name="altGr">True to hold AltGr too, as in <see cref="ShortcutInputs"/>.</param>
+    /// <exception cref="InvalidOperationException">Windows didn't take all the keys.</exception>
+    public static void SendShortcut(FSModifiers modifiers, KeyCode key, int times = 1, bool altGr = false)
+    {
+        Send(ShortcutInputs(modifiers, key, times, altGr));
+    }
+
+    /// <summary>
+    ///     The keys <see cref="SendShortcut"/> sends. AltGr is Right Alt with Left Ctrl held first, as a keyboard
+    ///     with AltGr sends it, so it works whether or not Windows adds the Ctrl itself.
+    /// </summary>
+    public static INPUT[] ShortcutInputs(FSModifiers modifiers, KeyCode key, int times = 1, bool altGr = false)
     {
         List<KeyCode> modifierKeys = [];
+
+        if (altGr)
+        {
+            modifierKeys.Add(KeyCode.VK_LCONTROL);
+            modifierKeys.Add(KeyCode.VK_RMENU);
+        }
 
         if (modifiers.HasFlag(FSModifiers.MOD_CONTROL))
         {
@@ -279,8 +300,102 @@ public class InputSimulator
             list.Add(KeyboardInput(modifierKeys[i], keyUp));
         }
 
-        INPUT[] kbinputs = [.. list];
-        User32.SendInput((uint)kbinputs.Length, kbinputs, Marshal.SizeOf(typeof(INPUT)));
+        return [.. list];
+    }
+
+    /// <summary>
+    ///     Types the text into the window that has the keyboard, whatever its keyboard layout, as
+    ///     <see cref="UnicodeTextInputs"/> does.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Windows didn't take all the keys.</exception>
+    public static void SendUnicodeText(string text)
+    {
+        Send(UnicodeTextInputs(text));
+    }
+
+    /// <summary>
+    ///     The keys that type the text: each character as itself (KEYEVENTF_UNICODE), so the window gets "@" and not
+    ///     the key that types "@" on a layout, which on its own layout may type something else or nothing. A character
+    ///     beyond the first 65536, such as an emoji, goes as its two UTF-16 halves. A new line (\n, \r or \r\n) is
+    ///     Enter and \t is Tab, as real keys, since programs act on those keys rather than on their characters.
+    /// </summary>
+    public static INPUT[] UnicodeTextInputs(string text)
+    {
+        List<INPUT> list = new(text.Length * 2);
+
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+
+            switch (c)
+            {
+                case '\r' or '\n':
+                    AddKeyPress(list, KeyCode.VK_RETURN);
+
+                    // \r\n is one new line
+                    if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n')
+                    {
+                        i++;
+                    }
+
+                    break;
+
+                case '\t':
+                    AddKeyPress(list, KeyCode.VK_TAB);
+                    break;
+
+                default:
+                    list.Add(UnicodeInput(c, KeyboardInputDwFlags.KEYEVENTF_UNICODE));
+                    list.Add(UnicodeInput(
+                        c,
+                        KeyboardInputDwFlags.KEYEVENTF_UNICODE | KeyboardInputDwFlags.KEYEVENTF_KEYUP));
+                    break;
+            }
+        }
+
+        return [.. list];
+    }
+
+    private static void AddKeyPress(List<INPUT> list, KeyCode key)
+    {
+        list.Add(KeyboardInput(key, KeyboardInputDwFlags.KEYEVENTF_KEYDOWN));
+        list.Add(KeyboardInput(key, KeyboardInputDwFlags.KEYEVENTF_KEYUP));
+    }
+
+    private static INPUT UnicodeInput(char c, KeyboardInputDwFlags flags) => new()
+    {
+        Type = InputType.INPUT_KEYBOARD,
+        MKHInput = new MOUSEKEYBDHARDWAREINPUT()
+        {
+            KeyboardInput = new KEYBDINPUT()
+            {
+                WVk = 0,
+                WScan = c,
+                DwFlags = flags,
+                Time = 0,
+                DwExtraInfo = User32.GetMessageExtraInfo()
+            }
+        }
+    };
+
+    /// <summary>
+    ///     Sends the keys in one go, so nothing typed on the keyboard meanwhile lands between them.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Windows didn't take all of them.</exception>
+    private static void Send(INPUT[] inputs)
+    {
+        if (inputs.Length == 0)
+        {
+            return;
+        }
+
+        uint sent = User32.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+
+        if (sent != inputs.Length)
+        {
+            throw new InvalidOperationException(
+                $"Windows took {sent} of the {inputs.Length} key presses; another program may be blocking them.");
+        }
     }
 
     private static KeyboardInputDwFlags ExtendedFlag(KeyCode key) =>
