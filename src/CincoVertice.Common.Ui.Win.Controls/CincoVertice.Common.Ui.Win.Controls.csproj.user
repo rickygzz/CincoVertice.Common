@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current">
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Update="MdiTab\MdiTab.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Rtf\CodeGutter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Rtf\CodeTextControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Rtf\ConsoleOutputControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

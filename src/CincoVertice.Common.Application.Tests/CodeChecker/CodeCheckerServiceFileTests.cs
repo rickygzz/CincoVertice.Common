@@ -1,0 +1,305 @@
+﻿using CincoVertice.Common.Application.CodeStandard.Constants;
+using CincoVertice.Common.Application.CodeStandard.Fixers.CSharp;
+using CincoVertice.Common.Application.CodeStandard.Models;
+using CincoVertice.Common.Application.CodeStandard.Services;
+using Xunit;
+
+namespace CincoVertice.Common.Application.Tests.CodeChecker;
+
+public class CodeCheckerServiceFileTests : IDisposable
+{
+    private readonly CodeCheckerService _checker = new(new LineCheckerService());
+    private readonly List<string> _tempFiles = [];
+
+    [Fact]
+    public void CheckFile_FileNotFound_AddsError()
+    {
+        // Arrange
+        string filePath = "non-existent_file.txt";
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Single(errors);
+        Assert.Equal(nameof(Errors.CH0001), errors[0].Code);
+        Assert.Equal(0, errors[0].Line);
+        Assert.Equal(Errors.CH0001, errors[0].Message);
+    }
+
+    [Fact]
+    public void CheckFile_WhenFileIsEmpty_ReturnsNoErrors()
+    {
+        // Arrange
+        string filePath = CreateTempFile(string.Empty);
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void CheckFile_WhenFileIsClean_ReturnsNoErrors()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "public class Test",
+            "{",
+            "    public int Value { get; set; }",
+            "}"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void CheckFile_WhenLineHasError_ReportsErrorWithCorrectLineNumber()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "public class Test",       // line 1 - clean
+            "    var a = 1;   ",       // line 2 - trailing whitespace (CH0011)
+            "}"                        // line 3 - clean
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal(nameof(Errors.CH0011), error.Code);
+        Assert.Equal(2, error.Line);
+        Assert.Equal(Errors.CH0011, error.Message);
+    }
+
+    [Fact]
+    public void CheckFile_WhenMultipleLinesHaveErrors_AggregatesAllErrors()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "trailing whitespace here ", // line 1 - CH0011
+            new string('a', 121)         // line 2 - CH0016 (over 120 chars)
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Equal(2, errors.Count);
+        Assert.Contains(errors, e => e.Code == nameof(Errors.CH0011) && e.Line == 1);
+        Assert.Contains(errors, e => e.Code == nameof(Errors.CH0016) && e.Line == 2);
+    }
+
+    [Fact]
+    public void CheckFile_NestedIndentationWithBlankLines_DoesNotReportCh0014()
+    {
+        // Arrange - each level increases by exactly four spaces, with blank lines between blocks.
+        string[] lines =
+        [
+            "public class Test",                 // level 0
+            "{",                                 // level 0
+            "    public void Configure()",       // level 1
+            "    {",                             // level 1
+            "",                                  // blank
+            "        Builder.Entity<Foo>()",     // level 2
+            "            .HasIndex(x)",          // level 3
+            "            .IsOnline();",          // level 3
+            "",                                  // blank
+            "        Builder.Entity<Bar>()",     // level 2
+            "            .HasIndex(y);",         // level 3
+            "    }",                             // level 1
+            "}"                                  // level 0
+        ];
+        string filePath = CreateTempFile(string.Join("\r\n", lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert - a one-level increase per line (even across blank lines) is valid.
+        Assert.DoesNotContain(errors, e => e.Code == nameof(Errors.CH0014));
+    }
+
+    [Fact]
+    public void CheckFile_WhenFileCannotBeRead_AddsCh0002Error()
+    {
+        // Arrange
+        string filePath = CreateTempFile("public class Test");
+
+        // Lock the file so the service's StreamReader fails to open it.
+        using var _ = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None);
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal(nameof(Errors.CH0002), error.Code);
+        Assert.Equal(0, error.Line);
+    }
+
+    [Fact]
+    public void CheckFile_ReportsBlankLinesThatTheFixerRemoves()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "public class Test",
+            "{",
+            "    public int A { get; set; }",
+            "",
+            "",
+            "    public int B { get; set; }",
+            "",
+            "}"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Equal(
+            [(5, nameof(Errors.CH0027)), (8, nameof(Errors.CH0028))],
+            errors.Select(e => (e.Line, e.Code)));
+    }
+
+    [Theory]
+    [InlineData("namespace CincoVertice.Common; // Comment", 0)]
+    [InlineData("namespace CincoVertice.Common // Comment", 1)]
+    public void CheckFile_ChecksNamespaceWithoutTrailingComment(string namespaceLine, int expectedErrors)
+    {
+        // Arrange
+        string filePath = CreateTempFile(namespaceLine);
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        Assert.Equal(expectedErrors, errors.Count(e => e.Code == nameof(Errors.CH0029)));
+    }
+
+    [Fact]
+    public void CheckFile_ReportsBlockNamespaceOnce()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "namespace CincoVertice.Common",
+            "{",
+            "    public class Test",
+            "    {",
+            "    }",
+            "}"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal((1, nameof(Errors.CH0029)), (error.Line, error.Code));
+    }
+
+    [Fact]
+    public void CheckFile_FollowsIfAcrossBlankAndCommentLines()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "if (x)",
+            "",
+            "    // Explain the return",
+            "    return;"
+        ];
+        string filePath = CreateTempFile(string.Join('\n', lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors);
+        Assert.Equal((4, nameof(Errors.CH0031)), (error.Line, error.Code));
+    }
+
+    [Fact]
+    public void CheckFile_WhenMissingBracesFixerRan_ReportsNoCh0031()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "if (a &&",
+            "    b)",
+            "    Run();",
+            "else if (c) Stop();",
+            "else",
+            "    Wait();"
+        ];
+        string fixedContent = new MissingBracesFixer().Fix(string.Join('\n', lines));
+        string original = CreateTempFile(string.Join('\n', lines));
+        string fixedFile = CreateTempFile(fixedContent);
+
+        // Act
+        List<ErrorModel> before = _checker.CheckFile(original);
+        List<ErrorModel> after = _checker.CheckFile(fixedFile);
+
+        // Assert
+        Assert.Equal(3, before.Count(e => e.Code == nameof(Errors.CH0031)));
+        Assert.DoesNotContain(after, e => e.Code == nameof(Errors.CH0031));
+    }
+
+    [Fact]
+    public void CheckFile_WhenSpacesAreInsideMultiLineString_ReportsOnlyCodeLines()
+    {
+        // Arrange
+        string[] lines =
+        [
+            "string s = @\"a  b",
+            "c  d",
+            "e  f\";",
+            "int x  = 1;"
+        ];
+        string filePath = CreateTempFile(string.Join("\r\n", lines));
+
+        // Act
+        List<ErrorModel> errors = _checker.CheckFile(filePath);
+
+        // Assert
+        var error = Assert.Single(errors, e => e.Code == nameof(Errors.CH0032));
+        Assert.Equal(4, error.Line);
+    }
+
+    private string CreateTempFile(string content)
+    {
+        string filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.cs");
+        File.WriteAllText(filePath, content);
+        _tempFiles.Add(filePath);
+
+        return filePath;
+    }
+
+    public void Dispose()
+    {
+        foreach (var filePath in _tempFiles)
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
+}
