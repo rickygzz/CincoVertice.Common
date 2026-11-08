@@ -13,9 +13,23 @@ namespace CincoVertice.Common.Application.CodeStandard.Checkers;
 /// </summary>
 public class CommentSpaceChecker : ILineChecker
 {
+    private readonly ICodeScanner _scanner;
+
+    /// <param name="scanner">Finds the language's comments; C# when not given.</param>
+    public CommentSpaceChecker(ICodeScanner? scanner = null)
+    {
+        _scanner = scanner ?? CSharpCodeScanner.Instance;
+    }
+
     /// <inheritdoc/>
     public bool Check(LineModel line)
     {
+        // The line of a multi-line string: a // in it, as in http://, is text
+        if (line.StartsInsideLiteral)
+        {
+            return true;
+        }
+
         if (line.TrimmedContent.StartsWith("//"))
         {
             CheckSpaceAfterSlashes(line, line.TrimmedContent);
@@ -24,7 +38,11 @@ public class CommentSpaceChecker : ILineChecker
         }
 
         // // inside a string, as in "http://", is not a comment
-        int commentStart = CSharpLiteralScanner.FindLineComment(line.TrimmedContent);
+        int commentStart = _scanner.FindComments(line.TrimmedContent)
+            .Where(comment => !comment.IsBlock)
+            .Select(comment => comment.Start)
+            .DefaultIfEmpty(-1)
+            .First();
 
         if (commentStart >= 0)
         {

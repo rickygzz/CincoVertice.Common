@@ -6,8 +6,8 @@ using CincoVertice.Common.Application.CodeStandard.Models;
 namespace CincoVertice.Common.Application.CodeStandard.Services;
 
 /// <summary>
-///     Fixes files and folders for the code standard, in place. Each file's content goes through
-///     <see cref="FixerPipeline"/>.
+///     Fixes files and folders for the code standard, in place. Each file's content goes through the
+///     <see cref="FixerPipeline"/> of its language.
 /// </summary>
 public class CodeFixerService : ICodeFixerService
 {
@@ -16,11 +16,22 @@ public class CodeFixerService : ICodeFixerService
     private static readonly UTF8Encoding _strictUtf8 =
         new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
-    private readonly FixerPipeline _pipeline;
+    private readonly IReadOnlyList<CodeLanguageModel> _languages;
 
+    /// <summary>
+    ///     Fixes C# files only, with the given pipeline.
+    /// </summary>
     public CodeFixerService(FixerPipeline pipeline)
+        : this([CodeLanguageModel.CSharp with { Fixers = pipeline }])
     {
-        _pipeline = pipeline;
+    }
+
+    /// <param name="languages">
+    ///     The languages to fix, each in its own files. A file of none of them is fixed as the first.
+    /// </param>
+    public CodeFixerService(IEnumerable<CodeLanguageModel> languages)
+    {
+        _languages = [.. languages];
     }
 
     public FileFixResultModel FixFile(string filePath)
@@ -45,7 +56,7 @@ public class CodeFixerService : ICodeFixerService
                 encoding = reader.CurrentEncoding;
             }
 
-            string fixedContent = _pipeline.Run(content);
+            string fixedContent = LanguageOf(filePath).Fixers.Run(content);
 
             if (fixedContent != content)
             {
@@ -67,6 +78,11 @@ public class CodeFixerService : ICodeFixerService
 
     public List<FileFixResultModel> FixFolder(string folderPath)
     {
-        return [.. SourceFileEnumerator.GetSourceFiles(folderPath).Select(FixFile)];
+        var extensions = _languages.SelectMany(language => language.Extensions);
+
+        return [.. SourceFileEnumerator.GetSourceFiles(folderPath, extensions).Select(FixFile)];
     }
+
+    private CodeLanguageModel LanguageOf(string filePath) =>
+        _languages.FirstOrDefault(language => language.Covers(filePath)) ?? _languages[0];
 }

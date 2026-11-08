@@ -58,4 +58,19 @@ public class TrailingWhitespaceCheckerTests
         Assert.Equal(Errors.CH0010, error.Message);
         Assert.Equal(4, error.Line);
     }
+
+    [Fact]
+    public void Check_WhenTheLineStartsInsideALiteral_LeavesItsSpaces()
+    {
+        // Arrange: the text of a multi-line string, which the fixer leaves as it is
+        var line = TestLine.Create("  select  *   ");
+        line.StartsInsideLiteral = true;
+
+        // Act
+        bool result = _checker.Check(line);
+
+        // Assert
+        Assert.True(result);
+        Assert.Empty(line.Errors);
+    }
 }

@@ -60,6 +60,8 @@ public static class Errors
 
     public const string CH0035 = "No space after ( or before ): Read(a), not Read( a ).";
 
+    public const string CH0036 = "Line should be indented {spaces} spaces, by the brackets around it.";
+
     public static ErrorModel New(int line, string code, string message)
     {
         return new ErrorModel { Line = line, Code = code, Message = message };

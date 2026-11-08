@@ -11,16 +11,28 @@ namespace CincoVertice.Common.Application.CodeStandard.Services;
 /// </summary>
 public class CodeCheckerService : ICodeCheckerService
 {
-    private readonly ILineCheckerService _lineChecker;
+    private readonly IReadOnlyList<CodeLanguageModel> _languages;
 
+    /// <summary>
+    ///     Checks C# files only, with the given line checker.
+    /// </summary>
     public CodeCheckerService(ILineCheckerService lineChecker)
+        : this([CodeLanguageModel.CSharp with { LineChecker = lineChecker }])
     {
-        _lineChecker = lineChecker;
+    }
+
+    /// <param name="languages">
+    ///     The languages to check, each in its own files. A file of none of them is checked as the first.
+    /// </param>
+    public CodeCheckerService(IEnumerable<CodeLanguageModel> languages)
+    {
+        _languages = [.. languages];
     }
 
     public List<ErrorModel> CheckFile(string filePath)
     {
         List<ErrorModel> errors = [];
+        CodeLanguageModel language = LanguageOf(filePath);
 
         if (!File.Exists(filePath))
         {
@@ -38,7 +50,8 @@ public class CodeCheckerService : ICodeCheckerService
             string content = reader.ReadToEnd();
 
             lines = LineParser.GetLines(content);
-            MarkLinesInsideLiterals(content, lines);
+            MarkLinesInsideLiterals(content, lines, language.Scanner);
+            SetExpectedIndentation(content, lines, language.Indenter);
         }
         catch (Exception ex)
         {
@@ -57,7 +70,7 @@ public class CodeCheckerService : ICodeCheckerService
             line.PreviousLineIsBlank = previousLineIsBlank;
             line.PreviousCodeLine = previousCodeLine;
 
-            _lineChecker.CheckLine(line);
+            language.LineChecker.CheckLine(line);
 
             // Blank lines never have their indentation computed, so they must not reset the
             // carried level; otherwise the next code line would falsely trip CH0014.
@@ -84,7 +97,9 @@ public class CodeCheckerService : ICodeCheckerService
     {
         List<FileCheckResultModel> results = [];
 
-        foreach (string filePath in SourceFileEnumerator.GetSourceFiles(folderPath))
+        var extensions = _languages.SelectMany(language => language.Extensions);
+
+        foreach (string filePath in SourceFileEnumerator.GetSourceFiles(folderPath, extensions))
         {
             List<ErrorModel> errors = CheckFile(filePath);
 
@@ -94,17 +109,34 @@ public class CodeCheckerService : ICodeCheckerService
         return results;
     }
 
+    private CodeLanguageModel LanguageOf(string filePath) =>
+        _languages.FirstOrDefault(language => language.Covers(filePath)) ?? _languages[0];
+
     /// <summary>
-    ///     False for blank, comment and preprocessor lines. Runs after the check, so a trailing comment is already
-    ///     removed from <see cref="LineModel.TrimmedContent"/>.
+    ///     Sets <see cref="LineModel.ExpectedIndentation"/> in a language indented by its brackets.
     /// </summary>
-    /// <summary>
-    ///     Sets <see cref="LineModel.StartsInsideLiteral"/> on the lines that continue a multi-line verbatim or raw
-    ///     string, which a single line cannot tell.
-    /// </summary>
-    private static void MarkLinesInsideLiterals(string content, List<LineModel> lines)
+    private static void SetExpectedIndentation(string content, List<LineModel> lines, BraceIndenter? indenter)
     {
-        var literals = CSharpLiteralScanner.FindLiterals(content).ToList();
+        if (indenter is null)
+        {
+            return;
+        }
+
+        int?[] indents = indenter.ExpectedIndents(content);
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            lines[i].ExpectedIndentation = indents[i];
+        }
+    }
+
+    /// <summary>
+    ///     Sets <see cref="LineModel.StartsInsideLiteral"/> on the lines that continue a multi-line string (verbatim
+    ///     or raw in C#, template in JavaScript), which a single line cannot tell.
+    /// </summary>
+    private static void MarkLinesInsideLiterals(string content, List<LineModel> lines, ICodeScanner scanner)
+    {
+        var literals = scanner.FindLiterals(content).ToList();
         int next = 0;
         int lineStart = 0;
 
@@ -120,6 +152,10 @@ public class CodeCheckerService : ICodeCheckerService
         }
     }
 
+    /// <summary>
+    ///     False for blank, comment and preprocessor lines. Runs after the check, so a trailing comment is already
+    ///     removed from <see cref="LineModel.TrimmedContent"/>.
+    /// </summary>
     private static bool IsCodeLine(LineModel line)
     {
         string code = line.TrimmedContent;

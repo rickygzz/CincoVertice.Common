@@ -15,6 +15,15 @@ namespace CincoVertice.Common.Application.CodeStandard.Checkers;
 public class MultipleSpaceChecker : ILineChecker
 {
     private static readonly string[] _keywords = ["if", "for", "foreach", "while", "do", "new"];
+
+    private readonly ICodeScanner _scanner;
+
+    /// <param name="scanner">Finds the language's literals; C# when not given.</param>
+    public MultipleSpaceChecker(ICodeScanner? scanner = null)
+    {
+        _scanner = scanner ?? CSharpCodeScanner.Instance;
+    }
+
     /// <inheritdoc/>
     public bool Check(LineModel line)
     {
@@ -26,15 +35,16 @@ public class MultipleSpaceChecker : ILineChecker
             return true;
         }
 
+        Dictionary<int, int> literalEnds = _scanner.FindLiterals(code).ToDictionary(x => x.Start, x => x.End);
         int i = 0;
 
         while (i < code.Length)
         {
             char current = code[i];
 
-            if (current is '"' or '\'' or '$' or '@')
+            if (literalEnds.TryGetValue(i, out int literalEnd))
             {
-                i = CSharpLiteralScanner.SkipLiteral(code, i);
+                i = literalEnd;
             }
             else if (current == '/' && i + 1 < code.Length && code[i + 1] == '*')
             {

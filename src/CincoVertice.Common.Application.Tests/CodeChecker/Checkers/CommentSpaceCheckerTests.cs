@@ -127,4 +127,19 @@ public class CommentSpaceCheckerTests
         Assert.Equal(nameof(Errors.CH0020), Assert.Single(line.Errors).Code);
         Assert.Equal("var x = 1;", line.TrimmedContent);
     }
+
+    [Fact]
+    public void Check_WhenTheLineStartsInsideALiteral_ReadsNoComment()
+    {
+        // Arrange: the text of a multi-line string, where // is text
+        var line = TestLine.Create("  see http://x.com");
+        line.StartsInsideLiteral = true;
+
+        // Act
+        bool result = _checker.Check(line);
+
+        // Assert
+        Assert.True(result);
+        Assert.Empty(line.Errors);
+    }
 }

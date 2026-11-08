@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Interfaces;
+using CincoVertice.Common.Application.CodeStandard.Models;
 using CincoVertice.Common.Application.CodeStandard.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,11 +9,9 @@ public static class ApplicationSetup
 {
     public static IServiceCollection AddApplicationLayer(IServiceCollection services)
     {
-        services.AddSingleton<ILineCheckerService, LineCheckerService>();
-        services.AddSingleton<ICodeCheckerService, CodeCheckerService>();
-
-        services.AddSingleton(_ => FixerPipeline.CreateFormatting());
-        services.AddSingleton<ICodeFixerService, CodeFixerService>();
+        // C# and JavaScript, each file by its extension
+        services.AddSingleton<ICodeCheckerService>(_ => new CodeCheckerService(CodeLanguageModel.All));
+        services.AddSingleton<ICodeFixerService>(_ => new CodeFixerService(CodeLanguageModel.All));
 
         return services;
     }

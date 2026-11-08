@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+using CincoVertice.Common.Application.CodeStandard.Interfaces;
 
 namespace CincoVertice.Common.Application.CodeStandard.Helper;
 
@@ -13,9 +14,16 @@ namespace CincoVertice.Common.Application.CodeStandard.Helper;
 public sealed class LiteralMask
 {
     private readonly List<string> _literals = [];
+    private readonly ICodeScanner _scanner;
 
     // Makes the placeholders unique, so restoring cannot match text that was already in the code
     private readonly string _marker = "__lit_" + Guid.NewGuid().ToString("N")[..8] + "_";
+
+    /// <param name="scanner">Finds the literals; C# when not given.</param>
+    public LiteralMask(ICodeScanner? scanner = null)
+    {
+        _scanner = scanner ?? CSharpCodeScanner.Instance;
+    }
 
     /// <summary>
     ///     Replaces each literal with a placeholder. Comments are left as they are.
@@ -25,7 +33,7 @@ public sealed class LiteralMask
         var sb = new StringBuilder(content.Length);
         int copied = 0;
 
-        foreach (var (start, end) in CSharpLiteralScanner.FindLiterals(content))
+        foreach (var (start, end) in _scanner.FindLiterals(content))
         {
             sb.Append(content, copied, start - copied);
             sb.Append('"').Append(_marker).Append(_literals.Count).Append('"');

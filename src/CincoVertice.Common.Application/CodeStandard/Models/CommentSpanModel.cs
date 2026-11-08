@@ -1,7 +1,7 @@
 ﻿namespace CincoVertice.Common.Application.CodeStandard.Models;
 
 /// <summary>
-///     A comment in C# code, including its // or /* */ delimiters.
+///     A comment in code, including its // or /* */ delimiters.
 /// </summary>
 /// <param name="Start">Index of the first slash.</param>
 /// <param name="End">Index after the comment (exclusive): the line end for //, after */ for /* */.</param>

@@ -14,7 +14,8 @@ public class TrailingWhitespaceChecker : ILineChecker
     /// <inheritdoc/>
     public bool Check(LineModel line)
     {
-        if (line.Content.Length == 0 || !char.IsWhiteSpace(line.Content[^1]))
+        // The line of a multi-line string: its spaces are text, which the fixer leaves as they are
+        if (line.StartsInsideLiteral || line.Content.Length == 0 || !char.IsWhiteSpace(line.Content[^1]))
         {
             return true;
         }

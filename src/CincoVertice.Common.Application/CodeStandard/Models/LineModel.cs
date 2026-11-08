@@ -43,6 +43,12 @@ public class LineModel
     /// </summary>
     public bool StartsInsideLiteral { get; set; } = false;
 
+    /// <summary>
+    ///     The indentation the line should have, in spaces, in a language indented by its brackets (see
+    ///     <see cref="Helper.BraceIndenter"/>); null otherwise, or for a line to leave alone. Set by the caller.
+    /// </summary>
+    public int? ExpectedIndentation { get; set; }
+
     public int IndentationLevel { get; set; } = 0;
 
     public LineEndingEnum LineEnding = LineEndingEnum.None;

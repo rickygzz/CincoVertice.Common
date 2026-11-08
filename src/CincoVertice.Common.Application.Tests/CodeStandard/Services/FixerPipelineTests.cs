@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Fixers;
+using CincoVertice.Common.Application.CodeStandard.Fixers.CSharp;
 using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;
 

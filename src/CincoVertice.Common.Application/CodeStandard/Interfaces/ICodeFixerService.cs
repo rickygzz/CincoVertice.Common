@@ -12,7 +12,7 @@ public interface ICodeFixerService
     FileFixResultModel FixFile(string filePath);
 
     /// <summary>
-    ///     Fixes every C# file in a folder and its subfolders; the same files as
+    ///     Fixes every C# and JavaScript file in a folder and its subfolders; the same files as
     ///     <see cref="ICodeCheckerService.CheckFolder"/>.
     /// </summary>
     /// <returns>One result per file, sorted by path, including unchanged files.</returns>
