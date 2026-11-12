@@ -16,6 +16,12 @@ public static class BuiltInFunctions
     // More key presses than this is more likely a mistake than intended
     private const int MaxPressTimes = 100;
 
+    // system.waitidle measures the load over this long at a time, so a short peak doesn't count as busy
+    public const int LoadSampleMilliseconds = 5000;
+
+    private const int MaxQuietSeconds = 60 * 60;
+    private const int MaxIdleWaitMinutes = 120;
+
     /// <param name="host">What scripts do on the desktop.</param>
     /// <param name="globals">The global variables.</param>
     /// <param name="argument">What script.argument() returns; empty for none.</param>
@@ -58,6 +64,10 @@ public static class BuiltInFunctions
             new("shell.run", 1, 2, a => Done(() => host.Run(a.Text(0), a.Text(1, string.Empty)))),
 
             new("tray.notify", 1, 1, a => Done(() => host.Notify(a.Text(0)))),
+
+            // waitidle(cpu, disk, seconds, minutes): true once both stay at or under their percent for the seconds;
+            // false when the minutes run out first
+            new("system.waitidle", 4, 4, a => WaitIdleAsync(host, a)),
 
             new("script.wait", 1, 1, async a =>
             {
@@ -217,6 +227,54 @@ public static class BuiltInFunctions
         }
 
         return (int)milliseconds;
+    }
+
+    /// <summary>
+    ///     Measures the load in steps of <see cref="LoadSampleMilliseconds"/> until the CPU and the disks have been at
+    ///     or under their limits for the quiet seconds in a row (true), or the minutes are over (false). A busy step
+    ///     starts the quiet time again.
+    /// </summary>
+    private static async Task<object> WaitIdleAsync(IScriptHost host, ScriptArguments a)
+    {
+        decimal cpu = Whole(a, 0, "the CPU percent", 1, 100);
+        decimal disk = Whole(a, 1, "the disk percent", 1, 100);
+        decimal quietSeconds = Whole(a, 2, "the quiet seconds", 1, MaxQuietSeconds);
+        decimal maxMinutes = Whole(a, 3, "the minutes", 1, MaxIdleWaitMinutes);
+
+        if (quietSeconds > maxMinutes * 60)
+        {
+            throw a.Error($"the quiet seconds ({quietSeconds}) are longer than the minutes ({maxMinutes}) to wait");
+        }
+
+        int stepsNeeded = (int)Math.Ceiling(quietSeconds * 1000 / LoadSampleMilliseconds);
+        int maxSteps = (int)(maxMinutes * 60 * 1000 / LoadSampleMilliseconds);
+        int quietSteps = 0;
+
+        for (int step = 0; step < maxSteps; step++)
+        {
+            SystemLoadModel load = await host.MeasureLoadAsync(LoadSampleMilliseconds);
+
+            quietSteps = load.CpuPercent <= cpu && load.DiskPercent <= disk ? quietSteps + 1 : 0;
+
+            if (quietSteps >= stepsNeeded)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static decimal Whole(ScriptArguments a, int index, string what, int min, int max)
+    {
+        decimal value = a.Number(index);
+
+        if (value < min || value > max || value != decimal.Truncate(value))
+        {
+            throw a.Error($"{what} must be a whole number from {min} to {max}, not {value}");
+        }
+
+        return value;
     }
 
     /// <summary>

@@ -55,6 +55,9 @@ public interface IScriptHost
 
     Task WaitAsync(int milliseconds);
 
+    /// <summary>Measures how busy the computer is over the next milliseconds, which it waits.</summary>
+    Task<SystemLoadModel> MeasureLoadAsync(int milliseconds);
+
     /// <summary>Shows a notification that does not wait for the user.</summary>
     void Notify(string text);
 }

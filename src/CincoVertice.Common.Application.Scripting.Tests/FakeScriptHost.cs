@@ -109,5 +109,18 @@ internal sealed class FakeScriptHost : IScriptHost
         return Task.CompletedTask;
     }
 
+    /// <summary>What each measure of the load gives, in turn; once empty, the computer is quiet (0% and 0%).</summary>
+    public Queue<SystemLoadModel> Loads { get; } = new();
+
+    /// <summary>How many times the load was measured, and so how long system.waitidle waited.</summary>
+    public int LoadMeasures { get; private set; }
+
+    public Task<SystemLoadModel> MeasureLoadAsync(int milliseconds)
+    {
+        LoadMeasures++;
+
+        return Task.FromResult(Loads.Count > 0 ? Loads.Dequeue() : new SystemLoadModel(0, 0));
+    }
+
     public void Notify(string text) => Calls.Add($"notify: {text}");
 }
