@@ -87,6 +87,18 @@ public class WindowPlacementTests
     }
 
     [Fact]
+    public void GetMonitors_HasEveryMonitorsBounds_WithItsWorkArea()
+    {
+        // Act
+        IReadOnlyList<(Rectangle Bounds, Rectangle WorkArea)> monitors = MonitorHelper.GetMonitors();
+
+        // Assert
+        Assert.Equal(
+            Screen.AllScreens.Select(screen => (screen.Bounds, screen.WorkingArea)).OrderBy(m => m.Bounds.X),
+            monitors.OrderBy(m => m.Bounds.X));
+    }
+
+    [Fact]
     public void GetWorkArea_IsTheOneOfTheWindowsMonitor()
     {
         // Arrange
