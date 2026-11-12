@@ -102,6 +102,19 @@ internal sealed class FakeScriptHost : IScriptHost
 
     public string GetActiveWindowTitle() => ActiveWindowTitle;
 
+    /// <summary>How many zones there are; a higher one throws, as the app does.</summary>
+    public int ZoneCount { get; set; } = 3;
+
+    public void MoveActiveWindowToZone(int zone)
+    {
+        if (zone > ZoneCount)
+        {
+            throw new ArgumentException($"there's no zone {zone}: there are {ZoneCount}.");
+        }
+
+        Calls.Add($"tozone: {zone}");
+    }
+
     public Task WaitAsync(int milliseconds)
     {
         Calls.Add($"wait: {milliseconds}");

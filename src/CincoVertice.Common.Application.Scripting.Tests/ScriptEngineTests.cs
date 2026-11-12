@@ -162,6 +162,29 @@ public class ScriptEngineTests
         Assert.Equal(["say: Inbox - Outlook"], calls);
     }
 
+    [Fact]
+    public async Task RunAsync_MovesTheActiveWindowToAZone()
+    {
+        // Act
+        var calls = await RunAsync("window.tozone(2)");
+
+        // Assert
+        Assert.Equal(["tozone: 2"], calls);
+    }
+
+    [Theory]
+    [InlineData("window.tozone(0)", "the zone must be a whole number from 1 to 99, not 0")]
+    [InlineData("window.tozone(1.5)", "the zone must be a whole number from 1 to 99, not 1.5")]
+    [InlineData("window.tozone(4)", "there's no zone 4: there are 3.")]
+    public async Task RunAsync_ToAZoneThatIsntThere_IsAnError(string script, string message)
+    {
+        // Act
+        var error = await Assert.ThrowsAsync<ScriptException>(() => RunAsync(script));
+
+        // Assert
+        Assert.Contains(message, error.Message);
+    }
+
     [Theory]
     [InlineData("Bold text", new[] { "paste: Bold text" })]
     [InlineData("", new string[0])]

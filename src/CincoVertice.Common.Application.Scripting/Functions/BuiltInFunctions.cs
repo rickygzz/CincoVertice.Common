@@ -19,6 +19,9 @@ public static class BuiltInFunctions
     // system.waitidle measures the load over this long at a time, so a short peak doesn't count as busy
     public const int LoadSampleMilliseconds = 5000;
 
+    /// <summary>The highest zone number window.tozone takes.</summary>
+    public const int MaxZone = 99;
+
     private const int MaxQuietSeconds = 60 * 60;
     private const int MaxIdleWaitMinutes = 120;
 
@@ -59,6 +62,8 @@ public static class BuiltInFunctions
             }),
 
             new("window.title", 0, 0, _ => Task.FromResult<object>(host.GetActiveWindowTitle())),
+            new("window.tozone", 1, 1, a =>
+                Done(() => host.MoveActiveWindowToZone((int)Whole(a, 0, "the zone", 1, MaxZone)))),
 
             new("shell.open", 1, 1, a => Done(() => host.Open(a.Text(0)))),
             new("shell.run", 1, 2, a => Done(() => host.Run(a.Text(0), a.Text(1, string.Empty)))),

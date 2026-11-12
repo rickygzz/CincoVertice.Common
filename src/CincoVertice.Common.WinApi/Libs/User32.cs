@@ -584,4 +584,194 @@ public partial class User32
     /// <returns>The previous DPI awareness context, to restore it; zero when dpiContext is not valid.</returns>
     [LibraryImport("user32.dll")]
     public static partial nint SetThreadDpiAwarenessContext(nint dpiContext);
+
+    /// <summary>Sent when the user starts moving or resizing a window.</summary>
+    public const uint EVENT_SYSTEM_MOVESIZESTART = 0x000A;
+
+    /// <summary>Sent when the user ends moving or resizing a window.</summary>
+    public const uint EVENT_SYSTEM_MOVESIZEEND = 0x000B;
+
+    /// <summary>The hook function is called in the hooking thread, from its message loop: no DLL is injected.</summary>
+    public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+
+    /// <summary>Events of the hooking process's own windows aren't sent.</summary>
+    public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
+
+    /// <summary>The object of an event that is the window itself, not a part of it.</summary>
+    public const int OBJID_WINDOW = 0;
+
+    /// <summary>The window, not one of its children, for GetAncestor.</summary>
+    public const uint GA_ROOT = 2;
+
+    /// <summary>The monitor nearest the window, when it's on none.</summary>
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    /// <summary>A function Windows calls for a window event (WinEventProc).</summary>
+    /// <param name="hWinEventHook">The hook.</param>
+    /// <param name="eventType">Which event, e.g. EVENT_SYSTEM_MOVESIZESTART.</param>
+    /// <param name="hwnd">The window of the event.</param>
+    /// <param name="idObject">The object of the event, e.g. OBJID_WINDOW.</param>
+    /// <param name="idChild">0 for the object itself.</param>
+    /// <param name="idEventThread">The thread of the event.</param>
+    /// <param name="dwmsEventTime">When it happened, in milliseconds.</param>
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    public delegate void WinEventProc(
+        nint hWinEventHook,
+        uint eventType,
+        nint hwnd,
+        int idObject,
+        int idChild,
+        uint idEventThread,
+        uint dwmsEventTime);
+
+    /// <summary>A function Windows calls for each monitor (MonitorEnumProc).</summary>
+    /// <returns>True to go on to the next monitor.</returns>
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public delegate bool MonitorEnumProc(nint hMonitor, nint hdcMonitor, nint lprcMonitor, nint dwData);
+
+    /// <summary>How SetWindowPos changes a window.</summary>
+    [Flags]
+    public enum SetWindowPosFlags : uint
+    {
+        /// <summary>Keeps the size.</summary>
+        SWP_NOSIZE = 0x0001,
+
+        /// <summary>Keeps the position.</summary>
+        SWP_NOMOVE = 0x0002,
+
+        /// <summary>Keeps the Z order.</summary>
+        SWP_NOZORDER = 0x0004,
+
+        /// <summary>Doesn't activate the window.</summary>
+        SWP_NOACTIVATE = 0x0010,
+
+        /// <summary>Keeps the Z order of the owner window.</summary>
+        SWP_NOOWNERZORDER = 0x0200,
+    }
+
+    /// <summary>A monitor's bounds and work area (MONITORINFO).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MONITORINFO
+    {
+        /// <summary>The size of the structure, set before the call.</summary>
+        public int cbSize;
+
+        /// <summary>The whole monitor.</summary>
+        public RECT rcMonitor;
+
+        /// <summary>The monitor without the taskbar and docked toolbars.</summary>
+        public RECT rcWork;
+
+        /// <summary>1 for the primary monitor.</summary>
+        public uint dwFlags;
+    }
+
+    /// <summary>
+    ///     Calls a function for a range of window events in every process. With WINEVENT_OUTOFCONTEXT the calls come
+    ///     through the message loop of the calling thread, which must have one.
+    /// </summary>
+    /// <param name="eventMin">The first event, e.g. EVENT_SYSTEM_MOVESIZESTART.</param>
+    /// <param name="eventMax">The last event.</param>
+    /// <param name="hmodWinEventProc">0 with WINEVENT_OUTOFCONTEXT.</param>
+    /// <param name="lpfnWinEventProc">
+    ///     A pointer to a <see cref="WinEventProc"/>, which the caller keeps alive until the hook is removed.
+    /// </param>
+    /// <param name="idProcess">0 for every process.</param>
+    /// <param name="idThread">0 for every thread.</param>
+    /// <param name="dwFlags">E.g. WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS.</param>
+    /// <returns>The hook, for UnhookWinEvent; 0 when it failed.</returns>
+    [LibraryImport("user32.dll")]
+    public static partial nint SetWinEventHook(
+        uint eventMin,
+        uint eventMax,
+        nint hmodWinEventProc,
+        nint lpfnWinEventProc,
+        uint idProcess,
+        uint idThread,
+        uint dwFlags);
+
+    /// <summary>Removes a hook made by SetWinEventHook.</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnhookWinEvent(nint hWinEventHook);
+
+    /// <summary>Changes the size, position and Z order of a window.</summary>
+    /// <param name="hWnd">The window.</param>
+    /// <param name="hWndInsertAfter">The window to put it after in the Z order; 0 with SWP_NOZORDER.</param>
+    /// <param name="X">The new left edge.</param>
+    /// <param name="Y">The new top edge.</param>
+    /// <param name="cx">The new width.</param>
+    /// <param name="cy">The new height.</param>
+    /// <param name="uFlags">What to keep.</param>
+    /// <returns>
+    ///     True when it worked; false otherwise, e.g. with ERROR_ACCESS_DENIED for a window of a program that runs as
+    ///     administrator, when the caller doesn't.
+    /// </returns>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWindowPos(
+        nint hWnd,
+        nint hWndInsertAfter,
+        int X,
+        int Y,
+        int cx,
+        int cy,
+        SetWindowPosFlags uFlags);
+
+    /// <summary>Whether the window is maximized.</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsZoomed(nint hWnd);
+
+    /// <summary>A window's ancestor; with GA_ROOT, its top-level window.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial nint GetAncestor(nint hwnd, uint gaFlags);
+
+    /// <summary>The monitor a window is on, or with MONITOR_DEFAULTTONEAREST the nearest one.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial nint MonitorFromWindow(nint hwnd, uint dwFlags);
+
+    /// <summary>A monitor's bounds and work area.</summary>
+    /// <param name="hMonitor">The monitor.</param>
+    /// <param name="lpmi">Receives them; its cbSize is set before the call.</param>
+    /// <returns>True when it worked.</returns>
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetMonitorInfo(nint hMonitor, ref MONITORINFO lpmi);
+
+    /// <summary>Calls a function for each monitor.</summary>
+    /// <param name="hdc">0 for every monitor of the desktop.</param>
+    /// <param name="lprcClip">0 for no clipping.</param>
+    /// <param name="lpfnEnum">A pointer to a <see cref="MonitorEnumProc"/>, kept alive during the call.</param>
+    /// <param name="dwData">Passed to the function.</param>
+    /// <returns>True when it worked.</returns>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool EnumDisplayMonitors(nint hdc, nint lprcClip, nint lpfnEnum, nint dwData);
+
+    /// <summary>The window's styles, for GetWindowLongPtr.</summary>
+    public const int GWL_STYLE = -16;
+
+    /// <summary>The window's extended styles (WS_EX_*), for GetWindowLongPtr.</summary>
+    public const int GWL_EXSTYLE = -20;
+
+    /// <summary>A title bar.</summary>
+    public const long WS_CAPTION = 0x00C00000;
+
+    /// <summary>A border to resize the window with.</summary>
+    public const long WS_THICKFRAME = 0x00040000;
+
+    /// <summary>A value of the window, e.g. its styles with GWL_STYLE.</summary>
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    public static partial nint GetWindowLongPtr(nint hWnd, int nIndex);
+
+    /// <summary>Whether the window has the visible style.</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsWindowVisible(nint hWnd);
+
+    /// <summary>The desktop's window, behind every other.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial nint GetShellWindow();
 }

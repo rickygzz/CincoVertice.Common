@@ -53,6 +53,13 @@ public interface IScriptHost
     /// <summary>The title of the window the user works in; empty when there is none or it has no title.</summary>
     string GetActiveWindowTitle();
 
+    /// <summary>Moves the window the user works in to one of the window zones of its monitor.</summary>
+    /// <param name="zone">Which, from 1.</param>
+    /// <exception cref="ArgumentException">
+    ///     There's no such zone, or no window to move; the message says why.
+    /// </exception>
+    void MoveActiveWindowToZone(int zone);
+
     Task WaitAsync(int milliseconds);
 
     /// <summary>Measures how busy the computer is over the next milliseconds, which it waits.</summary>
