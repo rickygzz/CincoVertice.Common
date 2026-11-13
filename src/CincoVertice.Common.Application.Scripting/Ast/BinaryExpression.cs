@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Ast;
+﻿namespace CincoVertice.Common.Application.Scripting.Ast;
 
 /// <param name="Line">Line of the operator.</param>
 /// <param name="Column">Column of the operator.</param>

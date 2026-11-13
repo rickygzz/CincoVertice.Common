@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using CincoVertice.Common.WinApi.Helpers;
 using CincoVertice.Common.WinApi.Libs.Enums;
 using Xunit;

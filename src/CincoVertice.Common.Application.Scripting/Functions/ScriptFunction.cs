@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Functions;
+﻿namespace CincoVertice.Common.Application.Scripting.Functions;
 
 /// <param name="Name">Name used in scripts (case-insensitive).</param>
 /// <param name="MinArguments">Minimum number of arguments.</param>

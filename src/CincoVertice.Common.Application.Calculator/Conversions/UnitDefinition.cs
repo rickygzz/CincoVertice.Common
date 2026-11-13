@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Conversions;
+﻿namespace CincoVertice.Common.Application.Calculator.Conversions;
 
 /// <summary>
 ///     A unit, defined by how a value in it becomes a value in its group's base unit:

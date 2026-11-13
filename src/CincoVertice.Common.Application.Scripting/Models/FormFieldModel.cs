@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Models;
+﻿namespace CincoVertice.Common.Application.Scripting.Models;
 
 /// <summary>
 ///     One box of dialog.form(): a text box, or a fixed list to pick from.

@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Tests;
+﻿namespace CincoVertice.Common.Application.Calculator.Tests;
 
 /// <summary>
 ///     A clock stopped at one moment, in a chosen local time zone.

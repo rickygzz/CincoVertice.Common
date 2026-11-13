@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.CodeStandard.Helper;
+﻿namespace CincoVertice.Common.Application.CodeStandard.Helper;
 
 /// <summary>
 ///     Block brace placement shared by the brace placement checker and fixer (CH0034), so both agree on which

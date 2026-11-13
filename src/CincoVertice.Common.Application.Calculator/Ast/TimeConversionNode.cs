@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Ast;
+﻿namespace CincoVertice.Common.Application.Calculator.Ast;
 
 /// <summary>
 ///     A time converted from one time zone to another, e.g. 10:30 Mexico to India. Only valid as a whole expression.

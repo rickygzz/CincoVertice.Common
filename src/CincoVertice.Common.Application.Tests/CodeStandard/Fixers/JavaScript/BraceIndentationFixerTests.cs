@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Fixers.JavaScript;
+﻿using CincoVertice.Common.Application.CodeStandard.Fixers.JavaScript;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using Xunit;
 

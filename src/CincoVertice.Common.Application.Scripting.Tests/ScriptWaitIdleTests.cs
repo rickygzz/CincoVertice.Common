@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Scripting.Models;
+﻿using CincoVertice.Common.Application.Scripting.Models;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Scripting.Tests;

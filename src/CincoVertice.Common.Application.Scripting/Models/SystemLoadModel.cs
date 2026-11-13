@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Models;
+﻿namespace CincoVertice.Common.Application.Scripting.Models;
 
 /// <summary>
 ///     How busy the computer was over a while.

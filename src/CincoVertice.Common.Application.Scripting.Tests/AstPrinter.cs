@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using CincoVertice.Common.Application.Scripting.Ast;
 
 namespace CincoVertice.Common.Application.Scripting.Tests;

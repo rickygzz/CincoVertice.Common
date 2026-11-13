@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 using CincoVertice.Common.Application.CodeStandard.Models;
 

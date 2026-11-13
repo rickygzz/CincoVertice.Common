@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using CincoVertice.Common.WinApi.Libs;
 
 namespace CincoVertice.Common.WinApi.Helpers;

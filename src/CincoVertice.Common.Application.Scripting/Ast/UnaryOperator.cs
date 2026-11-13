@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Ast;
+﻿namespace CincoVertice.Common.Application.Scripting.Ast;
 
 public enum UnaryOperator
 {

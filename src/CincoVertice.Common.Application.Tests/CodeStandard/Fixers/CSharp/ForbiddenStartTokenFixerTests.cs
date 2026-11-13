@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Fixers.CSharp;
+﻿using CincoVertice.Common.Application.CodeStandard.Fixers.CSharp;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeStandard.Fixers.CSharp;

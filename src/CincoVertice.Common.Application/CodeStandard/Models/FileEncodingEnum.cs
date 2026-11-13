@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.CodeStandard.Models;
+﻿namespace CincoVertice.Common.Application.CodeStandard.Models;
 
 /// <summary>How a fix writes a file's text.</summary>
 public enum FileEncodingEnum

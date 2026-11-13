@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Ast;
+﻿namespace CincoVertice.Common.Application.Scripting.Ast;
 
 /// <summary>An item of a list: list[index], where the first item is 1.</summary>
 /// <param name="Line">Line of the [.</param>

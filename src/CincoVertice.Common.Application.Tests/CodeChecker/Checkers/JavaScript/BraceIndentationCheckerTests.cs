@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Checkers.JavaScript;
+﻿using CincoVertice.Common.Application.CodeStandard.Checkers.JavaScript;
 using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.Tests.CodeChecker.Checkers.TestHelpers;
 using Xunit;

@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Ast;
+﻿namespace CincoVertice.Common.Application.Scripting.Ast;
 
 /// <summary>
 ///     A part of a script that has a value.

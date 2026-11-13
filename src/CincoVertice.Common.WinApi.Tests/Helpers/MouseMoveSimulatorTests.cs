@@ -1,4 +1,4 @@
-using CincoVertice.Common.WinApi.Helpers;
+﻿using CincoVertice.Common.WinApi.Helpers;
 using Xunit;
 
 namespace CincoVertice.Common.WinApi.Tests.Helpers;

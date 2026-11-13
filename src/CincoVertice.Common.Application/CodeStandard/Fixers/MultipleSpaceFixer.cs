@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 

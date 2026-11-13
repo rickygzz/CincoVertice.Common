@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Models;
+﻿namespace CincoVertice.Common.Application.Scripting.Models;
 
 /// <param name="Type">Kind of token.</param>
 /// <param name="Value">The token's text; for a text literal, its content without quotes and escapes.</param>

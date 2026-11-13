@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.CodeStandard.Models;
+﻿namespace CincoVertice.Common.Application.CodeStandard.Models;
 
 /// <summary>What a fix does to each file, besides what its language's fixers do.</summary>
 /// <param name="Fixers">

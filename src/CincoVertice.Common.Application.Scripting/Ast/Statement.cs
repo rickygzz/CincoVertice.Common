@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Ast;
+﻿namespace CincoVertice.Common.Application.Scripting.Ast;
 
 /// <summary>
 ///     One step of a script: an assignment, a function call or an if.

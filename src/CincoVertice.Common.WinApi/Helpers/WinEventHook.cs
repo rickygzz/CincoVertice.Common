@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using CincoVertice.Common.WinApi.Libs;
 
 namespace CincoVertice.Common.WinApi.Helpers;

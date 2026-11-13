@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Functions;
+﻿namespace CincoVertice.Common.Application.Calculator.Functions;
 
 /// <param name="Name">Name used in expressions (case-insensitive).</param>
 /// <param name="MinArguments">Minimum number of arguments.</param>

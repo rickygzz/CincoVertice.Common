@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.CodeStandard.Helper;
+﻿namespace CincoVertice.Common.Application.CodeStandard.Helper;
 
 /// <summary>
 ///     Brace spacing shared by the brace space checker and fixer (CH0033), so both agree on where a space goes.

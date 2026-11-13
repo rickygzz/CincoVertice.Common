@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator;
+﻿namespace CincoVertice.Common.Application.Calculator;
 
 /// <summary>
 ///     Math functions for decimal, which System.Math does not provide.

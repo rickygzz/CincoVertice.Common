@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Ast;
+﻿namespace CincoVertice.Common.Application.Calculator.Ast;
 
 /// <summary>
 ///     Node of the expression syntax tree built by <see cref="ExpressionParser"/>.

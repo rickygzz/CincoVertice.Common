@@ -1,4 +1,4 @@
-using CincoVertice.Common.WinApi.Libs;
+﻿using CincoVertice.Common.WinApi.Libs;
 using CincoVertice.Common.WinApi.Libs.Enums;
 using System.Security;
 using Microsoft.Win32;

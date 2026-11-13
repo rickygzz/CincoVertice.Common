@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting;
+﻿namespace CincoVertice.Common.Application.Scripting;
 
 /// <summary>
 ///     A syntax or run-time error in a script, with the position it was found at.

@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Constants;
+﻿using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.CodeStandard.Models;
 using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;

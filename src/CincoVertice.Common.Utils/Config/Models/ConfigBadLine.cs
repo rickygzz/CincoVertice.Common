@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Utils.Config.Models;
+﻿namespace CincoVertice.Common.Utils.Config.Models;
 
 /// <summary>
 ///     A line <see cref="ConfigLexer"/> could not read.

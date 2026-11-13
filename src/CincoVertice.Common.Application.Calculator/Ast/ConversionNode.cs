@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Ast;
+﻿namespace CincoVertice.Common.Application.Calculator.Ast;
 
 /// <summary>
 ///     A unit conversion, e.g. 10 km to mi. Only valid as a whole expression.

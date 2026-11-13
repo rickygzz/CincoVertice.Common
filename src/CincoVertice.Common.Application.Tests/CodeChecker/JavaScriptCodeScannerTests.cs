@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Helper;
+﻿using CincoVertice.Common.Application.CodeStandard.Helper;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeChecker;

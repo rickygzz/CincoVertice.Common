@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Functions;
+﻿namespace CincoVertice.Common.Application.Calculator.Functions;
 
 /// <summary>
 ///     Evaluated function argument: a number or a text.

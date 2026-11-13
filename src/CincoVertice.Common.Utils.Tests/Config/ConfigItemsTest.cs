@@ -1,4 +1,4 @@
-using CincoVertice.Common.Utils.Config;
+﻿using CincoVertice.Common.Utils.Config;
 using Xunit;
 
 namespace CincoVertice.Common.Utils.Tests.Config;

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using CincoVertice.Common.Application.Scripting.Helpers;
 using CincoVertice.Common.Application.Scripting.Models;

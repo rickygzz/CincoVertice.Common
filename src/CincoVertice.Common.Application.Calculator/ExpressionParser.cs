@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Calculator.Ast;
+﻿using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Models;
 using System.Globalization;
 using System.Text;

@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.TimeZones;
+﻿namespace CincoVertice.Common.Application.Calculator.TimeZones;
 
 /// <summary>
 ///     A place whose time can be converted (10:30 Mexico to India).

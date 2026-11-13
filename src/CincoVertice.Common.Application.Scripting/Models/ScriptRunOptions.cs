@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Models;
+﻿namespace CincoVertice.Common.Application.Scripting.Models;
 
 /// <summary>
 ///     What a run of a script gets from where it was started.

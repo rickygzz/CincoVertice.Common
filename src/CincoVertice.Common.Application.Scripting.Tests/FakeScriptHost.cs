@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Scripting.Interfaces;
+﻿using CincoVertice.Common.Application.Scripting.Interfaces;
 using CincoVertice.Common.Application.Scripting.Models;
 
 namespace CincoVertice.Common.Application.Scripting.Tests;

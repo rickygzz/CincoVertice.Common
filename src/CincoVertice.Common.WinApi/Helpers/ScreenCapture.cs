@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing.Imaging;
 using CincoVertice.Common.WinApi.Libs;
 using CincoVertice.Common.WinApi.Libs.Enums;

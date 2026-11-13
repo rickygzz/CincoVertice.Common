@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.CodeStandard.Checkers.CSharp;
+﻿using CincoVertice.Common.Application.CodeStandard.Checkers.CSharp;
 using CincoVertice.Common.Application.CodeStandard.Constants;
 using CincoVertice.Common.Application.CodeStandard.Models;
 using CincoVertice.Common.Application.CodeStandard.Services;

@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Models;
+﻿namespace CincoVertice.Common.Application.Calculator.Models;
 
 public enum TokenType
 {

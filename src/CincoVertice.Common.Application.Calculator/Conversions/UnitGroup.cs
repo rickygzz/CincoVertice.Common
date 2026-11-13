@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Conversions;
+﻿namespace CincoVertice.Common.Application.Calculator.Conversions;
 
 /// <summary>
 ///     What a unit measures. Only units of the same group can be converted to each other.

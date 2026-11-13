@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Calculator.Ast;
+﻿using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Conversions;
 using CincoVertice.Common.Application.Calculator.TimeZones;
 using System.Globalization;

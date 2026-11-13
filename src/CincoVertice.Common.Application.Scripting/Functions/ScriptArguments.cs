@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Functions;
+﻿namespace CincoVertice.Common.Application.Scripting.Functions;
 
 /// <summary>
 ///     The evaluated arguments of a function call, with typed accessors that report a wrong type at the call.

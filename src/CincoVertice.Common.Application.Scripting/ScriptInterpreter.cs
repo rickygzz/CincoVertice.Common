@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Scripting.Ast;
+﻿using CincoVertice.Common.Application.Scripting.Ast;
 using CincoVertice.Common.Application.Scripting.Functions;
 
 namespace CincoVertice.Common.Application.Scripting;

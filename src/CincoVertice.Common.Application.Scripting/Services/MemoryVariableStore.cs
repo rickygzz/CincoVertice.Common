@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using CincoVertice.Common.Application.Scripting.Interfaces;
 
 namespace CincoVertice.Common.Application.Scripting.Services;

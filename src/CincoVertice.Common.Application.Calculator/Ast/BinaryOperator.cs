@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Ast;
+﻿namespace CincoVertice.Common.Application.Calculator.Ast;
 
 public enum BinaryOperator
 {

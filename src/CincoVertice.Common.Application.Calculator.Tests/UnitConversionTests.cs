@@ -1,4 +1,4 @@
-using CincoVertice.Common.Application.Calculator.Conversions;
+﻿using CincoVertice.Common.Application.Calculator.Conversions;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Calculator.Tests;

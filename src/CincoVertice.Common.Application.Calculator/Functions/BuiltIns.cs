@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Functions;
+﻿namespace CincoVertice.Common.Application.Calculator.Functions;
 
 /// <summary>
 ///     Constants and functions available in expressions. Names are case-insensitive.

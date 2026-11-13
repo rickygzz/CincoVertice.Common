@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Calculator.Conversions;
+﻿namespace CincoVertice.Common.Application.Calculator.Conversions;
 
 /// <summary>
 ///     The units available in conversions (10 km to mi).

@@ -1,4 +1,4 @@
-namespace CincoVertice.Common.Application.Scripting.Helpers;
+﻿namespace CincoVertice.Common.Application.Scripting.Helpers;
 
 /// <summary>
 ///     The indentation rule of multi-line texts: what is before the closing """ is removed from every line, so the
