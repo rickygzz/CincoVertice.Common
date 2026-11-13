@@ -774,4 +774,71 @@ public partial class User32
     /// <summary>The desktop's window, behind every other.</summary>
     [LibraryImport("user32.dll")]
     public static partial nint GetShellWindow();
+
+    /// <summary>The cursor is shown, for CURSORINFO.flags.</summary>
+    public const uint CURSOR_SHOWING = 0x00000001;
+
+    /// <summary>The icon or cursor drawn with its mask and image, as Windows does, for DrawIconEx.</summary>
+    public const uint DI_NORMAL = 0x0003;
+
+    /// <summary>The cursor, and where it is (CURSORINFO).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CURSORINFO
+    {
+        /// <summary>The size of the structure, set before the call.</summary>
+        public int cbSize;
+
+        /// <summary>CURSOR_SHOWING when it's shown.</summary>
+        public uint flags;
+
+        /// <summary>The cursor.</summary>
+        public nint hCursor;
+
+        /// <summary>Where it points, in screen coordinates.</summary>
+        public POINT ptScreenPos;
+    }
+
+    /// <summary>An icon or cursor's hot spot and bitmaps (ICONINFO); the caller deletes the bitmaps.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ICONINFO
+    {
+        /// <summary>Nonzero for an icon, 0 for a cursor.</summary>
+        public int fIcon;
+
+        /// <summary>The point of the cursor that points, from its left.</summary>
+        public int xHotspot;
+
+        /// <summary>The same, from its top.</summary>
+        public int yHotspot;
+
+        /// <summary>Its mask bitmap.</summary>
+        public nint hbmMask;
+
+        /// <summary>Its color bitmap; 0 for a black and white cursor.</summary>
+        public nint hbmColor;
+    }
+
+    /// <summary>The cursor shown now, and where, in the DPI awareness of the calling thread.</summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorInfo(ref CURSORINFO pci);
+
+    /// <summary>An icon or cursor's hot spot and bitmaps; the caller deletes the bitmaps with DeleteObject.</summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetIconInfo(nint hIcon, out ICONINFO piconinfo);
+
+    /// <summary>Draws an icon or cursor; a width and height of 0 draw it at its usual size.</summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DrawIconEx(
+        nint hdc,
+        int xLeft,
+        int yTop,
+        nint hIcon,
+        int cxWidth,
+        int cyWidth,
+        uint istepIfAniCur,
+        nint hbrFlickerFreeDraw,
+        uint diFlags);
 }
