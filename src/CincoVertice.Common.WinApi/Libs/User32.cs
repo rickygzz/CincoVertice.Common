@@ -841,4 +841,82 @@ public partial class User32
         uint istepIfAniCur,
         nint hbrFlickerFreeDraw,
         uint diFlags);
+
+    /// <summary>A low-level hook of the mouse, for SetWindowsHookEx.</summary>
+    public const int WH_MOUSE_LL = 14;
+
+    /// <summary>A low-level hook of the keyboard, for SetWindowsHookEx.</summary>
+    public const int WH_KEYBOARD_LL = 13;
+
+    /// <summary>Messages a low-level hook gets, in its wParam.</summary>
+    public const int WM_KEYDOWN = 0x0100;
+    public const int WM_SYSKEYDOWN = 0x0104;
+    public const int WM_LBUTTONDOWN = 0x0201;
+    public const int WM_RBUTTONDOWN = 0x0204;
+    public const int WM_MBUTTONDOWN = 0x0207;
+
+    /// <summary>The character a key types, for MapVirtualKey; 0 when it types none.</summary>
+    public const uint MAPVK_VK_TO_CHAR = 2;
+
+    /// <summary>
+    ///     A function Windows calls for each input, for SetWindowsHookEx (LowLevelMouseProc, LowLevelKeyboardProc).
+    /// </summary>
+    /// <returns>What CallNextHookEx returns, so the input goes on.</returns>
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    public delegate nint LowLevelHookProc(int nCode, nint wParam, nint lParam);
+
+    /// <summary>A mouse input, as a low-level hook gets it (MSLLHOOKSTRUCT).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSLLHOOKSTRUCT
+    {
+        /// <summary>Where the pointer is, in per-monitor aware screen coordinates: physical pixels.</summary>
+        public POINT pt;
+
+        public uint mouseData;
+
+        public uint flags;
+
+        public uint time;
+
+        public nint dwExtraInfo;
+    }
+
+    /// <summary>A key, as a low-level hook gets it (KBDLLHOOKSTRUCT).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KBDLLHOOKSTRUCT
+    {
+        /// <summary>The virtual key code.</summary>
+        public uint vkCode;
+
+        public uint scanCode;
+
+        public uint flags;
+
+        public uint time;
+
+        public nint dwExtraInfo;
+    }
+
+    /// <summary>
+    ///     Calls a function for the input of every program; the calls come through the calling thread's messages.
+    /// </summary>
+    /// <param name="idHook">WH_MOUSE_LL or WH_KEYBOARD_LL.</param>
+    /// <param name="lpfn">A pointer to a <see cref="LowLevelHookProc"/>, kept alive until the hook is removed.</param>
+    /// <param name="hmod">The module of the calling program.</param>
+    /// <param name="dwThreadId">0 for every thread.</param>
+    /// <returns>The hook; 0 when it failed.</returns>
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowsHookExW", SetLastError = true)]
+    public static partial nint SetWindowsHookEx(int idHook, nint lpfn, nint hmod, uint dwThreadId);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnhookWindowsHookEx(nint hhk);
+
+    /// <summary>Passes the input on to the next hook, so it reaches the program it's for.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
+    /// <summary>Translates a virtual key code, e.g. with MAPVK_VK_TO_CHAR to the character it types.</summary>
+    [LibraryImport("user32.dll", EntryPoint = "MapVirtualKeyW")]
+    public static partial uint MapVirtualKey(uint uCode, uint uMapType);
 }
