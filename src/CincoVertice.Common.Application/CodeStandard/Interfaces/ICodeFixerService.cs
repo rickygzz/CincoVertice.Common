@@ -15,7 +15,11 @@ public interface ICodeFixerService
     ///     Fixes every C# and JavaScript file in a folder and its subfolders; the same files as
     ///     <see cref="ICodeCheckerService.CheckFolder"/>.
     /// </summary>
+    /// <param name="folderPath">The folder.</param>
+    /// <param name="fixers">
+    ///     The fixers to run, by <see cref="Services.FixerPipeline.NameOf"/>, in their usual order; all when null.
+    /// </param>
     /// <returns>One result per file, sorted by path, including unchanged files.</returns>
     /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>
-    List<FileFixResultModel> FixFolder(string folderPath);
+    List<FileFixResultModel> FixFolder(string folderPath, IReadOnlyCollection<string>? fixers = null);
 }

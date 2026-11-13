@@ -1,5 +1,6 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Fixers;
 using CincoVertice.Common.Application.CodeStandard.Fixers.CSharp;
+using CincoVertice.Common.Application.CodeStandard.Models;
 using CincoVertice.Common.Application.CodeStandard.Services;
 using Xunit;
 
@@ -18,6 +19,42 @@ public class FixerPipelineTests
 
         // Assert
         Assert.Equal("x(); // a\n", result);
+    }
+
+    [Fact]
+    public void Names_AreTheFixersClassNamesWithoutFixer_InTheirOrder()
+    {
+        // Arrange
+        var pipeline = new FixerPipeline([new CommentSpaceFixer(), new TrailingWhitespaceFixer()]);
+
+        // Act and assert
+        Assert.Equal(["CommentSpace", "TrailingWhitespace"], pipeline.Names);
+    }
+
+    [Fact]
+    public void Only_RunsTheFixersNamed_AndIgnoresNamesItDoesntHave()
+    {
+        // Arrange
+        var pipeline = new FixerPipeline([new CommentSpaceFixer(), new TrailingWhitespaceFixer()]);
+
+        // Act
+        FixerPipeline only = pipeline.Only(["TrailingWhitespace", "BraceIndentation"]);
+
+        // Assert: the comment keeps its missing space
+        Assert.Equal(["TrailingWhitespace"], only.Names);
+        Assert.Equal("x(); //a\n", only.Run("x(); //a   \n"));
+    }
+
+    [Fact]
+    public void EveryFixerOfEveryLanguage_HasANameOfItsOwn()
+    {
+        // Act
+        IEnumerable<string> names = CodeLanguageModel.All.SelectMany(language => language.Fixers.Names);
+
+        // Assert: one name per fixer within a language; a name never ends in "Fixer"
+        Assert.All(CodeLanguageModel.All, language =>
+            Assert.Equal(language.Fixers.Names.Count, language.Fixers.Names.Distinct().Count()));
+        Assert.DoesNotContain(names, name => name.EndsWith("Fixer", StringComparison.Ordinal));
     }
 
     [Fact]

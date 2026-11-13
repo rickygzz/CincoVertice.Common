@@ -175,6 +175,36 @@ public class CodeFixerServiceTests : IDisposable
         Assert.Empty(checker.CheckFolder(_folder).SelectMany(r => r.Errors));
     }
 
+    [Fact]
+    public void FixFolder_WithSomeFixers_RunsOnlyThoseInEveryLanguage()
+    {
+        // Arrange: a comment without its space, and spaces at the end of a line, in C# and JavaScript
+        string cs = CreateFile("a.cs", "x(); //a   \n");
+        string js = CreateFile("b.js", "x(); //b   \n");
+        var fixer = new CodeFixerService(CodeLanguageModel.All);
+
+        // Act
+        fixer.FixFolder(_folder, ["TrailingWhitespace"]);
+
+        // Assert: the spaces are gone, the comments as they were
+        Assert.Equal("x(); //a\n", File.ReadAllText(cs));
+        Assert.Equal("x(); //b\n", File.ReadAllText(js));
+    }
+
+    [Fact]
+    public void FixFolder_WithNoFixers_ChangesNothing()
+    {
+        // Arrange
+        string path = CreateFile("a.cs", "x(); //a   \n");
+
+        // Act
+        List<FileFixResultModel> results = new CodeFixerService(CodeLanguageModel.All).FixFolder(_folder, []);
+
+        // Assert
+        Assert.False(Assert.Single(results).IsChanged);
+        Assert.Equal("x(); //a   \n", File.ReadAllText(path));
+    }
+
     private string CreateFile(string relativePath, string content)
     {
         string path = Path.Combine(_folder, relativePath);

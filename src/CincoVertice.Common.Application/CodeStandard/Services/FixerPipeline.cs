@@ -24,6 +24,30 @@ public sealed class FixerPipeline
         _scanner = scanner ?? CSharpCodeScanner.Instance;
     }
 
+    /// <summary>The names of its fixers, in the order they run, e.g. "Indentation"; see <see cref="NameOf"/>.</summary>
+    public IReadOnlyList<string> Names => [.. _fixers.Select(NameOf)];
+
+    /// <summary>
+    ///     A fixer's name, which a user's choice of fixers keeps: its class name without "Fixer", e.g.
+    ///     "BracePlacement". Renaming a fixer's class renames it.
+    /// </summary>
+    public static string NameOf(IStringFixer fixer)
+    {
+        string name = fixer.GetType().Name;
+
+        return name.EndsWith("Fixer", StringComparison.Ordinal) ? name[..^"Fixer".Length] : name;
+    }
+
+    /// <summary>
+    ///     The same pipeline with only the fixers named, still in their order; the names of other languages' fixers
+    ///     are ignored.
+    /// </summary>
+    /// <param name="names">As <see cref="NameOf"/> gives them.</param>
+    public FixerPipeline Only(IReadOnlyCollection<string> names)
+    {
+        return new FixerPipeline(_fixers.Where(fixer => names.Contains(NameOf(fixer))), _scanner);
+    }
+
     /// <summary>
     ///     Runs every fixer in order, feeding each one the previous fixer's output.
     ///     String and char literals are masked first, so no fixer can change text inside them.

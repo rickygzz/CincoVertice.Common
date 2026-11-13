@@ -76,8 +76,16 @@ public class CodeFixerService : ICodeFixerService
         return result;
     }
 
-    public List<FileFixResultModel> FixFolder(string folderPath)
+    public List<FileFixResultModel> FixFolder(string folderPath, IReadOnlyCollection<string>? fixers = null)
     {
+        if (fixers is not null)
+        {
+            return new CodeFixerService(_languages.Select(language => language with
+            {
+                Fixers = language.Fixers.Only(fixers),
+            })).FixFolder(folderPath);
+        }
+
         var extensions = _languages.SelectMany(language => language.Extensions);
 
         return [.. SourceFileEnumerator.GetSourceFiles(folderPath, extensions).Select(FixFile)];
