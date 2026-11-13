@@ -304,4 +304,27 @@ public partial class Kernel32
     /// <returns>The thread identifier of the calling thread.</returns>
     [LibraryImport("kernel32.dll")]
     public static partial uint GetCurrentThreadId();
+
+    /// <summary>What a thread needs of the computer, for SetThreadExecutionState.</summary>
+    [Flags]
+    public enum ExecutionState : uint
+    {
+        /// <summary>Keeps the computer from sleeping.</summary>
+        ES_SYSTEM_REQUIRED = 0x00000001,
+
+        /// <summary>Keeps the screen on.</summary>
+        ES_DISPLAY_REQUIRED = 0x00000002,
+
+        /// <summary>Until the next call with ES_CONTINUOUS, not only once; alone, it clears what was asked.</summary>
+        ES_CONTINUOUS = 0x80000000,
+    }
+
+    /// <summary>
+    ///     Tells Windows what the calling thread needs, e.g. that the computer doesn't sleep. Windows clears it when
+    ///     the thread ends. It doesn't stop the screen saver, nor the lock after the time without input.
+    /// </summary>
+    /// <param name="esFlags">What the thread needs; ES_CONTINUOUS alone to need nothing again.</param>
+    /// <returns>What it needed before; 0 when it failed.</returns>
+    [LibraryImport("kernel32.dll")]
+    public static partial ExecutionState SetThreadExecutionState(ExecutionState esFlags);
 }
