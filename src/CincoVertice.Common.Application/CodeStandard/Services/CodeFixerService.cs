@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using CincoVertice.Common.Application.CodeStandard.Fixers;
 using CincoVertice.Common.Application.CodeStandard.Helper;
 using CincoVertice.Common.Application.CodeStandard.Interfaces;
 using CincoVertice.Common.Application.CodeStandard.Models;
@@ -34,8 +35,10 @@ public class CodeFixerService : ICodeFixerService
         _languages = [.. languages];
     }
 
-    public FileFixResultModel FixFile(string filePath)
+    public FileFixResultModel FixFile(string filePath, FixOptionsModel? options = null)
     {
+        options ??= FixOptionsModel.Default;
+
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("File not found.", filePath);
@@ -56,11 +59,16 @@ public class CodeFixerService : ICodeFixerService
                 encoding = reader.CurrentEncoding;
             }
 
-            string fixedContent = LanguageOf(filePath).Fixers.Run(content);
+            FixerPipeline fixers = LanguageOf(filePath).Fixers;
+            string fixedContent = (options.Fixers is null ? fixers : fixers.Only(options.Fixers)).Run(content);
 
-            if (fixedContent != content)
+            // The whole text, literals too: a multi-line string's line endings are the file's
+            fixedContent = new LineEndingFixer(options.LineEnding).Fix(fixedContent);
+            Encoding writeAs = EncodingOf(options.Encoding) ?? encoding;
+
+            if (fixedContent != content || !IsSame(writeAs, encoding))
             {
-                File.WriteAllText(filePath, fixedContent, encoding);
+                File.WriteAllText(filePath, fixedContent, writeAs);
                 result.IsChanged = true;
             }
         }
@@ -76,20 +84,24 @@ public class CodeFixerService : ICodeFixerService
         return result;
     }
 
-    public List<FileFixResultModel> FixFolder(string folderPath, IReadOnlyCollection<string>? fixers = null)
+    public List<FileFixResultModel> FixFolder(string folderPath, FixOptionsModel? options = null)
     {
-        if (fixers is not null)
-        {
-            return new CodeFixerService(_languages.Select(language => language with
-            {
-                Fixers = language.Fixers.Only(fixers),
-            })).FixFolder(folderPath);
-        }
-
         var extensions = _languages.SelectMany(language => language.Extensions);
 
-        return [.. SourceFileEnumerator.GetSourceFiles(folderPath, extensions).Select(FixFile)];
+        return [.. SourceFileEnumerator.GetSourceFiles(folderPath, extensions).Select(path => FixFile(path, options))];
     }
+
+    // What to write a file as; null to keep its own
+    private static Encoding? EncodingOf(FileEncodingEnum encoding) => encoding switch
+    {
+        FileEncodingEnum.Utf8 => new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+        FileEncodingEnum.Utf8Bom => new UTF8Encoding(encoderShouldEmitUTF8Identifier: true),
+        _ => null,
+    };
+
+    // The same text in the file: the same code page, and a BOM in both or in neither
+    private static bool IsSame(Encoding a, Encoding b) =>
+        a.CodePage == b.CodePage && a.GetPreamble().Length == b.GetPreamble().Length;
 
     private CodeLanguageModel LanguageOf(string filePath) =>
         _languages.FirstOrDefault(language => language.Covers(filePath)) ?? _languages[0];

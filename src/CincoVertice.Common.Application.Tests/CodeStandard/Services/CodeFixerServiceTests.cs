@@ -184,7 +184,7 @@ public class CodeFixerServiceTests : IDisposable
         var fixer = new CodeFixerService(CodeLanguageModel.All);
 
         // Act
-        fixer.FixFolder(_folder, ["TrailingWhitespace"]);
+        fixer.FixFolder(_folder, new FixOptionsModel(["TrailingWhitespace"]));
 
         // Assert: the spaces are gone, the comments as they were
         Assert.Equal("x(); //a\n", File.ReadAllText(cs));
@@ -198,11 +198,96 @@ public class CodeFixerServiceTests : IDisposable
         string path = CreateFile("a.cs", "x(); //a   \n");
 
         // Act
-        List<FileFixResultModel> results = new CodeFixerService(CodeLanguageModel.All).FixFolder(_folder, []);
+        List<FileFixResultModel> results =
+            new CodeFixerService(CodeLanguageModel.All).FixFolder(_folder, new FixOptionsModel([]));
 
         // Assert
         Assert.False(Assert.Single(results).IsChanged);
         Assert.Equal("x(); //a   \n", File.ReadAllText(path));
+    }
+
+    [Theory]
+    [InlineData(LineEndingEnum.CRLF, "// a\r\n// b\r\n// c\r\n")]
+    [InlineData(LineEndingEnum.LF, "// a\n// b\n// c\n")]
+    [InlineData(LineEndingEnum.CR, "// a\r// b\r// c\r")]
+    public void FixFile_WithALineEnding_GivesItToEveryLine_AfterTheFixers(LineEndingEnum lineEnding, string expected)
+    {
+        // Arrange: a mix of the three
+        string path = CreateFile("a.cs", "//a\r\n//b\n//c\r");
+
+        // Act
+        FileFixResultModel result = _fixer.FixFile(path, new FixOptionsModel(LineEnding: lineEnding));
+
+        // Assert
+        Assert.True(result.IsChanged);
+        Assert.Equal(expected, File.ReadAllText(path));
+    }
+
+    [Theory]
+    [InlineData(false, FileEncodingEnum.Utf8Bom, true)]
+    [InlineData(true, FileEncodingEnum.Utf8, false)]
+    [InlineData(true, FileEncodingEnum.Keep, true)]
+    [InlineData(false, FileEncodingEnum.Keep, false)]
+    public void FixFile_WithAnEncoding_WritesTheFileSo_EvenWithNothingElseToFix(
+        bool hasBom,
+        FileEncodingEnum encoding,
+        bool expectBom)
+    {
+        // Arrange: nothing for the fixer to change, and a character UTF-8 writes in two bytes
+        string path = Path.Combine(_folder, "a.cs");
+        byte[] text = Encoding.UTF8.GetBytes("// é\n");
+        File.WriteAllBytes(path, hasBom ? [.. _utf8Bom, .. text] : text);
+
+        // Act
+        FileFixResultModel result = _fixer.FixFile(path, new FixOptionsModel(Encoding: encoding));
+
+        // Assert: written only when the BOM changes
+        Assert.Equal(hasBom != expectBom, result.IsChanged);
+        Assert.Equal(expectBom ? [.. _utf8Bom, .. text] : text, File.ReadAllBytes(path));
+    }
+
+    [Fact]
+    public void FixFile_AUtf16File_BecomesUtf8_WhenAsked()
+    {
+        // Arrange
+        string path = Path.Combine(_folder, "a.cs");
+        File.WriteAllText(path, "// é\n", Encoding.Unicode);
+
+        // Act
+        FileFixResultModel result = _fixer.FixFile(path, new FixOptionsModel(Encoding: FileEncodingEnum.Utf8Bom));
+
+        // Assert
+        Assert.True(result.IsChanged);
+        Assert.Equal([.. _utf8Bom, .. Encoding.UTF8.GetBytes("// é\n")], File.ReadAllBytes(path));
+    }
+
+    [Fact]
+    public void FixFolder_WithNoFixers_ButALineEnding_OnlyConverts()
+    {
+        // Arrange
+        string path = CreateFile("a.cs", "//a   \n");
+
+        // Act
+        new CodeFixerService(CodeLanguageModel.All).FixFolder(
+            _folder,
+            new FixOptionsModel([], LineEndingEnum.CRLF));
+
+        // Assert: the comment and the spaces as they were
+        Assert.Equal("//a   \r\n", File.ReadAllText(path));
+    }
+
+    [Theory]
+    [InlineData(null, LineEndingEnum.None, FileEncodingEnum.Keep, true)]
+    [InlineData(new string[0], LineEndingEnum.None, FileEncodingEnum.Keep, false)]
+    [InlineData(new string[0], LineEndingEnum.LF, FileEncodingEnum.Keep, true)]
+    [InlineData(new string[0], LineEndingEnum.None, FileEncodingEnum.Utf8Bom, true)]
+    public void Options_DoNothing_OnlyWithNoFixersAndKeepingTheRest(
+        string[]? fixers,
+        LineEndingEnum lineEnding,
+        FileEncodingEnum encoding,
+        bool doesAnything)
+    {
+        Assert.Equal(doesAnything, new FixOptionsModel(fixers, lineEnding, encoding).DoesAnything);
     }
 
     private string CreateFile(string relativePath, string content)

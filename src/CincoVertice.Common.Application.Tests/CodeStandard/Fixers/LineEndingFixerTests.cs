@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Application.CodeStandard.Fixers;
+using CincoVertice.Common.Application.CodeStandard.Models;
 using Xunit;
 
 namespace CincoVertice.Common.Application.Tests.CodeStandard.Fixers;
@@ -15,6 +16,26 @@ public class LineEndingFixerTests
 
         // Assert
         Assert.Equal(string.Empty, result);
+    }
+
+    [Theory]
+    [InlineData(LineEndingEnum.CRLF, "a\r\nb\r\nc\r\nd")]
+    [InlineData(LineEndingEnum.LF, "a\nb\nc\nd")]
+    [InlineData(LineEndingEnum.CR, "a\rb\rc\rd")]
+    [InlineData(LineEndingEnum.None, "a\r\nb\nc\rd")]
+    public void Fix_GivesEveryLineTheLineEndingChosen(LineEndingEnum lineEnding, string expected)
+    {
+        // Act: CRLF, LF and CR mixed
+        string result = new LineEndingFixer(lineEnding).Fix("a\r\nb\nc\rd");
+
+        // Assert
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void Fix_ToCrlf_LeavesCrlfAsItIs_NotDoubled()
+    {
+        Assert.Equal("a\r\n\r\nb\r\n", new LineEndingFixer(LineEndingEnum.CRLF).Fix("a\r\n\r\nb\n"));
     }
 
     [Fact]
