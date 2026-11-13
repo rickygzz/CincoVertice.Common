@@ -33,6 +33,15 @@ public static partial class Dwmapi
         out RECT pvAttribute,
         int cbAttribute);
 
+    /// <summary>Sets a Desktop Window Manager (DWM) attribute of a window, e.g. a dark title bar.</summary>
+    /// <param name="hwnd">The window.</param>
+    /// <param name="dwAttribute">Which attribute, a <see cref="DwmWindowAttribute"/>.</param>
+    /// <param name="pvAttribute">Its value; a BOOL, 0 or 1, for the attributes that are on or off.</param>
+    /// <param name="cbAttribute">The size of the value, in bytes.</param>
+    /// <returns>0 when it worked; an HRESULT error code otherwise.</returns>
+    [LibraryImport("dwmapi.dll")]
+    public static partial int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
     /// <summary>
     ///     Waits until the Desktop Window Manager has drawn the screen again, so a change to a window shows from then on.
     /// </summary>

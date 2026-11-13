@@ -23,5 +23,10 @@ public enum DwmWindowAttribute : uint
     DWMWA_CLOAK,
     DWMWA_CLOAKED,
     DWMWA_FREEZE_REPRESENTATION,
-    DWMWA_LAST
+    DWMWA_LAST,
+
+    /// <summary>
+    ///     Use with DwmSetWindowAttribute. A BOOL: true draws the window's title bar dark. Windows 10 20H1 and later.
+    /// </summary>
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
 }

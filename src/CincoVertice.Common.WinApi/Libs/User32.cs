@@ -916,6 +916,23 @@ public partial class User32
     [LibraryImport("user32.dll")]
     public static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
 
+    /// <summary>Stops a window drawing itself (wParam 0) or lets it again (1); invalidate it after.</summary>
+    public const uint WM_SETREDRAW = 0x000B;
+
+    /// <summary>The line at the top of an edit or rich edit control, from 0.</summary>
+    public const uint EM_GETFIRSTVISIBLELINE = 0x00CE;
+
+    /// <summary>Scrolls an edit or rich edit control by lParam lines: down when positive, up when negative.</summary>
+    public const uint EM_LINESCROLL = 0x00B6;
+
+    /// <summary>
+    ///     Sends a message to a window and waits until it's handled. Only for windows of this thread, or ones that
+    ///     answer: one that doesn't blocks the caller.
+    /// </summary>
+    /// <returns>What the window answered, which depends on the message.</returns>
+    [LibraryImport("user32.dll", EntryPoint = "SendMessageW")]
+    public static partial nint SendMessage(nint hWnd, uint msg, nint wParam, nint lParam);
+
     /// <summary>Translates a virtual key code, e.g. with MAPVK_VK_TO_CHAR to the character it types.</summary>
     [LibraryImport("user32.dll", EntryPoint = "MapVirtualKeyW")]
     public static partial uint MapVirtualKey(uint uCode, uint uMapType);
