@@ -28,7 +28,9 @@ public static class DarkMode
         }
     }
 
-    /// <summary>Draws a window's title bar dark or light; does nothing where Windows can't.</summary>
+    /// <summary>
+    ///     Draws a window's title bar dark or light, at once even when it's shown; does nothing where Windows can't.
+    /// </summary>
     public static void UseDarkTitleBar(nint window, bool isDark)
     {
         int value = isDark ? 1 : 0;
@@ -37,6 +39,21 @@ public static class DarkMode
             (int)DwmWindowAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE,
             ref value,
             sizeof(int));
+
+        // Windows draws the title bar again only when the frame changes
+        User32.SetWindowPos(
+            window,
+            0,
+            0,
+            0,
+            0,
+            0,
+            User32.SetWindowPosFlags.SWP_FRAMECHANGED
+            | User32.SetWindowPosFlags.SWP_NOMOVE
+            | User32.SetWindowPosFlags.SWP_NOSIZE
+            | User32.SetWindowPosFlags.SWP_NOZORDER
+            | User32.SetWindowPosFlags.SWP_NOACTIVATE
+            | User32.SetWindowPosFlags.SWP_NOOWNERZORDER);
     }
 
     /// <summary>Draws a control's scroll bars dark or light, as Explorer does.</summary>

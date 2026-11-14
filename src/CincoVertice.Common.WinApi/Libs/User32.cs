@@ -646,6 +646,9 @@ public partial class User32
         /// <summary>Doesn't activate the window.</summary>
         SWP_NOACTIVATE = 0x0010,
 
+        /// <summary>Draws the frame again, e.g. after its colors changed, as if its size had.</summary>
+        SWP_FRAMECHANGED = 0x0020,
+
         /// <summary>Keeps the Z order of the owner window.</summary>
         SWP_NOOWNERZORDER = 0x0200,
     }
