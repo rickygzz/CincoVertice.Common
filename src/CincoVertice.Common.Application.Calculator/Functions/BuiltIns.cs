@@ -12,6 +12,13 @@ public static class BuiltIns
             ["e"] = 2.7182818284590452353602874714m,
         };
 
+    /// <summary>The functions whose result is a text: ipconfig().</summary>
+    public const string IpConfig = "ipconfig";
+
+    /// <summary>Names of functions that give a text, which <see cref="ExpressionEvaluator"/> calls itself.</summary>
+    public static readonly IReadOnlySet<string> TextFunctions =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { IpConfig };
+
     public static readonly IReadOnlyDictionary<string, FunctionDefinition> Functions =
         new FunctionDefinition[]
         {

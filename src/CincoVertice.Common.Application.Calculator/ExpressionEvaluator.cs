@@ -2,6 +2,7 @@
 using CincoVertice.Common.Application.Calculator.Conversions;
 using CincoVertice.Common.Application.Calculator.Functions;
 using CincoVertice.Common.Application.Calculator.Models;
+using CincoVertice.Common.Application.Calculator.Network;
 
 namespace CincoVertice.Common.Application.Calculator;
 
@@ -16,6 +17,19 @@ public class ExpressionEvaluator
 
     private static readonly IReadOnlyDictionary<string, CalculatorValue> _noNames =
         new Dictionary<string, CalculatorValue>();
+
+    private readonly INetworkAddressReader _network;
+
+    public ExpressionEvaluator()
+        : this(new SystemNetworkAddressReader())
+    {
+    }
+
+    /// <param name="network">Gives ipconfig() the computer's addresses.</param>
+    public ExpressionEvaluator(INetworkAddressReader network)
+    {
+        _network = network;
+    }
 
     /// <summary>The number an expression gives, with no names but the constants; today is the computer's.</summary>
     /// <exception cref="ExpressionException">
@@ -54,6 +68,7 @@ public class ExpressionEvaluator
     {
         CalculatorValueKind.Number => value.Number,
         CalculatorValueKind.Date => throw new ExpressionException("Expected a number, not a date", position),
+        CalculatorValueKind.Text => throw new ExpressionException("Expected a number, not a text", position),
         _ => throw new ExpressionException("Expected a number, not a length of time", position),
     };
 
@@ -102,6 +117,7 @@ public class ExpressionEvaluator
         {
             CalculatorValueKind.Number => CalculatorValue.FromNumber(-operand.Number),
             CalculatorValueKind.Duration => CalculatorValue.FromDuration(-operand.Months, -operand.Days),
+            CalculatorValueKind.Text => throw new ExpressionException("A text can't be negative", node.Position),
             _ => throw new ExpressionException("A date can't be negative", node.Position),
         };
     }
@@ -143,9 +159,11 @@ public class ExpressionEvaluator
 
         return (node.Operator, leftKind, rightKind) switch
         {
-            (BinaryOperator.Add or BinaryOperator.Subtract, CalculatorValueKind.Date, not CalculatorValueKind.Date) =>
+            (BinaryOperator.Add or BinaryOperator.Subtract, CalculatorValueKind.Date, CalculatorValueKind.Number
+                or CalculatorValueKind.Duration) =>
                 Moved(left.Date, right, node.Operator == BinaryOperator.Subtract ? -1 : 1, node.Position),
-            (BinaryOperator.Add, not CalculatorValueKind.Date, CalculatorValueKind.Date) =>
+            (BinaryOperator.Add, CalculatorValueKind.Number or CalculatorValueKind.Duration,
+                CalculatorValueKind.Date) =>
                 Moved(right.Date, left, 1, node.Position),
             (BinaryOperator.Subtract, CalculatorValueKind.Date, CalculatorValueKind.Date) =>
                 CalculatorValue.FromDuration(0, left.Date.DayNumber - right.Date.DayNumber),
@@ -207,6 +225,7 @@ public class ExpressionEvaluator
     {
         CalculatorValueKind.Date => "a date",
         CalculatorValueKind.Duration => "a length of time",
+        CalculatorValueKind.Text => "a text",
         _ => "a number",
     };
 
@@ -235,6 +254,11 @@ public class ExpressionEvaluator
         IReadOnlyDictionary<string, CalculatorValue> names,
         DateOnly today)
     {
+        if (BuiltIns.TextFunctions.Contains(node.Name))
+        {
+            return EvaluateTextFunction(node);
+        }
+
         if (!BuiltIns.Functions.TryGetValue(node.Name, out FunctionDefinition? function))
         {
             throw new ExpressionException($"Unknown function '{node.Name}'", node.Position);
@@ -251,6 +275,17 @@ public class ExpressionEvaluator
             [.. node.Arguments.Select(argument => EvaluateArgument(argument, names, today))];
 
         return CalculatorValue.FromNumber(Calculate(node.Position, () => function.Invoke(arguments)));
+    }
+
+    /// <summary>ipconfig(): the computer's addresses and gateways, as a text.</summary>
+    private CalculatorValue EvaluateTextFunction(FunctionCallNode node)
+    {
+        if (node.Arguments.Count > 0)
+        {
+            throw new ExpressionException($"Function '{node.Name}' expects no arguments", node.Position);
+        }
+
+        return CalculatorValue.FromText(NetworkConfigText.Of(_network.Read()));
     }
 
     private FunctionArgument EvaluateArgument(

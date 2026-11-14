@@ -1,6 +1,7 @@
 ﻿using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Conversions;
 using CincoVertice.Common.Application.Calculator.Models;
+using CincoVertice.Common.Application.Calculator.Network;
 using CincoVertice.Common.Application.Calculator.TimeZones;
 using System.Globalization;
 
@@ -21,7 +22,7 @@ public class ExpressionCalculator
     private static readonly IReadOnlyDictionary<string, CalculatorValue> _noNames =
         new Dictionary<string, CalculatorValue>();
 
-    private readonly ExpressionEvaluator _evaluator = new();
+    private readonly ExpressionEvaluator _evaluator;
     private readonly TimeProvider _clock;
 
     public ExpressionCalculator()
@@ -31,8 +32,16 @@ public class ExpressionCalculator
 
     /// <param name="clock">Gives today's date, the time now and the local time zone to time conversions.</param>
     public ExpressionCalculator(TimeProvider clock)
+        : this(clock, new SystemNetworkAddressReader())
+    {
+    }
+
+    /// <param name="clock">Gives today's date, the time now and the local time zone to time conversions.</param>
+    /// <param name="network">Gives ipconfig() the computer's addresses.</param>
+    public ExpressionCalculator(TimeProvider clock, INetworkAddressReader network)
     {
         _clock = clock;
+        _evaluator = new ExpressionEvaluator(network);
     }
 
     /// <exception cref="ExpressionException">The expression is invalid or cannot be calculated.</exception>

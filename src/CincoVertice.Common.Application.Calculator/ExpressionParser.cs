@@ -116,7 +116,7 @@ public class ExpressionParser
             return "a constant";
         }
 
-        if (BuiltIns.Functions.ContainsKey(name))
+        if (BuiltIns.Functions.ContainsKey(name) || BuiltIns.TextFunctions.Contains(name))
         {
             return "a function";
         }
