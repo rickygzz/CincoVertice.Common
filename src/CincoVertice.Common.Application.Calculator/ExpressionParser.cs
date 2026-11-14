@@ -1,4 +1,5 @@
 ﻿using CincoVertice.Common.Application.Calculator.Ast;
+using CincoVertice.Common.Application.Calculator.Functions;
 using CincoVertice.Common.Application.Calculator.Models;
 using System.Globalization;
 using System.Text;
@@ -7,6 +8,7 @@ namespace CincoVertice.Common.Application.Calculator;
 
 /// <summary>
 ///     Builds a syntax tree from the tokens returned by <see cref="ExpressionTokenizer"/> (recursive descent).
+///     <para>{Line}       ::= ({Identifier} '=')? {Calculation}   // x = 5 keeps 5 in x</para>
 ///     <para>{Calculation} ::= {TimeConversion} | {Expression} ({Unit} 'to' {Unit})?</para>
 ///     <para>{Unit}       ::= {Identifier} ('/' {Identifier} | '^' {Number})?</para>
 ///     <para>{TimeConversion} ::= ({Time} ('am' | 'pm')? | {Number} ('am' | 'pm') | 'now') {Zone}? 'to' {Zone}</para>
@@ -16,7 +18,8 @@ namespace CincoVertice.Common.Application.Calculator;
 ///     <para>{Term}       ::= {Unary} (('*' | '/' | '%') {Unary})*</para>
 ///     <para>{Unary}      ::= ('+' | '-') {Unary} | {Power}</para>
 ///     <para>{Power}      ::= {Primary} ('^' {Unary})?</para>
-///     <para>{Primary}    ::= {Number}
+///     <para>{Primary}    ::= {Number} {DurationUnit}?    // 30 d, 2 wk, 3 months, 1 yr; not before 'to'
+///                          | {Date}
 ///                          | {String}
 ///                          | {Identifier} ('(' ({Expression} (',' {Expression})*)? ')')?
 ///                          | '(' {Expression} ')'</para>
@@ -53,12 +56,9 @@ public class ExpressionParser
             throw new ExpressionException("Empty expression", Current.Position);
         }
 
-        ExpressionNode node = StartsWithTime() ? ParseTimeConversion() : ParseExpression();
-
-        if (node is not TimeConversionNode && Current.Type == TokenType.Identifier)
-        {
-            node = ParseConversion(node);
-        }
+        ExpressionNode node = Current.Type == TokenType.Identifier && Next.Type == TokenType.Assign
+            ? ParseAssignment()
+            : ParseCalculation();
 
         if (Current.Type != TokenType.EndOfExpression)
         {
@@ -67,6 +67,81 @@ public class ExpressionParser
 
         return node;
     }
+
+    private ExpressionNode ParseCalculation()
+    {
+        ExpressionNode node = StartsWithTime() ? ParseTimeConversion() : ParseExpression();
+
+        if (node is not TimeConversionNode && Current.Type == TokenType.Identifier)
+        {
+            node = ParseConversion(node);
+        }
+
+        return node;
+    }
+
+    /// <summary>A name, '=' and what it keeps; not a name the calculator has, which it would hide.</summary>
+    private AssignmentNode ParseAssignment()
+    {
+        Token name = Current;
+
+        if (ReservedAs(name.Value) is string reason)
+        {
+            throw new ExpressionException($"'{name.Value}' is {reason}, so it can't be given a value", name.Position);
+        }
+
+        Advance();
+        Advance();
+
+        if (Current.Type == TokenType.EndOfExpression)
+        {
+            throw new ExpressionException("Expected a value after '='", Current.Position);
+        }
+
+        ExpressionNode value = ParseCalculation();
+
+        if (value is TimeConversionNode)
+        {
+            throw new ExpressionException("A time in another place can't be kept in a name", value.Position);
+        }
+
+        return new AssignmentNode(name.Value, value, name.Position);
+    }
+
+    /// <returns>What the name already is to the calculator; null for a name free to use.</returns>
+    private static string? ReservedAs(string name)
+    {
+        if (BuiltIns.Constants.ContainsKey(name))
+        {
+            return "a constant";
+        }
+
+        if (BuiltIns.Functions.ContainsKey(name))
+        {
+            return "a function";
+        }
+
+        return name.ToLowerInvariant() switch
+        {
+            ExpressionCalculator.LastAnswerName => "the last answer",
+            ExpressionCalculator.TodayName => "today's date",
+            NowWord or "to" or "am" or "pm" => "a word the calculator uses",
+            _ => null,
+        };
+    }
+
+    /// <returns>
+    ///     The months and days in one of the unit, for the units of a length of time a date can be moved by; null for
+    ///     any other.
+    /// </returns>
+    private static (decimal Months, decimal Days)? DurationUnit(string name) => name.ToLowerInvariant() switch
+    {
+        "d" or "day" or "days" => (0, 1),
+        "w" or "wk" or "week" or "weeks" => (0, 7),
+        "mo" or "month" or "months" => (1, 0),
+        "y" or "yr" or "year" or "years" => (12, 0),
+        _ => null,
+    };
 
     private ConversionNode ParseConversion(ExpressionNode value)
     {
@@ -380,9 +455,34 @@ public class ExpressionParser
             case TokenType.Number:
                 Advance();
                 // Already validated by the tokenizer
-                return new NumberNode(
-                    decimal.Parse(token.Value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture),
-                    token.Position);
+                decimal number = decimal.Parse(
+                    token.Value,
+                    NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture);
+
+                // A length of time, for a date: 30 d; but 1 d to h is a conversion
+                if (Current.Type == TokenType.Identifier
+                    && !IsToWord(Next)
+                    && DurationUnit(Current.Value) is (decimal months, decimal days))
+                {
+                    Advance();
+
+                    return new DurationNode(number * months, number * days, token.Position);
+                }
+
+                return new NumberNode(number, token.Position);
+
+            case TokenType.Date:
+                Advance();
+
+                return DateOnly.TryParseExact(
+                    token.Value,
+                    "yyyy-M-d",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out DateOnly date)
+                    ? new DateNode(date, token.Position)
+                    : throw new ExpressionException($"There's no such date as {token.Value}", token.Position);
 
             case TokenType.String:
                 // Allowed anywhere by the grammar; the evaluator only accepts it as a function argument

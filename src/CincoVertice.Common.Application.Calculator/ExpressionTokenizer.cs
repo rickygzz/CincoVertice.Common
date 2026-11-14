@@ -1,6 +1,7 @@
 ﻿using CincoVertice.Common.Application.Calculator.Models;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CincoVertice.Common.Application.Calculator;
 
@@ -8,12 +9,13 @@ namespace CincoVertice.Common.Application.Calculator;
 ///     Splits an expression into tokens.
 ///     <para>{Number}     ::= {Digit}+ ('.' {Digit}*)? | '.' {Digit}+</para>
 ///     <para>{Time}       ::= {Digit}+ ':' {Digit}+</para>
+///     <para>{Date}       ::= {Digit}{4} '-' {Digit}{1,2} '-' {Digit}{1,2}   // not 2026 minus 12 minus 25</para>
 ///     <para>{Identifier} ::= ({Letter} | '_') ({Letter} | {Digit} | '_')*</para>
 ///     <para>{String}     ::= '"' ({Char} | '""')* '"'      // "" inside the text is one quote</para>
-///     <para>{Symbol}     ::= [+-*/%^(),]</para>
+///     <para>{Symbol}     ::= [+-*/%^(),=]</para>
 ///     <para>A '-' is always its own token; the parser decides whether it is a subtraction or a negation.</para>
 /// </summary>
-public class ExpressionTokenizer
+public partial class ExpressionTokenizer
 {
     private string _expression = string.Empty;
     private int _position = 0;
@@ -70,6 +72,7 @@ public class ExpressionTokenizer
                 '(' => CreateToken(TokenType.LeftParenthesis, "("),
                 ')' => CreateToken(TokenType.RightParenthesis, ")"),
                 ',' => CreateToken(TokenType.Comma, ","),
+                '=' => CreateToken(TokenType.Assign, "="),
                 _ => throw new ExpressionException($"Invalid character '{_currentChar}'", _position)
             };
 
@@ -105,6 +108,19 @@ public class ExpressionTokenizer
         }
 
         string numberString = numberBuilder.ToString();
+
+        // Four digits, then -month-day, is a date
+        Match rest = DateRestRegex().Match(_expression, _position);
+
+        if (!hasDecimalPoint && numberString.Length == 4 && rest.Success)
+        {
+            for (int i = 0; i < rest.Length; i++)
+            {
+                Advance();
+            }
+
+            return new Token(TokenType.Date, numberString + rest.Value, startPosition);
+        }
 
         if (_currentChar == ':' && !hasDecimalPoint)
         {
@@ -213,6 +229,10 @@ public class ExpressionTokenizer
             Advance();
         }
     }
+
+    // The -12-25 of 2026-12-25, right where the year ends; not a part of a longer number
+    [GeneratedRegex(@"\G-\d{1,2}-\d{1,2}(?![\d.:])")]
+    private static partial Regex DateRestRegex();
 
     private void Advance()
     {

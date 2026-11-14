@@ -1,5 +1,6 @@
 ﻿using CincoVertice.Common.Application.Calculator.Ast;
 using CincoVertice.Common.Application.Calculator.Conversions;
+using CincoVertice.Common.Application.Calculator.Models;
 using CincoVertice.Common.Application.Calculator.TimeZones;
 using System.Globalization;
 
@@ -11,6 +12,15 @@ namespace CincoVertice.Common.Application.Calculator;
 /// </summary>
 public class ExpressionCalculator
 {
+    /// <summary>The name of the last answer, which the caller keeps among the names: ans * 2.</summary>
+    public const string LastAnswerName = "ans";
+
+    /// <summary>The name of today's date: today + 30 d.</summary>
+    public const string TodayName = "today";
+
+    private static readonly IReadOnlyDictionary<string, CalculatorValue> _noNames =
+        new Dictionary<string, CalculatorValue>();
+
     private readonly ExpressionEvaluator _evaluator = new();
     private readonly TimeProvider _clock;
 
@@ -39,20 +49,41 @@ public class ExpressionCalculator
     /// <param name="expression">The expression.</param>
     /// <param name="groupThousands">Separate thousands with ','.</param>
     /// <exception cref="ExpressionException">The expression is invalid or cannot be calculated.</exception>
-    public string EvaluateToText(string? expression, bool groupThousands = false)
+    public string EvaluateToText(string? expression, bool groupThousands = false) =>
+        Calculate(expression, groupThousands: groupThousands).Text;
+
+    /// <summary>
+    ///     Calculates a line: an expression, or a name given its value (x = 5). It may use names given earlier, and
+    ///     the last answer as <c>ans</c>, which the caller keeps: the calculator itself keeps nothing. A date is shown
+    ///     with its day of the week, 2026-12-25 (Friday), and a length of time in months and days, 42 days.
+    /// </summary>
+    /// <param name="expression">The line.</param>
+    /// <param name="names">The values of the names given earlier, the last answer among them; any letter case.</param>
+    /// <param name="groupThousands">Separate thousands with ','.</param>
+    /// <exception cref="ExpressionException">The line is invalid or cannot be calculated.</exception>
+    public CalculationResult Calculate(
+        string? expression,
+        IReadOnlyDictionary<string, CalculatorValue>? names = null,
+        bool groupThousands = false)
     {
         ExpressionNode tree = Parse(expression);
 
         if (tree is TimeConversionNode time)
         {
-            return TimeZoneConverter.Convert(time, _clock);
+            return new CalculationResult(TimeZoneConverter.Convert(time, _clock), null);
         }
 
-        string result = Format(_evaluator.Evaluate(tree), groupThousands);
+        DateOnly today = DateOnly.FromDateTime(_clock.GetLocalNow().DateTime);
+        CalculatorValue value = _evaluator.Evaluate(tree, names ?? _noNames, today);
+        AssignmentNode? assignment = tree as AssignmentNode;
+        string text = value.ToText(groupThousands);
 
-        return tree is ConversionNode conversion
-            ? $"{result} {UnitTable.Find(conversion.To, conversion.ToPosition).Symbol}"
-            : result;
+        if ((assignment?.Value ?? tree) is ConversionNode conversion)
+        {
+            text = $"{text} {UnitTable.Find(conversion.To, conversion.ToPosition).Symbol}";
+        }
+
+        return new CalculationResult(text, value, assignment?.Name);
     }
 
     private static ExpressionNode Parse(string? expression)
