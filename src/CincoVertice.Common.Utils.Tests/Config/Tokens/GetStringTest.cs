@@ -34,8 +34,8 @@ public class GetStringTest
 
     [Theory]
     [InlineData("[\"ABC\"]", 3, 7, '\0')]
-    [InlineData(@"[""ABC
-DEF""]", 8, 12, '\0')]
+    [InlineData("[\"ABC\r\nDEF\"]", 8, 12, '\0')]
+    [InlineData("[\"ABC\nDEF\"]", 7, 11, '\0')]
     public void GetString_FindsQuotedString_ChangesCharIndex(
         string testStr,
         int expectedLength,
@@ -58,8 +58,8 @@ DEF""]", 8, 12, '\0')]
 
     [Theory]
     [InlineData("[\"ABC", 3, 5, '\0')]
-    [InlineData(@"[""ABC
-DEF", 8, 10, '\0')]
+    [InlineData("[\"ABC\r\nDEF", 8, 10, '\0')]
+    [InlineData("[\"ABC\nDEF", 7, 9, '\0')]
     public void GetString_FindsQuotedStringNotClosed_TokenTypeError(
         string testStr,
         int expectedLength,

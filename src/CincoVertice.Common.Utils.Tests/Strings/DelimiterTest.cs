@@ -28,19 +28,20 @@ public class DelimiterTest
     }
 
     [Theory]
-    [InlineData("=", false, " B ")]
-    [InlineData("=", true, "B")]
-    [InlineData("\r\n\r\n", false, " = B ")]
-    [InlineData("\r\n\r\n", true, "= B")]
+    [InlineData("\r\n", "=", false, " B ")]
+    [InlineData("\n", "=", true, "B")]
+    [InlineData("\r\n", "\r\n\r\n", false, " = B ")]
+    [InlineData("\r\n", "\r\n\r\n", true, "= B")]
+    [InlineData("\n", "\n\n", false, " = B ")]
+    [InlineData("\n", "\n\n", true, "= B")]
     public void DelitimerAfter_TestMultilineString_ReturnsExpectedResult(
+        string newLine,
         string delimiter,
         bool trim,
         string expectedResult)
     {
         // Arrange
-        var testStr = @"A
-
- = B ";
+        var testStr = "A" + newLine + newLine + " = B ";
 
         // Act
         var result = Delimiter.After(testStr, delimiter, trim);

@@ -75,4 +75,33 @@ public sealed class AtomicFileTest : IDisposable
         Assert.Equal("old", File.ReadAllText(_path));
         Assert.Single(Directory.GetFiles(_folder));
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WriteAsync_ReplacesOnlyAfterCompletion_AndKeepsTheOriginalOnFailure(bool fails)
+    {
+        File.WriteAllText(_path, "old");
+        var ready = new TaskCompletionSource();
+        Task writing = AtomicFile.WriteAsync(_path, async temporaryPath =>
+        {
+            await File.WriteAllTextAsync(temporaryPath, "new");
+            await ready.Task;
+        });
+
+        Assert.Equal("old", File.ReadAllText(_path));
+        if (fails)
+        {
+            ready.SetException(new IOException("Disk full"));
+            await Assert.ThrowsAsync<IOException>(() => writing);
+        }
+        else
+        {
+            ready.SetResult();
+            await writing;
+        }
+
+        Assert.Equal(fails ? "old" : "new", File.ReadAllText(_path));
+        Assert.Single(Directory.GetFiles(_folder));
+    }
 }

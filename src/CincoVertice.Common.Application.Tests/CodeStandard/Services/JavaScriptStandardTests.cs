@@ -39,6 +39,34 @@ public class JavaScriptStandardTests : IDisposable
         + "}\n"
         + "module.exports = { sign };";
 
+    [Theory]
+    [InlineData("if (ready) /a  b/.test(value);")]
+    [InlineData("while (ready()) /a  b/.test(value);")]
+    [InlineData("for (;;) /a  b/.test(value);")]
+    [InlineData("if (ready) {} /a  b/.test(value);")]
+    [InlineData("if (ready) { if (other) {} } /a  b/.test(value);")]
+    [InlineData("try {} catch (error) {} /a  b/.test(value);")]
+    public void Formatting_PreservesRegexAfterControlStatements(string source)
+    {
+        string fixedCode = FixerPipeline.CreateJavaScriptFormatting().Run(source);
+
+        Assert.Contains("/a  b/", fixedCode);
+        Assert.Equal(fixedCode, FixerPipeline.CreateJavaScriptFormatting().Run(fixedCode));
+    }
+
+    [Theory]
+    [InlineData("const result = call() /  2 / divisor;")]
+    [InlineData("const result = object.if(ready) /  2 / divisor;")]
+    [InlineData("const result = ({ value: 1 }) /  2 / divisor;")]
+    [InlineData("const result = { value: 1 } /  2 / divisor;")]
+    public void Formatting_StillFormatsDivisionAfterExpressions(string source)
+    {
+        string fixedCode = FixerPipeline.CreateJavaScriptFormatting().Run(source);
+
+        Assert.Contains("/ 2 /", fixedCode);
+        Assert.DoesNotContain("/  2 /", fixedCode);
+    }
+
     private const string Fixed =
         "const axios = require('axios');\n"
         + "/**\n"

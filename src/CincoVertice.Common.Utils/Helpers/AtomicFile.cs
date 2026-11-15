@@ -7,6 +7,22 @@
 /// </summary>
 public static class AtomicFile
 {
+    /// <summary>Completes an asynchronous write before replacing the destination.</summary>
+    public static async Task WriteAsync(string path, Func<string, Task> writeTemporaryFile)
+    {
+        string temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+
+        try
+        {
+            await writeTemporaryFile(temporaryPath);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temporaryPath);
+        }
+    }
+
     public static void WriteAllText(string path, string text) =>
         Write(path, temporaryPath => File.WriteAllText(temporaryPath, text));
 

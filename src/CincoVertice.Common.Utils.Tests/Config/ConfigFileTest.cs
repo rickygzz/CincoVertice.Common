@@ -12,8 +12,10 @@ public class ConfigFileTest
         this.output = output;
     }
 
-    [Fact]
-    public void ConfigFile_GetsValidInput_ParsesCorrectly()
+    [Theory]
+    [InlineData("\r\n")]
+    [InlineData("\n")]
+    public void ConfigFile_GetsValidInput_ParsesCorrectly(string newLine)
     {
         // Create test configuration file.
         string content = @"keyA =    1   
@@ -37,6 +39,7 @@ keyFloatC = 01.5
 keyFloatE = 0.5
 keyFloatF = 1.";
 
+        content = content.ReplaceLineEndings(newLine);
         string file = Environment.CurrentDirectory + '\\' + "TestIOConfigFile.conf";
         File.WriteAllText(file, content);
 
@@ -79,10 +82,8 @@ keyFloatF = 1.";
         index = 4;
         Assert.Equal("keyE", config.Items.GetKeyName(index));
         Assert.Equal(ConfigTokenType.StringQuoted, config.Items.GetValueType(index));
-        Assert.Equal(@"     This is a multi
-line string value        ", config.Items.GetValue(index));
-        Assert.Equal(@"     This is a multi
-line string value        ", config.Items.GetValue("keyE"));
+        Assert.Equal("     This is a multi" + newLine + "line string value        ", config.Items.GetValue(index));
+        Assert.Equal("     This is a multi" + newLine + "line string value        ", config.Items.GetValue("keyE"));
 
         // Hex values
         index = 5;
@@ -201,6 +202,9 @@ keyFloatD = .5
 keyFloatE = 0.5
 keyFloatF = 1.";
 
+        // Structural newlines use the platform's convention; the quoted value keeps its input newline.
+        expectedText = expectedText.ReplaceLineEndings(Environment.NewLine)
+            .Replace("multi" + Environment.NewLine + "line", "multi" + newLine + "line", StringComparison.Ordinal);
         Assert.Equal(expectedText, savedtext);
     }
 

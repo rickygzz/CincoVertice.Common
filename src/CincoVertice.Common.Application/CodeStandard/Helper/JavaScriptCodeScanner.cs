@@ -53,12 +53,17 @@ public sealed class JavaScriptCodeScanner : ICodeScanner
         Word,
         Value,
         Operator,
+        Statement,
+        MemberAccess,
     }
 
     private static IEnumerable<(int Start, int End, SpanKind Kind)> Scan(string content)
     {
         Previous previous = Previous.Nothing;
         string previousWord = string.Empty;
+        bool isMemberWord = false;
+        Stack<bool> parentheses = new();
+        Stack<bool> braces = new();
         int i = 0;
 
         while (i < content.Length)
@@ -110,12 +115,40 @@ public sealed class JavaScriptCodeScanner : ICodeScanner
                     i++;
                 }
 
+                isMemberWord = previous == Previous.MemberAccess;
                 previous = Previous.Word;
                 previousWord = content[start..i];
             }
             else
             {
-                previous = c is ')' or ']' or '}' ? Previous.Value : Previous.Operator;
+                if (c == '(')
+                {
+                    parentheses.Push(previous == Previous.Word && !isMemberWord
+                        && previousWord is "if" or "while" or "for" or "with" or "switch" or "catch");
+                    previous = Previous.Operator;
+                }
+                else if (c == ')')
+                {
+                    previous = parentheses.TryPop(out bool control) && control ? Previous.Statement : Previous.Value;
+                }
+                else if (c == '{')
+                {
+                    braces.Push(previous is Previous.Nothing or Previous.Statement
+                        || (previous == Previous.Word && previousWord is "else" or "do" or "try" or "finally"));
+                    previous = Previous.Statement;
+                }
+                else if (c == '}')
+                {
+                    previous = braces.TryPop(out bool block) && block ? Previous.Statement : Previous.Value;
+                }
+                else
+                {
+                    previous = c == ']' ? Previous.Value
+                        : c == ';' ? Previous.Statement
+                        : c == '.' ? Previous.MemberAccess
+                        : Previous.Operator;
+                }
+
                 i++;
             }
         }
@@ -123,7 +156,7 @@ public sealed class JavaScriptCodeScanner : ICodeScanner
 
     private static bool StartsRegex(Previous previous, string previousWord) => previous switch
     {
-        Previous.Nothing or Previous.Operator => true,
+        Previous.Nothing or Previous.Operator or Previous.Statement => true,
         Previous.Word => _keywordsBeforeValue.Contains(previousWord),
         _ => false,
     };

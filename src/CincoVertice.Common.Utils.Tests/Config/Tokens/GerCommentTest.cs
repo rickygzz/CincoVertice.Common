@@ -11,8 +11,8 @@ public class GerCommentTest
     [InlineData("#", 1, 1, '\0')]
     [InlineData("#\nAnother line", 1, 2, 'A')]
     [InlineData("# ABC", 5, 5, '\0')]
-    [InlineData(@"# ABC
-Another line", 5, 7, 'A')]
+    [InlineData("# ABC\r\nAnother line", 5, 7, 'A')]
+    [InlineData("# ABC\nAnother line", 5, 6, 'A')]
     [InlineData("# This is a test", 16, 16, '\0')]
     [InlineData("# [ABC]", 7, 7, '\0')]
     [InlineData("# \"ABC\"", 7, 7, '\0')]
