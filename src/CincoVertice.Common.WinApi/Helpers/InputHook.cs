@@ -51,6 +51,9 @@ public sealed class InputHook : IDisposable
     /// <summary>Raised when a key goes down, with its virtual key code.</summary>
     public event EventHandler<Keys>? KeyDown;
 
+    /// <summary>Raised when a key goes up, with its virtual key code.</summary>
+    public event EventHandler<Keys>? KeyUp;
+
     public void Dispose()
     {
         if (_mouseHook != 0)
@@ -90,10 +93,20 @@ public sealed class InputHook : IDisposable
 
     private nint OnKeyboard(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= 0 && (int)wParam is User32.WM_KEYDOWN or User32.WM_SYSKEYDOWN)
+        if (nCode >= 0)
         {
-            var input = Marshal.PtrToStructure<User32.KBDLLHOOKSTRUCT>(lParam);
-            KeyDown?.Invoke(this, (Keys)input.vkCode);
+            int message = (int)wParam;
+
+            if (message is User32.WM_KEYDOWN or User32.WM_SYSKEYDOWN)
+            {
+                var input = Marshal.PtrToStructure<User32.KBDLLHOOKSTRUCT>(lParam);
+                KeyDown?.Invoke(this, (Keys)input.vkCode);
+            }
+            else if (message is User32.WM_KEYUP or User32.WM_SYSKEYUP)
+            {
+                var input = Marshal.PtrToStructure<User32.KBDLLHOOKSTRUCT>(lParam);
+                KeyUp?.Invoke(this, (Keys)input.vkCode);
+            }
         }
 
         return User32.CallNextHookEx(_keyboardHook, nCode, wParam, lParam);

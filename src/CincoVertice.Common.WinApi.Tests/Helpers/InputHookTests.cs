@@ -27,6 +27,22 @@ public class InputHookTests
         Assert.Equal([Keys.F24], keys);
     }
 
+    [Fact]
+    public void AKeyLetGoOf_IsToldOf()
+    {
+        // Arrange
+        var keys = new List<Keys>();
+        using var hook = new InputHook();
+        hook.KeyUp += (_, key) => keys.Add(key);
+
+        // Act
+        InputSimulator.SendShortcut(0, KeyCode.VK_F24, altGr: false);
+        Pump();
+
+        // Assert
+        Assert.Equal([Keys.F24], keys);
+    }
+
     // The hook's calls come through this thread's messages
     private static void Pump()
     {
